@@ -1,0 +1,152 @@
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard300';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Pretendard';
+}
+
+.page-background {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f1f1f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pinkLayer {
+    background-color: #FFDDD8;
+    width: 1289px;
+    height: 689px;
+    border-radius: 20px;
+    padding: 45px 41px;   /* 상하 45px, 좌우 41px — 원하는 값으로 바로 조정 가능 */
+    box-sizing: border-box;
+    position: relative;
+}
+
+.whiteLayer {
+    background-color: #FFFFFF;
+    width: 1207px;
+    height: 599px;
+    border-radius: 20px 20px 20px 20px;
+    position: relative;
+    overflow: hidden;    /* ← 추가: 모서리 곡선으로 자연스럽게 클리핑 */
+}
+
+.date-select-wrap {
+  position: relative;
+}
+
+.date-selector {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.date-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #FFDDD8;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 32px 10px 16px; /* 오른쪽 여백을 화살표만큼 확보 */
+  font-size: 30px;
+  width: 172px;
+  height: 77px;
+  color: #333;
+  cursor: pointer;
+
+  /* 화살표를 배경 이미지로 그려넣기 */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='black'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 6px;
+}
+
+.date-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  list-style: none;
+  padding: 6px 0;
+  z-index: 20;
+}
+
+.date-dropdown-item {
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.date-dropdown-item:hover {
+  background-color: #FFE9E6;
+}
+
+.content-area {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.content-area h1 {
+  width: 723px;
+  height: 48px;
+  margin: 0 auto 56px auto;
+  font-size: 32px;
+  line-height: 48px;
+}
+
+.date-select option {
+  font-size: 16px;
+}
+
+.next-btn {
+  font-family: 'Pretendard300';
+  position: absolute;
+  width: 130px;
+  height: 61px;
+  right: 40px;
+  bottom: 40px;
+  background-color: #d7f5e0;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 24px;
+  cursor: pointer;
+  font-size: 40px;
+}
+
+.dokddage {
+  position: absolute;
+  left: 3px;      /* 40px → 0 */
+  bottom: 20px;    /* 40px → 0 */
+  z-index: 3;
+}
+
+.dokddage img{
+  width: 249px;
+  height: 257px;
+  display: block;
+}

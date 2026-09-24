@@ -1,0 +1,84 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.page-background {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f1f1f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-container {
+  position: relative;
+  width: 1289px;
+  height: 689px;
+  border-radius: 20px 20px 20px 20px;
+  overflow: hidden;
+  display: block; /* 배경은 그냥 쌓기만 함 */
+}
+
+.pink_fir {
+    position: absolute;
+    background-color: #FFDDD8;
+    border-radius: 0px 100px 0px 0px;
+    width: 644.5px;
+    height: 689px;
+    left: 0;
+    top: 0;
+    z-index: 2;
+}
+
+.white_fir {
+    position: absolute;
+    background-color: #ffffff;
+    border-radius: 0px 0px 0px 100px;
+    width: 644.5px;
+    height: 689px;
+    right: 0;
+    top: 0;
+    z-index: 2;
+}
+
+.pink_sec {
+    position: absolute;
+    bottom: 0;
+    background-color: #FFDDD8;
+    width: 1289px;
+    height: 220px;
+    z-index: 0;
+}
+
+.white_sec {
+    position: absolute;
+    top: 0;
+    background-color: #ffffff;
+    width: 1289px;
+    height: 220px;
+    z-index: 0;
+}
+
+.auth-picture img{
+  position: absolute;
+  z-index: 3;              /* pink_fir, white_fir(z-index:2)보다 위로 */
+  left: 25%;                /* 원하는 위치로 조정 */
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: 417px;
+  height: 556px;
+}
+
+.auth-logo img{
+  position: absolute;
+  z-index: 3;              /* pink_fir, white_fir(z-index:2)보다 위로 */
+  right: 8%;                /* 원하는 위치로 조정 */
+  top: 20%;
+  transform: translate(-50%, -50%);
+  width: 198px;
+  height: 75px;
+}
