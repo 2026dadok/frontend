@@ -1,13 +1,11 @@
 import './App.css'
-import AuthBirth from './pages/auth/AuthBirth';
+import SignupFlow from "./pages/auth/SignupFlow";
 
 function App() {
 
   return (
     <>
-      <AuthBirth>
-
-      </AuthBirth>
+      <SignupFlow />
     </>
   )
 }

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
-export const DateSelect = ({ label, options }) => {
+export const DateSelect = ({ label, options, value, onChange }) => {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(null);
   const wrapRef = useRef(null);
 
   useEffect(() => {
@@ -22,7 +21,7 @@ export const DateSelect = ({ label, options }) => {
         className="date-select"
         onClick={() => setOpen((prev) => !prev)}
       >
-        {selected ?? label}
+        {value ?? label}
       </button>
 
       {open && (
@@ -32,7 +31,7 @@ export const DateSelect = ({ label, options }) => {
               key={o}
               className="date-dropdown-item"
               onClick={() => {
-                setSelected(o);
+                onChange(o);
                 setOpen(false);
               }}
             >
