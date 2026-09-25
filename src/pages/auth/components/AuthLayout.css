@@ -20,7 +20,8 @@
   height: 689px;
   border-radius: 20px 20px 20px 20px;
   overflow: hidden;
-  display: block; /* 배경은 그냥 쌓기만 함 */
+  display: block;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
 }
 
 .pink_fir {
@@ -65,8 +66,8 @@
 
 .auth-picture img{
   position: absolute;
-  z-index: 3;              /* pink_fir, white_fir(z-index:2)보다 위로 */
-  left: 25%;                /* 원하는 위치로 조정 */
+  z-index: 3;
+  left: 25%;
   top: 55%;
   transform: translate(-50%, -50%);
   width: 417px;
@@ -75,10 +76,19 @@
 
 .auth-logo img{
   position: absolute;
-  z-index: 3;              /* pink_fir, white_fir(z-index:2)보다 위로 */
-  right: 8%;                /* 원하는 위치로 조정 */
+  z-index: 3;
+  right: 8%;
   top: 20%;
   transform: translate(-50%, -50%);
   width: 198px;
   height: 75px;
+}
+
+.auth-content {
+  position: absolute;
+  z-index: 4;
+  right: 8%;
+  top: 220px;      /* 로고 아래로 내림 (0 → 220px, 로고 높이+여백만큼) */
+  bottom: 40px;    /* 카드 하단에서 40px 위까지 */
+  width: 420px;
 }
