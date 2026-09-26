@@ -5,7 +5,7 @@ import "./EmailVerify.css";
 
 const VERIFY_TIME = 5 * 60;
 
-const EmailVerify = ({ onSubmit, onFindAccount }) => {
+const EmailVerify = ({ onNext, onFindAccount }) => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -70,7 +70,7 @@ const EmailVerify = ({ onSubmit, onFindAccount }) => {
       alert("인증번호 6자리를 입력하세요.");
       return;
     }
-    onSubmit({ email, code });
+    onNext({ email, code });
   };
 
   return (

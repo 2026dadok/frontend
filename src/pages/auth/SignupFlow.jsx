@@ -5,17 +5,15 @@ import AuthBirth from "./AuthBirth";
 import AuthGoalTime from "./AuthGoalTime";
 
 const SignupFlow = () => {
-  const [step, setStep] = useState("signup"); // signup → emailVerify → birth → goalTime
+  const [step, setStep] = useState("signup");
   const [signupData, setSignupData] = useState(null);
 
-  // 1단계: 회원가입 폼 제출
-  const handleSignupSubmit = (formData) => {
+  const handleSignupNext = (formData) => {
     setSignupData(formData);
     setStep("emailVerify");
   };
 
-  // 2단계: 이메일 인증 제출 → 서버로 전송
-  const handleEmailSubmit = async (emailData) => {
+  const handleEmailNext = async (emailData) => {
     const payload = { ...signupData, ...emailData };
 
     try {
@@ -27,7 +25,7 @@ const SignupFlow = () => {
 
       if (!res.ok) throw new Error("서버 응답 오류");
 
-      setStep("birth"); // 가입 성공 시 생년월일 입력으로 이동
+      setStep("birth");
     } catch (err) {
       console.error(err);
       alert("계정 생성 중 오류가 발생했습니다.");
@@ -38,15 +36,14 @@ const SignupFlow = () => {
     <>
       {step === "signup" && (
         <SignupForm
-          onSubmit={handleSignupSubmit}
-          onSkip={() => setStep("emailVerify")}
+          onNext={handleSignupNext}
           onFindAccount={() => console.log("아이디/비밀번호 찾기")}
         />
       )}
 
       {step === "emailVerify" && (
         <EmailVerify
-          onSubmit={handleEmailSubmit}
+          onNext={handleEmailNext}
           onFindAccount={() => console.log("아이디/비밀번호 찾기")}
         />
       )}
@@ -61,7 +58,9 @@ const SignupFlow = () => {
       {step === "goalTime" && (
         <AuthGoalTime
           name={signupData?.name}
-          onNext={(goalTime) => console.log("전체 가입 완료", goalTime)}
+          onNext={(goalTime) => {
+            console.log("전체 가입 완료", { ...signupData, goalTime });
+          }}
         />
       )}
     </>

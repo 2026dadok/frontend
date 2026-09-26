@@ -3,26 +3,31 @@ import AuthLayout from "./components/AuthLayout";
 import { LineInput } from "./components/LineInput";
 import "./SignupForm.css";
 
-const SignupForm = ({ onSubmit, onSkip, onFindAccount }) => {
+const SignupForm = ({ onNext, onFindAccount }) => {
   const [name, setName] = useState("");
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
 
-  const handleSubmit = () => {
+  const validate = () => {
     if (!name || !id || !password || !passwordConfirm) {
       alert("모든 항목을 입력하세요.");
-      return;
+      return false;
     }
     if (password !== passwordConfirm) {
       alert("비밀번호가 일치하지 않습니다.");
-      return;
+      return false;
     }
-    onSubmit({ name, id, password });
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validate()) return;
+    onNext({ name, id, password });
   };
 
   const handleEnter = (e) => {
-    if (e.key === "Enter") handleSubmit();
+    if (e.key === "Enter") handleNext();
   };
 
   return (
@@ -47,7 +52,7 @@ const SignupForm = ({ onSubmit, onSkip, onFindAccount }) => {
         />
 
         <div className="signup-footer">
-          <button type="button" className="skip-link" onClick={onSkip}>
+          <button type="button" className="skip-link" onClick={handleNext}>
             넘어가기
           </button>
           <button type="button" className="find-account" onClick={onFindAccount}>
