@@ -3,9 +3,10 @@ import SignupForm from "./SignupForm";
 import EmailVerify from "./EmailVerify";
 import AuthBirth from "./AuthBirth";
 import AuthGoalTime from "./AuthGoalTime";
+import LoginForm from "./LoginForm";
 
 const SignupFlow = () => {
-  const [step, setStep] = useState("signup");
+  const [step, setStep] = useState("signup"); // signup → emailVerify → birth → goalTime → login
   const [signupData, setSignupData] = useState(null);
 
   const handleSignupNext = (formData) => {
@@ -60,7 +61,15 @@ const SignupFlow = () => {
           name={signupData?.name}
           onNext={(goalTime) => {
             console.log("전체 가입 완료", { ...signupData, goalTime });
+            setStep("login");   // ← 가입 완료 후 로그인 화면으로
           }}
+        />
+      )}
+
+      {step === "login" && (
+        <LoginForm
+          onGoToSignup={() => setStep("signup")}
+          onFindAccount={() => console.log("아이디/비밀번호 찾기")}
         />
       )}
     </>
