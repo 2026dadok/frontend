@@ -10,10 +10,10 @@ const AuthGoalTime = ({ name, onNext }) => {
 
   const validate = (values) => {
     const allSelected = Object.values(values).every((v) => v !== null);
-    if (!allSelected) return false;               // 하나라도 안 골랐으면 false
+    if (!allSelected) return false;
 
     const allZero = Object.values(values).every((v) => v === "00");
-    return !allZero;                               // 00:00:00이면 false
+    return !allZero;
   };
 
   const handleSubmit = (values) => {

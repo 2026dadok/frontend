@@ -6,7 +6,7 @@ import AuthGoalTime from "./AuthGoalTime";
 import LoginForm from "./LoginForm";
 
 const SignupFlow = () => {
-  const [step, setStep] = useState("signup"); // signup → emailVerify → birth → goalTime → login
+  const [step, setStep] = useState("signup");
   const [signupData, setSignupData] = useState(null);
 
   const handleSignupNext = (formData) => {
@@ -15,7 +15,11 @@ const SignupFlow = () => {
   };
 
   const handleEmailNext = async (emailData) => {
-    const payload = { ...signupData, ...emailData };
+    const payload = {
+      name: signupData.loginId,
+      passwd: signupData.password,
+      email: emailData.email,
+    };
 
     try {
       const res = await fetch("/auth/signout", {
@@ -51,17 +55,17 @@ const SignupFlow = () => {
 
       {step === "birth" && (
         <AuthBirth
-          name={signupData?.name}
+          name={signupData?.displayName}
           onNext={() => setStep("goalTime")}
         />
       )}
 
       {step === "goalTime" && (
         <AuthGoalTime
-          name={signupData?.name}
+          name={signupData?.displayName}
           onNext={(goalTime) => {
             console.log("전체 가입 완료", { ...signupData, goalTime });
-            setStep("login");   // ← 가입 완료 후 로그인 화면으로
+            setStep("login");
           }}
         />
       )}

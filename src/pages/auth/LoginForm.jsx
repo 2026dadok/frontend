@@ -4,13 +4,12 @@ import { LineInput } from "./components/LineInput";
 import "./LoginForm.css";
 
 const LoginForm = ({ onGoToSignup, onFindAccount }) => {
-  const [name, setName] = useState("");       // 아이디 역할
+  const [name, setName] = useState(""); //id
   const [passwd, setPasswd] = useState("");
-  const [email, setEmail] = useState("");
 
   const validate = () => {
-    if (!name || !passwd || !email) {
-      alert("모든 항목을 입력하세요.");
+    if (!name || !passwd) {
+      alert("아이디와 비밀번호를 입력하세요.");
       return false;
     }
     if (name.replace(/\s/g, "").length > 21) {
@@ -19,10 +18,6 @@ const LoginForm = ({ onGoToSignup, onFindAccount }) => {
     }
     if (passwd.length > 50) {
       alert("비밀번호는 50자 이내로 입력하세요.");
-      return false;
-    }
-    if (email.length > 30) {
-      alert("이메일은 30자 이내로 입력하세요.");
       return false;
     }
     return true;
@@ -35,7 +30,7 @@ const LoginForm = ({ onGoToSignup, onFindAccount }) => {
       const res = await fetch("/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, passwd, email }),
+        body: JSON.stringify({ name, passwd }),
       });
 
       if (!res.ok) throw new Error("로그인 실패");
@@ -63,12 +58,6 @@ const LoginForm = ({ onGoToSignup, onFindAccount }) => {
           type="password"
           value={passwd}
           onChange={setPasswd}
-        />
-        <LineInput
-          placeholder="이메일"
-          type="email"
-          value={email}
-          onChange={setEmail}
           onKeyDown={handleEnter}
         />
 
