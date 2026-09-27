@@ -4,6 +4,7 @@ import EmailVerify from "./EmailVerify";
 import AuthBirth from "./AuthBirth";
 import AuthGoalTime from "./AuthGoalTime";
 import LoginForm from "./LoginForm";
+import FindAccount from "./FindAccount";
 
 const SignupFlow = () => {
   const [step, setStep] = useState("signup");
@@ -42,14 +43,14 @@ const SignupFlow = () => {
       {step === "signup" && (
         <SignupForm
           onNext={handleSignupNext}
-          onFindAccount={() => console.log("아이디/비밀번호 찾기")}
+          onFindAccount={() => setStep("findAccount")}
         />
       )}
 
       {step === "emailVerify" && (
         <EmailVerify
           onNext={handleEmailNext}
-          onFindAccount={() => console.log("아이디/비밀번호 찾기")}
+          onFindAccount={() => setStep("findAccount")}
         />
       )}
 
@@ -73,7 +74,14 @@ const SignupFlow = () => {
       {step === "login" && (
         <LoginForm
           onGoToSignup={() => setStep("signup")}
-          onFindAccount={() => console.log("아이디/비밀번호 찾기")}
+          onFindAccount={() => setStep("findAccount")}
+        />
+      )}
+
+      {step === "findAccount" && (
+        <FindAccount
+          onBackToLogin={() => setStep("login")}
+          onGoToSignup={() => setStep("signup")}
         />
       )}
     </>

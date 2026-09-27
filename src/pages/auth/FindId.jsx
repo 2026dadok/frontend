@@ -1,0 +1,95 @@
+import { useState, useEffect, useRef } from "react";
+import { LineInput } from "./components/LineInput";
+
+const VERIFY_TIME = 5 * 60;
+
+const FindId = ({ onBackToLogin }) => {
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(VERIFY_TIME);
+  const [foundId, setFoundId] = useState(null);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (!codeSent) return;
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [codeSent]);
+
+  const formatTime = (sec) => {
+    const m = String(Math.floor(sec / 60)).padStart(2, "0");
+    const s = String(sec % 60).padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const handleSendCode = () => {
+    if (!email) {
+      alert("이메일을 입력하세요.");
+      return;
+    }
+    // TODO: /auth/send-code 연동
+    setCodeSent(true);
+    setSecondsLeft(VERIFY_TIME);
+  };
+
+  const handleFindId = () => {
+    if (!codeSent) {
+      alert("이메일 인증을 진행해주세요.");
+      return;
+    }
+    if (secondsLeft === 0) {
+      alert("인증 시간이 만료되었습니다.");
+      return;
+    }
+    if (!code || code.length !== 6) {
+      alert("인증번호 6자리를 입력하세요.");
+      return;
+    }
+    // TODO: /auth/find-id 연동, 응답으로 받은 아이디를 setFoundId에 반영
+    setFoundId("goodboy_101"); // 임시 더미 값
+  };
+
+  if (foundId) {
+    return (
+      <div className="fa-result">
+        <p>회원님의 아이디는 아래와 같습니다</p>
+        <p className="fa-result-id">@{foundId}</p>
+        <button type="button" className="fa-submit" onClick={onBackToLogin}>
+          로그인
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fa-step">
+      <LineInput placeholder="이메일" type="email" value={email} onChange={setEmail} />
+
+      <div className="ev-code-row">
+        <LineInput placeholder="인증번호 6자리 입력" value={code} onChange={setCode} />
+        {codeSent && <span className="ev-timer">{formatTime(secondsLeft)}</span>}
+      </div>
+
+      {!codeSent ? (
+        <button type="button" className="fa-send-link" onClick={handleSendCode}>
+          인증번호 받기
+        </button>
+      ) : (
+        <button type="button" className="fa-submit" onClick={handleFindId}>
+          넘어가기
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default FindId;

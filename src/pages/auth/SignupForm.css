@@ -49,3 +49,14 @@
 .find-account {
   color: #999;
 }
+
+.skip-link,
+.find-account {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
