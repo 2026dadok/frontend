@@ -17,7 +17,6 @@ const AuthGoalTime = ({ name, onNext }) => {
   };
 
   const handleSubmit = (values) => {
-    console.log("목표시간:", values);
     onNext(values);
   };
 
