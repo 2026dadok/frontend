@@ -16,16 +16,12 @@ const AuthGoalTime = ({ name, onNext }) => {
     return !allZero;
   };
 
-  const handleSubmit = (values) => {
-    onNext(values);
-  };
-
   return (
     <TripleSelectStep
       title={`${name}님의 하루 독서 목표 시간을 알려주세요`}
       fields={fields}
       buttonLabel="시작"
-      onSubmit={handleSubmit}
+      onSubmit={onNext}
       validate={validate}
       invalidMessage="목표시간을 입력하세요."
     />

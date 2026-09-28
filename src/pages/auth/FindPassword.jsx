@@ -34,17 +34,28 @@ const FindPassword = ({ onBackToLogin }) => {
     return `${m}:${s}`;
   };
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (!name || !email) {
       alert("아이디와 이메일을 입력하세요.");
       return;
     }
-    // TODO: /auth/send-code 연동
-    setCodeSent(true);
-    setSecondsLeft(VERIFY_TIME);
+    try {
+      // TODO: 인증번호 발송 엔드포인트 명세서에 없음, 서버팀 확인 필요
+      const res = await fetch("/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("발송 실패");
+      setCodeSent(true);
+      setSecondsLeft(VERIFY_TIME);
+    } catch (err) {
+      console.error(err);
+      alert("인증번호 발송 중 오류가 발생했습니다.");
+    }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (secondsLeft === 0) {
       alert("인증 시간이 만료되었습니다.");
       return;
@@ -53,22 +64,50 @@ const FindPassword = ({ onBackToLogin }) => {
       alert("인증번호 6자리를 입력하세요.");
       return;
     }
-    // TODO: /auth/find-password 연동 (본인 확인)
-    setVerified(true);
+
+    try {
+      const res = await fetch("/auth/email-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+      if (!res.ok) throw new Error("인증 실패");
+
+      setVerified(true);
+    } catch (err) {
+      console.error(err);
+      alert("인증번호가 올바르지 않습니다.");
+    }
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!newPassword || !newPasswordConfirm) {
       alert("새 비밀번호를 입력하세요.");
+      return;
+    }
+    if (newPassword.length > 50) {
+      alert("비밀번호는 50자 이내로 입력하세요.");
       return;
     }
     if (newPassword !== newPasswordConfirm) {
       alert("비밀번호가 일치하지 않습니다.");
       return;
     }
-    // TODO: 비밀번호 재설정 API 연동 (엔드포인트 확정 후 추가)
-    alert("비밀번호가 변경되었습니다.");
-    onBackToLogin();
+
+    try {
+      const res = await fetch("/auth/find-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, new_passwd: newPassword }),
+      });
+      if (!res.ok) throw new Error("재설정 실패");
+
+      alert("비밀번호가 변경되었습니다.");
+      onBackToLogin();
+    } catch (err) {
+      console.error(err);
+      alert("비밀번호 재설정 중 오류가 발생했습니다.");
+    }
   };
 
   if (verified) {

@@ -41,6 +41,7 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     }
 
     try {
+      // TODO: 인증번호 발송 엔드포인트 명세서에 없음, 서버팀 확인 필요
       const res = await fetch("/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,7 +58,7 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     }
   };
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     if (!codeSent) {
       alert("이메일 인증을 진행해주세요.");
       return;
@@ -70,7 +71,21 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
       alert("인증번호 6자리를 입력하세요.");
       return;
     }
-    onNext({ email, code });
+
+    try {
+      const res = await fetch("/auth/email-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+
+      if (!res.ok) throw new Error("인증 실패");
+
+      onNext({ email });
+    } catch (err) {
+      console.error(err);
+      alert("인증번호가 올바르지 않습니다.");
+    }
   };
 
   return (

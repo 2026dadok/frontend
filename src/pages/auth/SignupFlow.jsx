@@ -10,26 +10,22 @@ const SignupFlow = () => {
   const [step, setStep] = useState("signup");
   const [signupData, setSignupData] = useState({});
 
-  // 1단계: 이름/아이디/비밀번호
   const handleSignupNext = (formData) => {
     setSignupData((prev) => ({ ...prev, ...formData }));
     setStep("emailVerify");
   };
 
-  // 2단계: 이메일 (서버 전송 X, 값만 보관)
   const handleEmailNext = ({ email }) => {
     setSignupData((prev) => ({ ...prev, email }));
     setStep("birth");
   };
 
-  // 3단계: 생년월일 (서버 전송 X)
   const handleBirthNext = (values) => {
     const birthday = `${values.YYYY}-${values.MM}-${values.DD}`;
     setSignupData((prev) => ({ ...prev, birthday }));
     setStep("goalTime");
   };
 
-  // 4단계: 목표시간 → 여기서 한 번에 회원가입 요청
   const handleGoalNext = async (values) => {
     const goal_time = `${values.HRS}:${values.MIN}:${values.SEC}`;
 

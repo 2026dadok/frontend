@@ -31,17 +31,28 @@ const FindId = ({ onBackToLogin }) => {
     return `${m}:${s}`;
   };
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (!email) {
       alert("이메일을 입력하세요.");
       return;
     }
-    // TODO: /auth/send-code 연동
-    setCodeSent(true);
-    setSecondsLeft(VERIFY_TIME);
+    try {
+      // TODO: 인증번호 발송 엔드포인트 명세서에 없음, 서버팀 확인 필요
+      const res = await fetch("/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("발송 실패");
+      setCodeSent(true);
+      setSecondsLeft(VERIFY_TIME);
+    } catch (err) {
+      console.error(err);
+      alert("인증번호 발송 중 오류가 발생했습니다.");
+    }
   };
 
-  const handleFindId = () => {
+  const handleFindId = async () => {
     if (!codeSent) {
       alert("이메일 인증을 진행해주세요.");
       return;
@@ -54,8 +65,30 @@ const FindId = ({ onBackToLogin }) => {
       alert("인증번호 6자리를 입력하세요.");
       return;
     }
-    // TODO: /auth/find-id 연동, 응답으로 받은 아이디를 setFoundId에 반영
-    setFoundId("goodboy_101"); // 임시 더미 값
+
+    try {
+      // 이메일 인증 확인
+      const verifyRes = await fetch("/auth/email-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+      if (!verifyRes.ok) throw new Error("인증 실패");
+
+      // 아이디 조회
+      const res = await fetch("/auth/find-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("조회 실패");
+
+      const data = await res.json();
+      setFoundId(data.name); // TODO: 응답 필드명 확인 필요
+    } catch (err) {
+      console.error(err);
+      alert("아이디 조회 중 오류가 발생했습니다.");
+    }
   };
 
   if (foundId) {
