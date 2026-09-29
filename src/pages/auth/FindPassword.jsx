@@ -34,25 +34,13 @@ const FindPassword = ({ onBackToLogin }) => {
     return `${m}:${s}`;
   };
 
-  const handleSendCode = async () => {
+  const handleStartVerify = () => {
     if (!name || !email) {
       alert("아이디와 이메일을 입력하세요.");
       return;
     }
-    try {
-      // TODO: 인증번호 발송 엔드포인트 명세서에 없음, 서버팀 확인 필요
-      const res = await fetch("/auth/send-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error("발송 실패");
-      setCodeSent(true);
-      setSecondsLeft(VERIFY_TIME);
-    } catch (err) {
-      console.error(err);
-      alert("인증번호 발송 중 오류가 발생했습니다.");
-    }
+    setCodeSent(true);
+    setSecondsLeft(VERIFY_TIME);
   };
 
   const handleVerify = async () => {
@@ -144,7 +132,7 @@ const FindPassword = ({ onBackToLogin }) => {
       </div>
 
       {!codeSent ? (
-        <button type="button" className="fa-send-link" onClick={handleSendCode}>
+        <button type="button" className="fa-send-link" onClick={handleStartVerify}>
           인증번호 받기
         </button>
       ) : (
