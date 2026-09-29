@@ -75,3 +75,9 @@
 .email-verify--tight {
   margin-top: -60px;
 }
+
+.ev-send-link:disabled {
+  color: #ccc;
+  text-decoration: none;
+  cursor: not-allowed;
+}

@@ -4,13 +4,17 @@ import { LineInput } from "./components/LineInput";
 import "./EmailVerify.css";
 
 const VERIFY_TIME = 5 * 60;
+const RESEND_COOLDOWN = 60;
 
 const EmailVerify = ({ onNext, onFindAccount }) => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(VERIFY_TIME);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendKey, setResendKey] = useState(0);
   const timerRef = useRef(null);
+  const cooldownRef = useRef(null);
 
   useEffect(() => {
     if (!codeSent) return;
@@ -26,7 +30,23 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [codeSent]);
+  }, [codeSent, resendKey]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(cooldownRef.current);
+  }, [resendKey, resendCooldown]);
 
   const formatTime = (sec) => {
     const m = String(Math.floor(sec / 60)).padStart(2, "0");
@@ -34,14 +54,17 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     return `${m}:${s}`;
   };
 
-  // 인증번호 발송 API 없음 → 타이머만 시작
   const handleStartVerify = () => {
     if (!email) {
       alert("이메일을 입력하세요.");
       return;
     }
+    if (resendCooldown > 0) return;
+
     setCodeSent(true);
     setSecondsLeft(VERIFY_TIME);
+    setResendCooldown(RESEND_COOLDOWN);
+    setResendKey((prev) => prev + 1);
   };
 
   const handleCreateAccount = async () => {
@@ -81,8 +104,17 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
 
         <div className="ev-label-row">
           <span className="ev-input-label">이메일</span>
-          <button type="button" className="ev-send-link" onClick={handleStartVerify}>
-            인증번호 받기
+          <button
+            type="button"
+            className="ev-send-link"
+            onClick={handleStartVerify}
+            disabled={resendCooldown > 0}
+          >
+            {resendCooldown > 0
+              ? `다시 받기 (${resendCooldown}초)`
+              : codeSent
+              ? "다시 받기"
+              : "인증번호 받기"}
           </button>
         </div>
         <LineInput

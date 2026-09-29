@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { LineInput } from "./components/LineInput";
 
 const VERIFY_TIME = 5 * 60;
+const RESEND_COOLDOWN = 60;
 
 const FindPassword = ({ onBackToLogin }) => {
   const [name, setName] = useState("");
@@ -9,10 +10,13 @@ const FindPassword = ({ onBackToLogin }) => {
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(VERIFY_TIME);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendKey, setResendKey] = useState(0);
   const [verified, setVerified] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const timerRef = useRef(null);
+  const cooldownRef = useRef(null);
 
   useEffect(() => {
     if (!codeSent) return;
@@ -26,7 +30,21 @@ const FindPassword = ({ onBackToLogin }) => {
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, [codeSent]);
+  }, [codeSent, resendKey]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(cooldownRef.current);
+  }, [resendKey, resendCooldown]);
 
   const formatTime = (sec) => {
     const m = String(Math.floor(sec / 60)).padStart(2, "0");
@@ -39,8 +57,12 @@ const FindPassword = ({ onBackToLogin }) => {
       alert("아이디와 이메일을 입력하세요.");
       return;
     }
+    if (resendCooldown > 0) return;
+
     setCodeSent(true);
     setSecondsLeft(VERIFY_TIME);
+    setResendCooldown(RESEND_COOLDOWN);
+    setResendKey((prev) => prev + 1);
   };
 
   const handleVerify = async () => {
@@ -131,11 +153,20 @@ const FindPassword = ({ onBackToLogin }) => {
         {codeSent && <span className="ev-timer">{formatTime(secondsLeft)}</span>}
       </div>
 
-      {!codeSent ? (
-        <button type="button" className="fa-send-link" onClick={handleStartVerify}>
-          인증번호 받기
-        </button>
-      ) : (
+      <button
+        type="button"
+        className="fa-send-link"
+        onClick={handleStartVerify}
+        disabled={resendCooldown > 0}
+      >
+        {resendCooldown > 0
+          ? `다시 받기 (${resendCooldown}초)`
+          : codeSent
+          ? "다시 받기"
+          : "인증번호 받기"}
+      </button>
+
+      {codeSent && (
         <button type="button" className="fa-submit" onClick={handleVerify}>
           다음
         </button>
