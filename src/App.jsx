@@ -20,8 +20,12 @@ const LoginPage = () => {
     <LoginForm
       onGoToSignup={() => navigate(PATHS.signup)}
       onFindAccount={() => navigate(PATHS.find)}
-      onLoginSuccess={(data) => {                       // 2번: 여기
-        localStorage.setItem("token", data.token);      // 응답 필드명은 백엔드 확인 필요
+      onLoginSuccess={(data) => {
+        if (!data?.token) {
+          alert("로그인 응답에 토큰이 없습니다.");
+          return;
+        }    
+        localStorage.setItem("token", data.token);
         navigate(PATHS.main);
       }}
     />
