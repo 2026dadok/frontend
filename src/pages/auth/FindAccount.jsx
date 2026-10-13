@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AuthLayout from "./components/AuthLayout";
 import FindId from "./FindId";
 import FindPassword from "./FindPassword";
 import "./FindAccount.css";
 
 const FindAccount = ({ onBackToLogin, onGoToSignup }) => {
-  const [tab, setTab] = useState("id"); // "id" | "password"
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState(params.get("pageGubun") === "password" ? "password" : "id");
 
   return (
     <AuthLayout>

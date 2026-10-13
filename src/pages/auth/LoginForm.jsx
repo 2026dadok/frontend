@@ -3,7 +3,7 @@ import AuthLayout from "./components/AuthLayout";
 import { LineInput } from "./components/LineInput";
 import "./LoginForm.css";
 
-const LoginForm = ({ onGoToSignup, onFindAccount }) => {
+const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
   const [name, setName] = useState(""); //id
   const [passwd, setPasswd] = useState("");
 
@@ -27,7 +27,7 @@ const LoginForm = ({ onGoToSignup, onFindAccount }) => {
     if (!validate()) return;
 
     try {
-      const res = await fetch("/auth/signin", {
+      const res = await fetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, passwd }),
@@ -36,7 +36,7 @@ const LoginForm = ({ onGoToSignup, onFindAccount }) => {
       if (!res.ok) throw new Error("로그인 실패");
 
       const data = await res.json();
-      console.log("로그인 성공:", data);
+      onLoginSuccess(data);
     } catch (err) {
       console.error(err);
       alert("아이디 또는 비밀번호가 올바르지 않습니다.");

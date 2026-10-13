@@ -10,53 +10,9 @@
   margin-bottom: 20px;
 }
 
-.line-input {
-  width: 100%;
-  border: none;
-  border-bottom: 1px solid #ddd;
-  padding: 8px 4px;
-  font-size: 14px;
-  outline: none;
-  margin-bottom: 20px;
-  background: transparent;
-}
-
-.line-input::placeholder {
-  color: #bbb;
-}
-
-.line-input:focus {
-  border-bottom: 1px solid #999;
-}
-
 .signup-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 8px;
-}
-
-.skip-link,
-.find-account {
-  background: none;
-  border: none;
-  font-size: 12px;
-  color: #333;
-  cursor: pointer;
-  padding: 0;
-}
-
-.find-account {
-  color: #999;
-}
-
-.skip-link,
-.find-account {
-  background: none;
-  border: none;
-  font-size: 12px;
-  color: #333;
-  cursor: pointer;
-  padding: 0;
-  white-space: nowrap;
 }

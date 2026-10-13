@@ -3,10 +3,8 @@ import SignupForm from "./SignupForm";
 import EmailVerify from "./EmailVerify";
 import AuthBirth from "./AuthBirth";
 import AuthGoalTime from "./AuthGoalTime";
-import LoginForm from "./LoginForm";
-import FindAccount from "./FindAccount";
 
-const SignupFlow = () => {
+const SignupFlow = ({ onComplete, onFindAccount }) => {
   const [step, setStep] = useState("signup");
   const [signupData, setSignupData] = useState({});
 
@@ -30,6 +28,7 @@ const SignupFlow = () => {
     const goal_time = `${values.HRS}:${values.MIN}:${values.SEC}`;
 
     const payload = {
+      nickname: signupData.nickname,
       name: signupData.loginId,
       passwd: signupData.password,
       email: signupData.email,
@@ -38,7 +37,7 @@ const SignupFlow = () => {
     };
 
     try {
-      const res = await fetch("/auth/signout", {
+      const res = await fetch("/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -46,7 +45,7 @@ const SignupFlow = () => {
 
       if (!res.ok) throw new Error("서버 응답 오류");
 
-      setStep("login");
+      onComplete();
     } catch (err) {
       console.error(err);
       alert("회원가입 중 오류가 발생했습니다.");
@@ -58,37 +57,23 @@ const SignupFlow = () => {
       {step === "signup" && (
         <SignupForm
           onNext={handleSignupNext}
-          onFindAccount={() => setStep("findAccount")}
+          onFindAccount={onFindAccount}
         />
       )}
 
       {step === "emailVerify" && (
         <EmailVerify
           onNext={handleEmailNext}
-          onFindAccount={() => setStep("findAccount")}
+          onFindAccount={onFindAccount}
         />
       )}
 
       {step === "birth" && (
-        <AuthBirth name={signupData.displayName} onNext={handleBirthNext} />
+        <AuthBirth name={signupData.nickname} onNext={handleBirthNext} />
       )}
 
       {step === "goalTime" && (
-        <AuthGoalTime name={signupData.displayName} onNext={handleGoalNext} />
-      )}
-
-      {step === "login" && (
-        <LoginForm
-          onGoToSignup={() => setStep("signup")}
-          onFindAccount={() => setStep("findAccount")}
-        />
-      )}
-
-      {step === "findAccount" && (
-        <FindAccount
-          onBackToLogin={() => setStep("login")}
-          onGoToSignup={() => setStep("signup")}
-        />
+        <AuthGoalTime name={signupData.nickname} onNext={handleGoalNext} />
       )}
     </>
   );

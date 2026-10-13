@@ -1,4 +1,5 @@
 import "./AuthLayout.css";
+import "./AuthCommon.css";
 import treeImg from "../../../images/dadoktree.png";
 import logoImg from "../../../images/dadokdadok.png"
 

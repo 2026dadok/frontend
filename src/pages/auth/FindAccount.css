@@ -84,12 +84,3 @@
   justify-content: flex-start;
   margin-top: 20px;
 }
-
-.signup-link {
-  background: none;
-  border: none;
-  font-size: 13px;
-  color: #333;
-  cursor: pointer;
-  padding: 0;
-}

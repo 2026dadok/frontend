@@ -4,14 +4,18 @@ import { LineInput } from "./components/LineInput";
 import "./SignupForm.css";
 
 const SignupForm = ({ onNext, onFindAccount }) => {
-  const [displayName, setDisplayName] = useState(""); // nickname
+  const [nickname, setNickname] = useState(""); // nickname
   const [loginId, setLoginId] = useState("");           // id
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
 
   const validate = () => {
-    if (!displayName || !loginId || !password || !passwordConfirm) {
+    if (!nickname || !loginId || !password || !passwordConfirm) {
       alert("모든 항목을 입력하세요.");
+      return false;
+    }
+    if (nickname.length > 10) {
+      alert("닉네임은 10글자 이내로 입력하세요.");
       return false;
     }
     if (loginId.replace(/\s/g, "").length > 21) {
@@ -31,7 +35,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
 
   const handleNext = () => {
     if (!validate()) return;
-    onNext({ displayName, loginId, password });
+    onNext({ nickname, loginId, password });
   };
 
   const handleEnter = (e) => {
@@ -43,7 +47,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
       <div className="signup-form">
         <h1>회원 가입하기</h1>
 
-        <LineInput placeholder="나의 이름" value={displayName} onChange={setDisplayName} />
+        <LineInput placeholder="나의 이름" value={nickname} onChange={setNickname} />
         <LineInput placeholder="아이디" value={loginId} onChange={setLoginId} />
         <LineInput
           placeholder="비밀번호"

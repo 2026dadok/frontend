@@ -1,0 +1,13 @@
+.line-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 4px;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 20px;
+  background: transparent;
+}
+
+.line-input::placeholder { color: #bbb; }
+.line-input:focus { border-bottom: 1px solid #999; }

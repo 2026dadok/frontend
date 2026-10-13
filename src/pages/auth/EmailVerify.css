@@ -33,31 +33,10 @@
   padding: 0;
 }
 
-.ev-code-row {
-  position: relative;
-  margin-top: 24px;
-}
-
-.ev-timer {
-  position: absolute;
-  right: 4px;
-  top: 12px;
-  color: #e57373;
-  font-size: 13px;
-}
-
 .ev-find {
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
-}
-
-.find-account {
-  background: none;
-  border: none;
-  font-size: 13px;
-  color: #999;
-  cursor: pointer;
 }
 
 .ev-submit {
@@ -70,10 +49,6 @@
   padding: 12px 28px;
   font-size: 14px;
   cursor: pointer;
-}
-
-.email-verify--tight {
-  margin-top: -60px;
 }
 
 .ev-send-link:disabled {

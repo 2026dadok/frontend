@@ -1,0 +1,31 @@
+.signup-link,
+.find-account,
+.skip-link {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.find-account { color: #999; }
+
+/* 가입 화면은 기존처럼 12px 유지 (specificity가 높아 import 순서와 무관) */
+.signup-footer .skip-link,
+.signup-footer .find-account { font-size: 12px; }
+
+/* EmailVerify, FindId, FindPassword 공통 */
+.ev-code-row {
+  position: relative;
+  margin-top: 24px;
+}
+
+.ev-timer {
+  position: absolute;
+  right: 4px;
+  top: 12px;
+  color: #e57373;
+  font-size: 13px;
+}
