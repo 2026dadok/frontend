@@ -8,7 +8,7 @@ const SignupPage = () => {
   const navigate = useNavigate();
   return (
     <SignupFlow
-      onComplete={() => navigate(PATHS.login)}
+      onComplete={() => navigate(PATHS.login, { replace: true })}
       onFindAccount={() => navigate(PATHS.find)}
     />
   );
@@ -26,7 +26,7 @@ const LoginPage = () => {
           return;
         }    
         localStorage.setItem("token", data.token);
-        navigate(PATHS.main);
+        navigate(PATHS.main, { replace: true });
       }}
     />
   );

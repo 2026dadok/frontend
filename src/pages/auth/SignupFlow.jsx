@@ -49,6 +49,7 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
     } catch (err) {
       console.error(err);
       alert("회원가입 중 오류가 발생했습니다.");
+      setStep("signup");
     }
   };
 

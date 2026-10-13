@@ -10,7 +10,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
   const [passwordConfirm, setPasswordConfirm] = useState("");
 
   const validate = () => {
-    if (!nickname || !loginId || !password || !passwordConfirm) {
+    if (!nickname.trim() || !loginId.trim() || !password || !passwordConfirm) {
       alert("모든 항목을 입력하세요.");
       return false;
     }
@@ -35,7 +35,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
 
   const handleNext = () => {
     if (!validate()) return;
-    onNext({ nickname, loginId, password });
+    onNext({ nickname: nickname.trim(), loginId: loginId.trim(), password });
   };
 
   const handleEnter = (e) => {

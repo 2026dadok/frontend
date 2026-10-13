@@ -52,18 +52,31 @@ const FindPassword = ({ onBackToLogin }) => {
     return `${m}:${s}`;
   };
 
-  const handleStartVerify = () => {
-    if (!name || !email) {
-      alert("아이디와 이메일을 입력하세요.");
-      return;
-    }
-    if (resendCooldown > 0) return;
+  const handleStartVerify = async () => {
+  if (!name || !email) {
+    alert("아이디와 이메일을 입력하세요.");
+    return;
+  }
+  if (resendCooldown > 0) return;
 
-    setCodeSent(true);
-    setSecondsLeft(VERIFY_TIME);
-    setResendCooldown(RESEND_COOLDOWN);
-    setResendKey((prev) => prev + 1);
-  };
+  try {
+    const res = await fetch("/auth/find-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email }),
+    });
+    if (!res.ok) throw new Error("발송 실패");
+  } catch (err) {
+    console.error(err);
+    alert("아이디와 이메일이 일치하지 않습니다.");
+    return;
+  }
+
+  setCodeSent(true);
+  setSecondsLeft(VERIFY_TIME);
+  setResendCooldown(RESEND_COOLDOWN);
+  setResendKey((prev) => prev + 1);
+};
 
   const handleVerify = async () => {
     if (secondsLeft === 0) {
