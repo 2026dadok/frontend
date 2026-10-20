@@ -5,6 +5,7 @@ import LoginForm from "./pages/auth/LoginForm";      // 1번
 import FindAccount from "./pages/auth/FindAccount";  // 1번
 import Layout from "./components/layouts/layout";
 import Home from "./pages/home/Home";
+import Quote from "./pages/quote/Quote";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ const App = () => (
         <Route path={PATHS.search} element={<div>책 검색</div>} />
         <Route path={PATHS.library} element={<div>서고</div>} />
         <Route path={PATHS.sharedLibrary} element={<div>공동 서재</div>} />
-        <Route path={PATHS.quote} element={<div>인용구 노트</div>} />
+        <Route path={PATHS.quote} element={<Quote />} />
         <Route path={PATHS.settings} element={<div>설정</div>} />
       </Route>
       {/* 5번: 맨 아래에 추가 */}
