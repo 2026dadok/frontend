@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { PATHS } from "../../routes";
-import "./Sidebar.css";
+import "./sidebar.css";
 
 import logoImg from "../../images/logo.png";
 import mypageIcon from "../../images/icon-mypage.png";

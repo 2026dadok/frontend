@@ -1,0 +1,12 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #fff5f3;
+}
+
+.app-layout-main {
+  flex: 1;
+  margin-left: 98px; /* fixed 사이드바 너비만큼 */
+  min-width: 0;
+  position: relative;
+}

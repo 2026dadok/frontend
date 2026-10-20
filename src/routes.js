@@ -4,5 +4,11 @@ export const PATHS = {
   login: "/auth/log_page",
   find: "/auth/idpw_found",
   signup: "/signup",
+  mypage: "/mypage",
+  rank: "/rank",
+  search: "/search",
+  library: "/library",
+  sharedLibrary: "/shared-library",
+  quote: "/quote",
+  settings: "/settings",
 };
-

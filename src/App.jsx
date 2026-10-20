@@ -3,6 +3,8 @@ import { PATHS } from "./routes";
 import SignupFlow from "./pages/auth/SignupFlow";    // 1번: 경로 수정
 import LoginForm from "./pages/auth/LoginForm";      // 1번
 import FindAccount from "./pages/auth/FindAccount";  // 1번
+import Layout from "./components/layouts/layout";
+import Home from "./pages/home/Home";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -55,10 +57,19 @@ const App = () => (
       <Route path={PATHS.login} element={<LoginPage />} />
       <Route path={PATHS.signup} element={<SignupPage />} />
       <Route path={PATHS.find} element={<FindPage />} />
-      <Route
-        path={PATHS.main}
-        element={<RequireAuth><div>로그인 후 메인</div></RequireAuth>}
-      />
+      {/* TODO: 개발 중 임시로 인증 없이 열어둠. 완성 후 RequireAuth로 감싸기 */}
+      <Route element={<Layout />}>
+        <Route path="/home" element={<Home />} />
+        <Route path={PATHS.mypage} element={<div>마이페이지</div>} />
+        <Route path={PATHS.rank} element={<div>주간 경쟁</div>} />
+        <Route path={PATHS.search} element={<div>책 검색</div>} />
+        <Route path={PATHS.library} element={<div>서고</div>} />
+        <Route path={PATHS.sharedLibrary} element={<div>공동 서재</div>} />
+        <Route path={PATHS.settings} element={<div>설정</div>} />
+      </Route>
+      <Route element={<RequireAuth><Layout /></RequireAuth>}>
+        <Route path={PATHS.main} element={<Home />} />
+      </Route>
       {/* 5번: 맨 아래에 추가 */}
       <Route path="*" element={<Navigate to={PATHS.guest} replace />} />
     </Routes>

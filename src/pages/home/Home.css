@@ -1,0 +1,134 @@
+.home {
+  padding: 34px 40px 24px 12px;
+  min-height: 100vh;
+}
+
+.home-xp-total {
+  position: absolute;
+  top: 24px;
+  right: 34px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #a6e8bf;
+  font-size: 34px;
+  font-weight: 700;
+}
+.home-xp-total img { width: 40px; height: 40px; object-fit: contain; }
+
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 415px;
+  gap: 40px;
+  margin-top: 40px;
+}
+.home-left, .home-right { display: flex; flex-direction: column; gap: 14px; }
+
+.home-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #fbe7e2;
+  border-radius: 24px;
+  box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+}
+
+/* 서재 */
+.home-shelf { padding: 24px 12px 20px; }
+.home-shelf-title { font-size: 22px; font-weight: 500; margin-bottom: 12px; padding-left: 14px; }
+.home-more {
+  position: absolute; top: 14px; right: 14px;
+  padding: 6px 16px; border-radius: 14px;
+  background: #e8f8ee; color: #6fbf8c; font-size: 13px; text-decoration: none;
+}
+.home-shelf-books { display: flex; gap: 20px; }
+.home-shelf-book, .home-shelf-add {
+  position: relative; flex: 0 0 154px; height: 228px; border-radius: 4px;
+}
+.home-shelf-book img { width: 100%; height: 100%; object-fit: cover; display: block; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+.home-badge {
+  position: absolute; top: -8px; right: -10px;
+  width: 54px; height: 54px; border-radius: 50%;
+  background: #f4c84a; color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.home-shelf-add {
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px dashed #b9ecd0; background: #fbfffd; text-decoration: none;
+}
+.home-shelf-add span {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #5fd496; color: #fff; font-size: 34px; line-height: 42px; text-align: center;
+}
+
+/* 추천 도서 */
+.home-recommend { padding: 22px 22px 18px; text-align: center; }
+.home-recommend h2 { font-size: 22px; font-weight: 600; }
+.home-recommend p { font-size: 13px; margin: 8px 0 16px; }
+.home-recommend-books { display: flex; justify-content: space-between; gap: 12px; min-height: 168px; }
+.home-recommend-books img { flex: 1; min-width: 0; height: 168px; object-fit: cover; border: 1px solid #eee; }
+
+/* 퀘스트 공통 */
+.home-quest-head { display: flex; align-items: center; gap: 14px; }
+.home-quest-head h2 { font-size: 21px; font-weight: 500; }
+.home-quest-icon {
+  width: 42px; height: 42px; border-radius: 12px; background: #ffeceb;
+  display: flex; align-items: center; justify-content: center;
+}
+.home-quest-icon img { width: 26px; height: 26px; object-fit: contain; }
+/* 주간 퀘스트: 같은 PNG를 마스크로 써서 초록색으로 */
+.home-quest-icon.green { background: #e6f8ee; }
+.home-quest-icon i {
+  width: 26px; height: 26px; background: #a6e8bf;
+  -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat;
+}
+.home-xp {
+  display: inline-block; padding: 5px 14px; border-radius: 14px;
+  background: #fff1ed; color: #f7c9b6; font-size: 13px; white-space: nowrap;
+}
+
+/* 주간 */
+.home-weekly { padding: 22px 30px 26px; }
+.home-weekly-title { font-size: 14px; margin: 26px 0 12px; }
+.home-weekly-bar { display: flex; align-items: center; gap: 14px; font-size: 11px; color: #777; }
+.home-progress { width: 155px; height: 6px; border-radius: 3px; background: #eee; overflow: hidden; }
+.home-progress div { height: 100%; background: #5fd496; border-radius: 3px; }
+.home-weekly-reward {
+  position: absolute; top: 40px; right: 56px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.home-weekly-reward img { width: 60px; height: 70px; object-fit: contain; }
+
+/* 일일 */
+.home-daily { padding: 22px 30px 24px; }
+.home-daily ul { list-style: none; margin-top: 20px; }
+.home-daily li { display: flex; align-items: center; gap: 14px; padding: 14px 0; }
+.home-daily-title { flex: 1; font-size: 14px; }
+.home-check {
+  width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #555; flex-shrink: 0;
+}
+.home-check.done {
+  border-color: #5fd496; background: #5fd496;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E");
+  background-size: 100%;
+}
+.home-daily-all {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 10px; padding: 14px 18px; border-radius: 10px; background: #fff3f1; font-size: 13px;
+}
+.home-daily-all img { width: 28px; height: 28px; object-fit: contain; }
+.home-daily-all span:nth-child(2) { flex: 1; }
+
+/* 오늘의 문장 */
+.home-quote { position: relative; height: 190px; margin-top: 8px; }
+.home-quote-bubble {
+  position: absolute; left: 0; top: 0; width: 300px; padding: 26px 30px;
+  background: #fffefb; border-radius: 22px; box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  font-size: 15px; line-height: 1.7;
+}
+.home-quote-bubble small { display: block; margin-top: 22px; font-size: 11px; color: #555; }
+.home-mascot { position: absolute; right: -20px; bottom: -30px; width: 160px; }
+
+@media (max-width: 1280px) {
+  .home-grid { grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }
+  .home-shelf-book, .home-shelf-add { flex-basis: 120px; height: 180px; }
+}
