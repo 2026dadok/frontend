@@ -6,7 +6,7 @@
 
 .app-layout-main {
   flex: 1;
-  margin-left: 98px; /* fixed 사이드바 너비만큼 */
+  margin-left: 103px; /* fixed 사이드바 너비만큼 */
   min-width: 0;
   position: relative;
 }

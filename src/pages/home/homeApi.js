@@ -1,9 +1,6 @@
 // 홈 화면에서 쓰는 데이터 호출 모음.
 // 아직 백엔드/다른 페이지가 없는 항목은 TODO + 빈 값(또는 더미)으로 둔다.
 
-const BOOK_API_BASE = import.meta.env.VITE_BOOK_API_BASE ?? ""; // TODO: 책 API 주소 (.env에 입력)
-const BOOK_API_KEY = import.meta.env.VITE_BOOK_API_KEY ?? ""; // TODO: 책 API 키 (.env에 입력)
-
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
 });
@@ -14,19 +11,29 @@ const getJson = async (url, options) => {
   return res.json();
 };
 
-// ───────── 이달의 추천 도서 (외부 책 API) ─────────
+// ───────── 이달의 추천 도서 (YES24 Open API: 월별 베스트셀러) ─────────
+// 문서: https://developers.yes24.com/api-doc/category-bestseller-monthly
+// 키는 .env.local 의 YES24_API_KEY → vite.config.js 프록시가 X-Api-Key 헤더로 붙인다.
+const YES24_BOOK_CATEGORY_ID = "001"; // 국내도서 (문서 예시 값, 필요하면 카테고리 목록 API로 확인)
+const RECOMMEND_COUNT = 6;
+
 // 화면은 { id, title, cover } 형태만 사용한다.
 const toBook = (item) => ({
-  id: item.id ?? item.itemId ?? item.isbn,      // TODO: 실제 응답 필드명으로 수정
-  title: item.title,                             // TODO
-  cover: item.cover ?? item.coverUrl ?? item.image, // TODO
+  id: item.itemId,
+  title: item.title,
+  cover: item.cover,
 });
 
 export const fetchRecommendedBooks = async () => {
-  if (!BOOK_API_BASE || !BOOK_API_KEY) return [];
-  // TODO: 실제 엔드포인트/쿼리 파라미터/응답 구조에 맞게 수정
-  const data = await getJson(`${BOOK_API_BASE}?key=${BOOK_API_KEY}&count=6`);
-  return (data.items ?? []).slice(0, 6).map(toBook);
+  const params = new URLSearchParams({
+    categoryId: YES24_BOOK_CATEGORY_ID,
+    pageSize: String(RECOMMEND_COUNT * 2), // 성인물 제외하고도 6권이 남도록 여유 있게
+  });
+  const json = await getJson(`/yes24/v1/category/bestsellerMonthly?${params}`);
+  return (json.data?.items ?? [])
+    .filter((item) => item.adultYn !== "Y")
+    .slice(0, RECOMMEND_COUNT)
+    .map(toBook);
 };
 
 // ───────── 나의 서재 / 공동 서재 ─────────
