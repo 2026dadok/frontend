@@ -21,7 +21,11 @@
   font-size: 34px;
   font-weight: 700;
 }
-.home-xp-total img { width: 34px; height: 34px; object-fit: contain; }
+/* 아이콘 PNG를 마스크로 써서 숫자와 항상 같은 색(currentColor)으로 칠한다 */
+.home-xp-total i {
+  width: 34px; height: 34px; background: currentColor;
+  -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat;
+}
 
 .home-grid {
   display: grid;

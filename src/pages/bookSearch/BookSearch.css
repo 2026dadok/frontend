@@ -1,0 +1,234 @@
+/* 책 검색 페이지. 디자인 기준 크기(1419 x 967)로 그리고, 창이 작으면 zoom(--s)으로 통째로 축소한다. */
+.bs {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  color: #222;
+}
+
+.bs-stage {
+  zoom: var(--s, 1);
+  width: calc((100vw - 103px) / var(--s, 1));
+  height: calc(100vh / var(--s, 1));
+}
+.bs-canvas {
+  position: relative;
+  width: 1419px;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.bs button { font-family: inherit; color: inherit; cursor: pointer; }
+
+/* 오른쪽 위 XP (홈과 동일) */
+.bs-xp {
+  position: absolute; top: 14px; right: 34px; z-index: 5;
+  display: flex; align-items: center; gap: 4px;
+  color: #a6e8bf; font-size: 34px; font-weight: 700;
+}
+.bs-xp i {
+  width: 34px; height: 34px; background: currentColor;
+  -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat;
+}
+
+/* ───────── 검색창 ───────── */
+.bs-search {
+  position: absolute; left: 227px; top: 46px; z-index: 4;
+  width: 860px; height: 52px;
+  display: flex; align-items: center;
+  background: #fff; border: 1px solid #f6e6e2; border-radius: 26px;
+  box-shadow: 0 4px 14px rgba(240, 190, 180, 0.18);
+}
+.bs-search input {
+  flex: 1; height: 100%; padding: 0 24px;
+  border: 0; background: transparent; outline: none;
+  font-size: 17px; color: #333;
+}
+.bs-search input::placeholder { color: #8d8d8d; }
+.bs-search button {
+  width: 56px; height: 100%; border: 0; background: transparent; color: #333;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ───────── 공통 ───────── */
+.bs-pill-btn {
+  display: block; height: 56px;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 18px;
+  box-shadow: 0 3px 10px rgba(240, 190, 180, 0.25);
+  font-size: 16px;
+}
+.bs-pill-btn:hover { background: #fffaf8; }
+.bs-pill-btn.big { width: 313px; height: 72px; margin-top: 20px; border-radius: 22px; font-size: 22px; }
+.bs-pill-btn.wide { width: 540px; height: 61px; margin-top: 20px; border-radius: 20px; font-size: 18px; }
+
+.bs-status { padding: 22px 0; text-align: center; font-size: 14px; color: #999; }
+.bs-status.left { padding: 8px 0; text-align: left; }
+.bs-link-btn { border: 0; background: none; color: #6fbf8c; font-size: inherit; text-decoration: underline; }
+.bs-end { height: 1px; }
+
+.bs-stars { display: inline-flex; gap: 2px; color: #dcdcdc; line-height: 1; }
+.bs-stars .on, .bs-stars button.on { color: #f7c744; }
+.bs-stars button { border: 0; background: none; padding: 0; font-size: inherit; color: #dcdcdc; line-height: 1; }
+.bs-stars.input button:hover { transform: scale(1.12); }
+
+.bs-avatar { flex: none; display: block; }
+
+.bs-toast {
+  position: absolute; top: 34px; left: 50%; transform: translateX(-50%); z-index: 30;
+  height: 68px; padding: 0 44px; display: flex; align-items: center;
+  background: #fff; border-radius: 20px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  font-size: 18px; font-weight: 500; white-space: nowrap;
+}
+
+.bs-list-scroll, .bs-results-scroll, .bs-detail-scroll {
+  scrollbar-width: thin; scrollbar-color: #ecd3cd transparent;
+}
+
+/* ───────── 1. 베스트셀러 목록 ───────── */
+.bs-sort { position: absolute; left: 122px; top: 126px; z-index: 3; }
+.bs-sort select {
+  appearance: none; -webkit-appearance: none;
+  height: 32px; width: 142px; padding: 0 32px 0 22px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center / 14px;
+  border: 1px solid #f1e3df; border-radius: 16px; font-size: 14px; color: #333;
+}
+
+.bs-list-scroll { position: absolute; left: 0; right: 0; top: 176px; bottom: 0; overflow-y: auto; }
+.bs-grid {
+  display: grid; grid-template-columns: repeat(4, 186px); column-gap: 58px; row-gap: 77px;
+  padding: 6px 0 60px 196px;
+}
+.bs-grid-book {
+  width: 186px; height: 272px; padding: 0; border: 0; background: none; border-radius: 6px;
+  transition: transform 0.15s;
+}
+.bs-grid-book:hover { transform: translateY(-4px); }
+.bs-grid-book img {
+  width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* ───────── 2. 검색 결과 ───────── */
+.bs-results-scroll { position: absolute; left: 0; right: 0; top: 130px; bottom: 0; overflow-y: auto; padding: 0 0 60px 75px; }
+.bs-results-title { margin: 0 0 18px 17px; font-size: 22px; font-weight: 500; }
+.bs-result {
+  position: relative; width: 1195px; min-height: 315px; margin-bottom: 20px; padding: 21px 21px 21px 21px;
+  display: flex; gap: 25px;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 24px;
+  box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+  cursor: pointer; outline: none;
+}
+.bs-result:hover, .bs-result:focus-visible { border-color: #f5cfc6; }
+.bs-result-cover { flex: none; width: 186px; height: 273px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); }
+.bs-result-body { flex: 1; min-width: 0; padding-top: 6px; }
+.bs-result-body h3 { font-size: 23px; font-weight: 500; line-height: 1.35; word-break: keep-all; }
+.bs-result-intro {
+  margin-top: 22px; font-size: 15px; line-height: 1.75; color: #333; white-space: pre-line;
+  display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bs-result-more { display: inline-block; margin-top: 4px; font-size: 15px; color: #777; }
+.bs-result-actions { flex: none; width: 147px; display: flex; flex-direction: column; justify-content: center; gap: 30px; margin-right: 30px; }
+.bs-result-actions .bs-pill-btn { width: 147px; }
+
+/* ───────── 3·4. 책 상세 ───────── */
+.bs-detail-left { position: absolute; left: 99px; top: 148px; width: 313px; }
+.bs-cover-card {
+  height: 472px; padding: 16px 15px 18px; display: flex; flex-direction: column; align-items: center;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 26px;
+  box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+}
+.bs-cover-card img { width: 270px; height: 400px; object-fit: cover; border-radius: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16); }
+.bs-cover-card p { margin-top: auto; font-size: 20px; text-align: center; word-break: keep-all; }
+
+.bs-detail-right {
+  position: absolute; left: 471px; top: 148px; bottom: 18px; width: 819px;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 28px;
+  box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+}
+.bs-detail-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 26px 33px 36px; border-radius: 28px; }
+.bs-detail-scroll h2 { font-size: 22px; font-weight: 500; }
+.bs-rating-badge {
+  position: absolute; top: 20px; right: 26px; z-index: 2; padding: 2px 8px;
+  display: flex; align-items: center; gap: 6px; background: #fff; border-radius: 12px;
+}
+.bs-rating-badge .star { color: #f7c744; font-size: 28px; line-height: 1; }
+.bs-rating-badge strong { font-size: 24px; font-weight: 500; }
+.bs-rating-badge .count { font-size: 24px; color: #b5b5b5; }
+
+.bs-intro { margin-top: 16px; font-size: 17px; line-height: 1.8; white-space: pre-line; word-break: keep-all; }
+.bs-intro.folded {
+  max-height: 200px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(#000 55%, transparent);
+  mask-image: linear-gradient(#000 55%, transparent);
+}
+.bs-fold { display: block; margin: 6px 0 0 auto; font-size: 14px; }
+
+.bs-others { margin-top: 22px; padding-top: 26px; border-top: 1px solid #e4e4e4; }
+.bs-others-row { display: flex; gap: 51px; margin-top: 22px; padding-left: 10px; }
+.bs-others-row button { width: 144px; height: 220px; padding: 0; border: 0; background: none; border-radius: 4px; }
+.bs-others-row img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); }
+.bs-others-row button:hover { transform: translateY(-3px); }
+
+.bs-reviews { margin-top: 30px; padding-top: 24px; border-top: 1px solid #e4e4e4; }
+.bs-reviews h2 { padding-left: 14px; }
+.bs-my-rating { margin: 8px 0 12px 14px; display: flex; align-items: center; gap: 4px; font-size: 16px; }
+.bs-review-form {
+  margin: 0 0 0 14px; height: 46px; padding-right: 6px;
+  display: flex; align-items: center; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px;
+}
+.bs-review-form input { flex: 1; height: 100%; padding: 0 14px; border: 0; outline: none; background: transparent; font-size: 14px; }
+.bs-review-form button { height: 32px; padding: 0 20px; border: 0; border-radius: 14px; background: #fde6df; font-size: 14px; }
+.bs-review-form button:hover { background: #fbd9ce; }
+
+.bs-others-title { margin: 26px 0 12px 14px; padding-top: 18px; border-top: 1px solid #e4e4e4; font-size: 16px; font-weight: 500; }
+.bs-others-title span { color: #b5b5b5; }
+.bs-review-list { list-style: none; margin-left: 14px; display: flex; flex-direction: column; gap: 20px; }
+.bs-review-list li { display: flex; gap: 12px; }
+.bs-review-head strong { font-size: 15px; font-weight: 500; }
+.bs-review-meta { margin-top: 4px; display: flex; align-items: center; gap: 10px; }
+.bs-review-meta time { font-size: 11px; color: #aaa; }
+.bs-review-list p { margin-top: 6px; font-size: 14px; line-height: 1.6; color: #555; word-break: break-all; }
+
+/* ───────── 5·6. 친구 초대 / 7. 공동서재 ───────── */
+.bs-co-cover {
+  position: absolute; left: 114px; top: 173px; width: 436px; height: 648px;
+  object-fit: cover; border-radius: 14px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.bs-co-right { position: absolute; left: 653px; top: 172px; width: 640px; }
+.bs-co-day { font-size: 18px; font-weight: 500; color: #444; }
+.bs-co-right h1 { margin-top: 6px; font-size: 34px; font-weight: 600; }
+
+.bs-co-input {
+  position: absolute; left: 84px; width: 451px; height: 54px; padding: 0 26px;
+  background: #fff; border: 1px solid #f6e6e2; border-radius: 27px; outline: none;
+  box-shadow: 0 3px 10px rgba(240, 190, 180, 0.2); font-size: 18px;
+}
+.bs-co-input::placeholder { color: #8d8d8d; }
+.bs-co-input.one { top: 206px; }
+.bs-co-input.two { top: 283px; }
+.bs-co-submit {
+  position: absolute; left: 55px; top: 453px; width: 538px; height: 77px;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 22px;
+  box-shadow: 0 3px 10px rgba(240, 190, 180, 0.25); font-size: 28px;
+}
+.bs-co-submit:hover:not(:disabled) { background: #fffaf8; }
+.bs-co-submit:disabled { cursor: default; opacity: 0.7; }
+.bs-co-mascot { position: absolute; right: 40px; bottom: 6px; width: 150px; }
+
+.bs-co-right.wide { width: 700px; }
+.bs-co-right.wide h1 { margin-top: 6px; font-size: 36px; font-weight: 500; }
+.bs-shared-sub { margin-top: 12px; font-size: 14px; color: #888; }
+.bs-shared-cards { margin-top: 36px; width: 646px; display: flex; flex-direction: column; gap: 45px; }
+.bs-shared-card {
+  height: 194px; padding: 0 36px; display: flex; align-items: center; gap: 22px;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 28px;
+  box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+}
+.bs-shared-info { flex: 1; }
+.bs-shared-info strong { font-size: 18px; font-weight: 600; }
+.bs-shared-bar { margin-top: 14px; display: flex; align-items: center; gap: 22px; }
+.bs-shared-bar .track { flex: 1; height: 13px; border-radius: 7px; background: #f3f3f3; overflow: hidden; }
+.bs-shared-bar .track div { height: 100%; background: #5fd496; border-radius: 7px; }
+.bs-shared-bar span { width: 40px; font-size: 18px; color: #555; }
+.bs-co-right.wide .bs-pill-btn.wide:first-of-type { margin-top: 28px; }
+.bs-co-right.wide .bs-pill-btn.wide { margin-left: 53px; }

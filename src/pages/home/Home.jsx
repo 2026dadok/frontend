@@ -72,7 +72,7 @@ const Shelf = ({ title, books, to }) => {
       <Link to={to} className="home-more">전체 보기</Link>
       <div className="home-shelf-books">
         {slots.map((b) => (
-          <div key={b.id} className="home-shelf-book">
+          <div key={`${b.id}-${b.friendId ?? ""}`} className="home-shelf-book">
             <img src={b.cover} alt={b.title} />
             {b.completed && <span className="home-badge">완독</span>}
           </div>
@@ -185,7 +185,7 @@ const Home = () => {
   return (
     <div className="home">
       <div className="home-xp-total">
-        <img src={xpIcon} alt="" />
+        <i style={{ maskImage: `url(${xpIcon})`, WebkitMaskImage: `url(${xpIcon})` }} aria-hidden="true" />
         <span>{totalXp}</span>
       </div>
 

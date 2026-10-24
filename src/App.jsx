@@ -6,6 +6,7 @@ import FindAccount from "./pages/auth/FindAccount";  // 1번
 import Layout from "./components/layouts/layout";
 import Home from "./pages/home/Home";
 import Quote from "./pages/quote/Quote";
+import BookSearch from "./pages/bookSearch/BookSearch";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -28,7 +29,10 @@ const LoginPage = () => {
           alert("로그인 응답에 토큰이 없습니다.");
           return;
         }    
-        localStorage.setItem("token", data.token);
+        const { token, ...profile } = data;
+        localStorage.setItem("token", token);
+        // 닉네임/이름 등 화면에 쓸 내 정보 (예: 책 검색 > 공동서재)
+        localStorage.setItem("user", JSON.stringify(profile));
         navigate(PATHS.main, { replace: true });
       }}
     />
@@ -65,7 +69,7 @@ const App = () => (
         <Route path={PATHS.main} element={<Home />} />
         <Route path={PATHS.mypage} element={<div>마이페이지</div>} />
         <Route path={PATHS.rank} element={<div>주간 경쟁</div>} />
-        <Route path={PATHS.search} element={<div>책 검색</div>} />
+        <Route path={PATHS.search} element={<BookSearch />} />
         <Route path={PATHS.library} element={<div>서고</div>} />
         <Route path={PATHS.sharedLibrary} element={<div>공동 서재</div>} />
         <Route path={PATHS.quote} element={<Quote />} />

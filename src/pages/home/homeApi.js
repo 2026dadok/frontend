@@ -1,6 +1,8 @@
 // 홈 화면에서 쓰는 데이터 호출 모음.
 // 아직 백엔드/다른 페이지가 없는 항목은 TODO + 빈 값(또는 더미)으로 둔다.
 
+import { getMyLibrary, getSharedLibrary } from "../bookSearch/bookStore";
+
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
 });
@@ -37,10 +39,11 @@ export const fetchRecommendedBooks = async () => {
 };
 
 // ───────── 나의 서재 / 공동 서재 ─────────
-// TODO: myLibrary, sharedLibrary 페이지 완성 후 해당 데이터와 연결
+// 지금은 책 검색 페이지에서 담은 책(localStorage)을 읽는다.
+// TODO: myLibrary, sharedLibrary 페이지·백엔드 완성 후 해당 데이터와 연결
 // 형태: { id, title, cover, completed }
-export const fetchMyLibraryBooks = async () => [];
-export const fetchSharedLibraryBooks = async () => [];
+export const fetchMyLibraryBooks = async () => getMyLibrary();
+export const fetchSharedLibraryBooks = async () => getSharedLibrary();
 
 // ───────── 퀘스트 (백엔드) ─────────
 // TODO: 백엔드 명세 확정 후 URL/응답 형태 맞추기
