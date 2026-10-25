@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { fetchAuthorOtherBooks } from "./bookSearchApi";
 import { getAddedCount, getMe, getReviews, saveMyReview, summarizeReviews } from "./bookStore";
 import { Avatar, StarInput, Stars } from "./parts";
@@ -22,6 +22,18 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
   const [content, setContent] = useState(mine?.content ?? "");
   const [expanded, setExpanded] = useState(false);
   const [others, setOthers] = useState(null); // null = 불러오는 중
+
+  // 표지 아래 "제목 | 저자 (옮김 …)" 가 두 줄로 넘어가면 옮김은 빼고 저자만 보여준다
+  const captionRef = useRef(null);
+  const [plainAuthor, setPlainAuthor] = useState(false);
+  useLayoutEffect(() => {
+    if (plainAuthor || book.authorLine === book.author) return;
+    if (!captionRef.current) return;
+    // 글 조각마다 사각형이 따로 잡히므로, 세로 위치가 서로 다른 줄의 수를 센다
+    const lineTops = new Set([...captionRef.current.getClientRects()].map((r) => Math.round(r.top / 4)));
+    if (lineTops.size > 1) setPlainAuthor(true);
+  }, [book, plainAuthor]);
+  const captionAuthor = plainAuthor ? book.author : book.authorLine;
 
   useEffect(() => {
     let alive = true;
@@ -67,7 +79,9 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
       <div className="bs-detail-left">
         <div className="bs-cover-card">
           <img src={book.cover} alt={book.title} />
-          <p>{book.title}{book.authorLine && ` | ${book.authorLine}`}</p>
+          <p>
+            <span ref={captionRef}>{book.title}{captionAuthor && ` | ${captionAuthor}`}</span>
+          </p>
         </div>
         <button type="button" className="bs-pill-btn big" onClick={() => onReadNow(book)}>
           바로 읽기
