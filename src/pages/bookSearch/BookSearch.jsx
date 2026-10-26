@@ -10,37 +10,22 @@ import SearchResults from "./SearchResults";
 import BookDetail from "./BookDetail";
 import CoInvite from "./CoInvite";
 import SharedLibrary from "./SharedLibrary";
+import useFitScale from "../../hooks/useFitScale";
 import xpIcon from "../../images/icon-xp.png";
 import "./BookSearch.css";
 
-// 디자인 기준 크기(사이드바 제외). 창이 이보다 작으면 전체를 비율로 줄여 한 화면에 맞춘다. (홈과 동일)
-const DESIGN_W = 1419;
-const DESIGN_H = 967;
-const SIDEBAR_W = 103;
 const TOAST_MS = 2000;
 const START_TOAST_MS = 1500;
 
 const EMPTY_PAGE = { books: [], total: 0, hasMore: false };
 
-const useFitScale = () => {
-  const calc = () =>
-    Math.min(1, window.innerHeight / DESIGN_H, (window.innerWidth - SIDEBAR_W) / DESIGN_W);
-  const [scale, setScale] = useState(calc);
-  useEffect(() => {
-    const onResize = () => setScale(calc());
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-  return scale;
-};
-
 // 화면 흐름(페이지 라우팅 없이 state 로 전환):
 //   list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
-const BookSearchFlow = ({ initialBook }) => {
+const BookSearchFlow = ({ initialBook, initialQuery }) => {
   const scale = useFitScale();
-  const [view, setView] = useState(initialBook ? "detail" : "list"); // 홈 추천 도서에서 오면 상세부터
-  const [query, setQuery] = useState(""); // 검색창에 적힌 글자
-  const [term, setTerm] = useState(""); // 마지막으로 검색한 단어
+  const [view, setView] = useState(initialBook ? "detail" : initialQuery ? "results" : "list"); // 홈 추천 도서에서 오면 상세부터, 서고 검색창에서 오면 결과부터
+  const [query, setQuery] = useState(initialQuery); // 검색창에 적힌 글자
+  const [term, setTerm] = useState(initialQuery); // 마지막으로 검색한 단어
   const [book, setBook] = useState(initialBook); // 선택한 책
   const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
@@ -179,7 +164,13 @@ const BookSearchFlow = ({ initialBook }) => {
 // 사이드바의 '책 검색'을 다시 누르면(location.key 변경) 처음 화면(1번)으로 돌아간다.
 const BookSearch = () => {
   const location = useLocation();
-  return <BookSearchFlow key={location.key} initialBook={location.state?.book ?? null} />;
+  return (
+    <BookSearchFlow
+      key={location.key}
+      initialBook={location.state?.book ?? null}
+      initialQuery={location.state?.query ?? ""}
+    />
+  );
 };
 
 export default BookSearch;

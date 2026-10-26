@@ -84,7 +84,7 @@ export const Stars = ({ value, size = 16 }) => {
   );
 };
 
-export const StarInput = ({ value, onChange, size = 26 }) => (
+export const StarInput = ({ value, onChange, size = 26, disabled = false }) => (
   <span className="bs-stars input" style={{ fontSize: size }} role="radiogroup" aria-label="나의 별점">
     {[1, 2, 3, 4, 5].map((n) => (
       <button
@@ -93,6 +93,7 @@ export const StarInput = ({ value, onChange, size = 26 }) => (
         role="radio"
         aria-checked={n === value}
         aria-label={`${n}점`}
+        disabled={disabled}
         className={n <= value ? "on" : ""}
         onClick={() => onChange(n)}
       >

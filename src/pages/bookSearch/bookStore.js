@@ -38,14 +38,18 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
 });
 
-const postToServer = async (url, body) => {
+// 서버에 요청하고 { ok, data } 를 돌려준다. 서버가 없거나 응답이 JSON 이 아니어도 예외 없이 처리한다.
+const requestServer = async (method, url, body) => {
   try {
-    const res = await fetch(url, { method: "POST", headers: authHeaders(), body: JSON.stringify(body) });
-    return res.ok;
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+    const data = await res.json().catch(() => null);
+    return { ok: res.ok, data };
   } catch {
-    return false;
+    return { ok: false, data: null };
   }
 };
+
+const postToServer = async (url, body) => (await requestServer("POST", url, body)).ok;
 
 // ───────── 내 정보 ─────────
 // 로그인 응답(token 제외)을 App.jsx 가 "user" 에 저장해 둔다. 필드명은 nickname / name 을 기대한다.
@@ -66,6 +70,7 @@ const toShelfBook = (book) => ({
   author: book.author,
   publisher: book.publisher,
   totalPage: book.pages,
+  category: book.category ?? "",
   completed: false,
 });
 
@@ -96,14 +101,38 @@ export const getAddedCount = (bookId) => {
 export const addToMyLibrary = async (book) => {
   const list = getMyLibrary();
   if (list.some((b) => b.id === book.id)) return "exists";
-  await postToServer("/library/books", {
+  const { data } = await requestServer("POST", "/library/books", {
     title: book.title,
     author: book.author,
     total_page: book.pages,
   });
-  if (!write(KEYS.myLibrary, [toShelfBook(book), ...list])) return "error";
+  // TODO: 서버가 돌려주는 책 번호의 필드 이름은 백엔드와 확인 (지금은 book_id / id 를 추측)
+  const serverBookId = data?.book_id ?? data?.data?.book_id ?? data?.id ?? null;
+  if (!write(KEYS.myLibrary, [{ ...toShelfBook(book), serverBookId }, ...list])) return "error";
   markAdded(book.id);
   return "added";
+};
+
+// 나의 서재에서 책을 삭제한다. "removed" | "error"
+// 서버에 등록된 책(serverBookId 있음)은 DELETE /library/books 가 성공해야 지우고,
+// 서버에 올라가지 않은 책(백엔드 연결 전에 담은 책)은 브라우저에서만 지운다.
+export const removeFromMyLibrary = async (bookId) => {
+  const list = getMyLibrary();
+  const book = list.find((b) => b.id === bookId);
+  if (!book) return "removed";
+  if (book.serverBookId != null) {
+    const { ok } = await requestServer("DELETE", "/library/books", { book_id: book.serverBookId });
+    if (!ok) return "error";
+  }
+  if (!write(KEYS.myLibrary, list.filter((b) => b.id !== bookId))) return "error";
+  // "서재에 추가한 사람 수"에서도 내 기록을 뺀다 (공동 서재에 아직 있으면 그대로 센다)
+  const adders = read(KEYS.adders, {});
+  const me = getMe().key;
+  const stillShared = getSharedLibrary().some((b) => b.id === bookId);
+  if (!stillShared && adders[bookId]) {
+    write(KEYS.adders, { ...adders, [bookId]: adders[bookId].filter((k) => k !== me) });
+  }
+  return "removed";
 };
 
 // ───────── 공동 서재 ─────────
@@ -141,21 +170,45 @@ export const daysSince = (iso) => {
 // 책당 1인 1리뷰. 별점 평균은 리뷰가 없으면 5.0.
 export const getReviews = (bookId) => (read(KEYS.reviews, {})[bookId] ?? []);
 
-// 내 리뷰를 등록하거나(없으면) 수정(있으면)한 뒤 갱신된 목록을 돌려준다. 저장 실패 시 null.
+// 내 리뷰 등록. 이미 내 리뷰가 있으면 덮어쓰지 않고 null (수정은 updateMyReview → 백엔드만).
+// 저장 실패 시에도 null. 성공하면 갱신된 목록을 돌려준다.
+// TODO: 리뷰 등록 API가 정해지면 서버 응답의 review_id 를 reviewId 에 저장한다 (수정·삭제에 필요)
 export const saveMyReview = (bookId, { rating, content }) => {
   const all = read(KEYS.reviews, {});
   const me = getMe();
   const list = all[bookId] ?? [];
+  if (list.some((r) => r.userKey === me.key)) return null;
   const review = {
     userKey: me.key,
     nickname: me.displayName,
+    reviewId: null,
     rating,
     content,
     date: new Date().toISOString(),
   };
-  const next = list.some((r) => r.userKey === me.key)
-    ? list.map((r) => (r.userKey === me.key ? review : r))
-    : [review, ...list];
+  const next = [review, ...list];
+  return write(KEYS.reviews, { ...all, [bookId]: next }) ? next : null;
+};
+
+// 내 리뷰 수정은 DB에 저장되어야 하므로 백엔드(PUT /bookstore/edit_reviews)가 성공했을 때만 화면 값을 바꾼다.
+// 서버가 받아주지 않으면 null (브라우저에는 아무것도 저장하지 않는다).
+export const updateMyReview = async (bookId, content) => {
+  const all = read(KEYS.reviews, {});
+  const me = getMe();
+  const list = all[bookId] ?? [];
+  const mine = list.find((r) => r.userKey === me.key);
+  if (!mine) return null;
+  try {
+    const res = await fetch("/bookstore/edit_reviews", {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ review_id: mine.reviewId, content }),
+    });
+    if (!res.ok) return null;
+  } catch {
+    return null;
+  }
+  const next = list.map((r) => (r.userKey === me.key ? { ...r, content } : r));
   return write(KEYS.reviews, { ...all, [bookId]: next }) ? next : null;
 };
 

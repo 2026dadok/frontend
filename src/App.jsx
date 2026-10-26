@@ -6,6 +6,7 @@ import FindAccount from "./pages/auth/FindAccount";  // 1번
 import Layout from "./components/layouts/layout";
 import Home from "./pages/home/Home";
 import Quote from "./pages/quote/Quote";
+import Library from "./pages/myLibrary/Library";
 import BookSearch from "./pages/bookSearch/BookSearch";
 
 const SignupPage = () => {
@@ -70,7 +71,10 @@ const App = () => (
         <Route path={PATHS.mypage} element={<div>마이페이지</div>} />
         <Route path={PATHS.rank} element={<div>주간 경쟁</div>} />
         <Route path={PATHS.search} element={<BookSearch />} />
-        <Route path={PATHS.library} element={<div>서고</div>} />
+        <Route path={PATHS.library} element={<Library />} />
+        {/* TODO: 타이머·감상문 페이지가 만들어지면 교체 (서고 책 메뉴의 바로 읽기 / 감상문 쓰기) */}
+        <Route path={PATHS.timer} element={<div>타이머</div>} />
+        <Route path={PATHS.review} element={<div>감상문</div>} />
         <Route path={PATHS.sharedLibrary} element={<div>공동 서재</div>} />
         <Route path={PATHS.quote} element={<Quote />} />
         <Route path={PATHS.settings} element={<div>설정</div>} />

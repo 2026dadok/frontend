@@ -10,5 +10,7 @@ export const PATHS = {
   library: "/library",
   sharedLibrary: "/shared-library",
   quote: "/quote",
+  timer: "/timer",
+  review: "/review",
   settings: "/settings",
 };

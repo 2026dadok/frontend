@@ -59,6 +59,12 @@ const formatCreators = (names) =>
     ? `${names[0]} 외 ${names.length - 1}명`
     : names.join(", ");
 
+// YES24 분류 "국내도서-소설/시/희곡" → "소설" (서고의 분류 필터에 쓴다)
+const toCategory = (sortName = "") => {
+  const part = String(sortName).split("-")[1] ?? String(sortName);
+  return part.split("/")[0].trim();
+};
+
 // 화면에서는 이 형태만 쓴다.
 const toBook = (item) => {
   const { creators, translators } = parseAuthors(item.author);
@@ -72,6 +78,7 @@ const toBook = (item) => {
     authorNames: creators, // 저자 일치 판단용 (번역가 제외)
     mainAuthor: creators[0] ?? "",
     publisher: item.publisher ?? "",
+    category: toCategory(item.goodsSortNm),
     cover: item.cover ?? "",
     intro: cleanText(item.contentDetail?.bookIntroduction || item.contentDetail?.bookSummary),
     pages: item.pages ?? null, // detail=Y 일 때만 내려온다. 없으면 null

@@ -70,6 +70,8 @@
 .bs-stars .on, .bs-stars button.on { color: #f7c744; }
 .bs-stars button { border: 0; background: none; padding: 0; font-size: inherit; color: #dcdcdc; line-height: 1; }
 .bs-stars.input button:hover { transform: scale(1.12); }
+.bs-stars.input button:disabled { cursor: default; }
+.bs-stars.input button:disabled:hover { transform: none; }
 
 .bs-avatar { flex: none; display: block; }
 
@@ -186,7 +188,13 @@
 .bs-review-form input { flex: 1; height: 100%; padding: 0 14px; border: 0; outline: none; background: transparent; font-size: 14px; }
 .bs-review-form button { height: 32px; padding: 0 20px; border: 0; border-radius: 14px; background: #fde6df; font-size: 14px; }
 .bs-review-form button:hover { background: #fbd9ce; }
+.bs-review-form .bs-review-cancel { margin-right: 6px; background: #f1f1f1; }
+.bs-review-form .bs-review-cancel:hover { background: #e8e8e8; }
+.bs-review-form input:read-only { color: #777; }
 
+/* 리뷰 칸은 전체가 14px 들여써져 있어서, 리뷰가 없을 때 나오는 안내 문장도 같이 들여쓴다 */
+.bs-reviews .bs-status.left { padding-left: 14px; }
+.bs-review-mine { margin-left: 8px; padding: 1px 8px; border-radius: 10px; background: #e8f8ee; color: #5fb887; font-size: 12px; font-weight: 500; }
 .bs-others-title { margin: 26px 0 12px 14px; padding-top: 18px; border-top: 1px solid #e4e4e4; font-size: 16px; font-weight: 500; }
 .bs-others-title span { color: #b5b5b5; }
 .bs-review-list { list-style: none; margin-left: 14px; display: flex; flex-direction: column; gap: 20px; }

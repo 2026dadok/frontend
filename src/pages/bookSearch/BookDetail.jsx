@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAuthorOtherBooks } from "./bookSearchApi";
-import { getAddedCount, getMe, getReviews, saveMyReview, summarizeReviews } from "./bookStore";
+import { getAddedCount, getMe, getReviews, saveMyReview, summarizeReviews, updateMyReview } from "./bookStore";
 import { Avatar, StarInput, Stars } from "./parts";
 
 const formatDate = (iso) => {
@@ -21,6 +21,7 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
   const [rating, setRating] = useState(mine?.rating ?? 0);
   const [content, setContent] = useState(mine?.content ?? "");
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false); // 내 리뷰 수정 중인지
   const [others, setOthers] = useState(null); // null = 불러오는 중
 
 
@@ -39,19 +40,35 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
 
   const { average } = summarizeReviews(reviews);
   const addedCount = getAddedCount(book.id); // 서재에 추가한 사람 수 (추가 버튼을 누르면 부모가 다시 그려서 갱신)
-  const otherReviews = reviews
-    .filter((r) => r.userKey !== me.key)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  // 내 리뷰도 이 목록에 같이 들어간다 (최신순)
+  const reviewList = [...reviews].sort((a, b) => new Date(b.date) - new Date(a.date));
   const foldable = book.intro.length > INTRO_FOLD_LENGTH;
 
-  const submitReview = () => {
-    if (!rating) {
-      showToast("별점을 선택해주세요.");
+  const submitReview = async () => {
+    // 이미 쓴 리뷰: 처음엔 잠겨 있고 [수정]을 눌러야 고칠 수 있다. 저장은 백엔드가 받아줘야 반영된다.
+    if (mine && !editing) {
+      setEditing(true);
       return;
     }
     const text = content.trim();
+    if (!mine && !rating) {
+      showToast("별점을 선택해주세요.");
+      return;
+    }
     if (!text) {
       showToast("한줄평을 입력해주세요.");
+      return;
+    }
+    if (mine) {
+      const next = await updateMyReview(book.id, text);
+      if (!next) {
+        showToast("리뷰를 수정하지 못했어요.");
+        return;
+      }
+      setReviews(next);
+      setContent(text);
+      setEditing(false);
+      showToast("리뷰를 수정했어요.");
       return;
     }
     const next = saveMyReview(book.id, { rating, content: text });
@@ -60,7 +77,12 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
       return;
     }
     setReviews(next);
-    showToast(mine ? "리뷰를 수정했어요." : "리뷰가 등록되었어요.");
+    showToast("리뷰가 등록되었어요.");
+  };
+
+  const cancelEdit = () => {
+    setContent(mine?.content ?? "");
+    setEditing(false);
   };
 
   return (
@@ -124,7 +146,7 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
             <h2>리뷰</h2>
             <div className="bs-my-rating">
               <span>나의 리뷰</span>
-              <StarInput value={rating} onChange={setRating} />
+              <StarInput value={rating} onChange={setRating} disabled={Boolean(mine)} />
             </div>
             <form
               className="bs-review-form"
@@ -139,25 +161,32 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
                 maxLength={MAX_REVIEW_LENGTH}
                 placeholder="이 책에 대한 한줄평을 남겨주세요."
                 aria-label="한줄평"
+                readOnly={Boolean(mine) && !editing}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
                 }}
               />
-              <button type="submit">등록</button>
+              {editing && (
+                <button type="button" className="bs-review-cancel" onClick={cancelEdit}>
+                  취소
+                </button>
+              )}
+              <button type="submit">{!mine ? "등록" : editing ? "저장" : "수정"}</button>
             </form>
 
             <h3 className="bs-others-title">
-              다른 사람들의 리뷰 <span>({otherReviews.length})</span>
+              다른 사람들의 리뷰 <span>({reviewList.length})</span>
             </h3>
-            {otherReviews.length === 0 && <p className="bs-status left">아직 다른 사람의 리뷰가 없어요.</p>}
+            {reviewList.length === 0 && <p className="bs-status left">아직 리뷰가 없어요.</p>}
             <ul className="bs-review-list">
-              {otherReviews.map((r) => (
+              {reviewList.map((r) => (
                 <li key={r.userKey}>
                   <Avatar size={46} />
                   <div>
                     <div className="bs-review-head">
                       <strong>{r.nickname}</strong>
+                      {r.userKey === me.key && <span className="bs-review-mine">내 리뷰</span>}
                     </div>
                     <div className="bs-review-meta">
                       <Stars value={r.rating} size={15} />
