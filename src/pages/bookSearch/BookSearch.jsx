@@ -36,12 +36,12 @@ const useFitScale = () => {
 
 // 화면 흐름(페이지 라우팅 없이 state 로 전환):
 //   list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
-const BookSearchFlow = () => {
+const BookSearchFlow = ({ initialBook }) => {
   const scale = useFitScale();
-  const [view, setView] = useState("list");
+  const [view, setView] = useState(initialBook ? "detail" : "list"); // 홈 추천 도서에서 오면 상세부터
   const [query, setQuery] = useState(""); // 검색창에 적힌 글자
   const [term, setTerm] = useState(""); // 마지막으로 검색한 단어
-  const [book, setBook] = useState(null); // 선택한 책
+  const [book, setBook] = useState(initialBook); // 선택한 책
   const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
   const [toast, setToast] = useState("");
@@ -179,7 +179,7 @@ const BookSearchFlow = () => {
 // 사이드바의 '책 검색'을 다시 누르면(location.key 변경) 처음 화면(1번)으로 돌아간다.
 const BookSearch = () => {
   const location = useLocation();
-  return <BookSearchFlow key={location.key} />;
+  return <BookSearchFlow key={location.key} initialBook={location.state?.book ?? null} />;
 };
 
 export default BookSearch;

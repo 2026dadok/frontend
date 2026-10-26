@@ -1,6 +1,7 @@
 // 홈 화면에서 쓰는 데이터 호출 모음.
 // 아직 백엔드/다른 페이지가 없는 항목은 TODO + 빈 값(또는 더미)으로 둔다.
 
+import { fetchBestsellers } from "../bookSearch/bookSearchApi";
 import { getMyLibrary, getSharedLibrary } from "../bookSearch/bookStore";
 
 const authHeaders = () => ({
@@ -14,28 +15,13 @@ const getJson = async (url, options) => {
 };
 
 // ───────── 이달의 추천 도서 (YES24 Open API: 월별 베스트셀러) ─────────
-// 문서: https://developers.yes24.com/api-doc/category-bestseller-monthly
+// 눌렀을 때 책 상세 화면에 저자·소개가 필요해서, 책 검색 페이지와 같은 목록 호출(fetchBestsellers)을 쓴다.
 // 키는 .env.local 의 YES24_API_KEY → vite.config.js 프록시가 X-Api-Key 헤더로 붙인다.
-const YES24_BOOK_CATEGORY_ID = "001"; // 국내도서 (문서 예시 값, 필요하면 카테고리 목록 API로 확인)
 const RECOMMEND_COUNT = 6;
 
-// 화면은 { id, title, cover } 형태만 사용한다.
-const toBook = (item) => ({
-  id: item.itemId,
-  title: item.title,
-  cover: item.cover,
-});
-
 export const fetchRecommendedBooks = async () => {
-  const params = new URLSearchParams({
-    categoryId: YES24_BOOK_CATEGORY_ID,
-    pageSize: String(RECOMMEND_COUNT * 2), // 성인물 제외하고도 6권이 남도록 여유 있게
-  });
-  const json = await getJson(`/yes24/v1/category/bestsellerMonthly?${params}`);
-  return (json.data?.items ?? [])
-    .filter((item) => item.adultYn !== "Y")
-    .slice(0, RECOMMEND_COUNT)
-    .map(toBook);
+  const { books } = await fetchBestsellers(1);
+  return books.slice(0, RECOMMEND_COUNT);
 };
 
 // ───────── 나의 서재 / 공동 서재 ─────────

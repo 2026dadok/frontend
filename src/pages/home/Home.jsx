@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
 import {
   fetchRecommendedBooks,
@@ -72,10 +72,10 @@ const Shelf = ({ title, books, to }) => {
       <Link to={to} className="home-more">전체 보기</Link>
       <div className="home-shelf-books">
         {slots.map((b) => (
-          <div key={`${b.id}-${b.friendId ?? ""}`} className="home-shelf-book">
+          <Link key={`${b.id}-${b.friendId ?? ""}`} to={to} className="home-shelf-book" aria-label={`${b.title} 서고에서 보기`}>
             <img src={b.cover} alt={b.title} />
             {b.completed && <span className="home-badge">완독</span>}
-          </div>
+          </Link>
         ))}
         <Link to={to} className="home-shelf-add" aria-label={`${title}에 책 추가`}>
           <span>+</span>
@@ -85,13 +85,15 @@ const Shelf = ({ title, books, to }) => {
   );
 };
 
-const Recommend = ({ books }) => (
+const Recommend = ({ books, onOpen }) => (
   <section className="home-card home-recommend">
     <h2>이달의 추천 도서</h2>
     <p>그리움을 닮은 계절, 그리움을 닮은 소설</p>
     <div className="home-recommend-books">
       {books.map((b) => (
-        <img key={b.id} src={b.cover} alt={b.title} />
+        <button key={b.id} type="button" onClick={() => onOpen(b)} aria-label={`${b.title} 상세 보기`}>
+          <img src={b.cover} alt={b.title} />
+        </button>
       ))}
     </div>
   </section>
@@ -181,6 +183,9 @@ const Home = () => {
   const totalXp = useLoad(fetchTotalXp, 0);
   const [quote] = useState(fetchRandomQuote);
   const scale = useFitScale();
+  const navigate = useNavigate();
+  // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다
+  const openRecommended = (book) => navigate(PATHS.search, { state: { book } });
 
   return (
     <div className="home">
@@ -192,9 +197,10 @@ const Home = () => {
       <div className="home-stage" style={{ "--s": scale }}>
         <div className="home-grid">
           <div className="home-left">
-            <Shelf title="나의 서재" books={myBooks} to={PATHS.library} />
-            <Shelf title="공동 서재" books={sharedBooks} to={PATHS.sharedLibrary} />
-            <Recommend books={recommended} />
+            {/* TODO: 서고 페이지에 나의 서재/공동 서재 화면이 생기면 tab 값으로 해당 화면을 연다 */}
+            <Shelf title="나의 서재" books={myBooks} to={`${PATHS.library}?tab=my`} />
+            <Shelf title="공동 서재" books={sharedBooks} to={`${PATHS.library}?tab=shared`} />
+            <Recommend books={recommended} onOpen={openRecommended} />
           </div>
           <div className="home-right">
             <WeeklyQuest quest={weekly} />
