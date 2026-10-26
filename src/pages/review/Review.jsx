@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import CompleteBadge from "../../components/CompleteBadge";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
-import { addCommentary, daysSince, getMyLibrary, getSharedLibrary } from "../bookSearch/bookStore";
+import { fetchBookIntro } from "../bookSearch/bookSearchApi";
+import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { DEMO_COMMENTARIES, fetchFriendCommentaries, fetchMyCommentaries } from "./reviewApi";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
@@ -13,6 +14,14 @@ import "../bookSearch/BookSearch.css"; // 알림창(.bs-toast)과 오른쪽 위 
 import "./Review.css";
 
 const TOAST_MS = 2000;
+
+// 책 소개가 넘치면(스크롤 가능) 아래쪽 글은 회색으로 두고, 스크롤해서 올라오면 검정이 된다. 맨 끝까지 내리면 전부 검정.
+// (CSS 의 data-fade="on" 일 때만 회색 그라데이션을 쓴다)
+const updateIntroFade = (el) => {
+  const overflow = el.scrollHeight - el.clientHeight > 2;
+  const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+  el.dataset.fade = overflow && !atEnd ? "on" : "off";
+};
 
 const DayCard = ({ day, entry, completed, canWrite, onOpen, onWrite }) => (
   <article
@@ -80,6 +89,23 @@ const Review = () => {
   }, [entries, book, demo]);
 
   // 서고의 '감상문 쓰기'로 오면(?write=1) 오늘 일차의 감상문이 아직 없을 때 쓰기 팝업을 바로 연다
+  // 서재에 소개가 저장되지 않은 책은 YES24에서 다시 가져와서 채운다. introFetched[책 id] 가 undefined 면 가져오는 중.
+  const [introFetched, setIntroFetched] = useState({});
+  useEffect(() => {
+    if (!book || book.intro || introFetched[book.id] !== undefined) return undefined;
+    let alive = true;
+    fetchBookIntro(book)
+      .then((intro) => {
+        if (!alive) return;
+        setIntroFetched((prev) => ({ ...prev, [book.id]: intro }));
+        if (intro) updateShelfBook(book.id, { intro });
+      })
+      .catch(() => alive && setIntroFetched((prev) => ({ ...prev, [book.id]: "" })));
+    return () => {
+      alive = false;
+    };
+  }, [book, introFetched]);
+
   const [writeDay, setWriteDay] = useState(() =>
     params.get("write") === "1" && !isFriend && book && !entries.some((e) => e.day === days[0]) ? days[0] : null
   );
@@ -135,12 +161,24 @@ const Review = () => {
           <section className="review-book">
             <figure>
               <div className="review-cover">
-                <img src={book.cover} alt={book.title} />
-                {completedDay && <CompleteBadge className="review-badge" />}
+                <div className="review-cover-inner">
+                  <img src={book.cover} alt={book.title} />
+                  {completedDay && <CompleteBadge className="review-badge" />}
+                </div>
               </div>
               <figcaption>{book.title}</figcaption>
             </figure>
-            <p className="review-intro">{book.intro || "등록된 책 소개가 없습니다."}</p>
+            <p
+              className="review-intro"
+              tabIndex={0}
+              aria-label="책 소개"
+              ref={(el) => el && updateIntroFade(el)}
+              onScroll={(e) => updateIntroFade(e.currentTarget)}
+            >
+              {book.intro ||
+                introFetched[book.id] ||
+                (introFetched[book.id] === undefined ? "책 소개를 불러오는 중…" : "등록된 책 소개가 없습니다.")}
+            </p>
           </section>
 
           <hr className="review-divider" />

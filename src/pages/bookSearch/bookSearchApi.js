@@ -168,3 +168,9 @@ export const fetchAuthorOtherBooks = async (book) => {
     })
     .slice(0, OTHER_WORKS_LIMIT);
 };
+
+// 서재에 소개가 저장되지 않은 책(소개 저장 기능이 생기기 전에 담은 책)의 소개를 YES24에서 다시 찾는다.
+export const fetchBookIntro = async (book) => {
+  const { books } = await searchBooks(book.title, 1);
+  return books.find((b) => b.id === book.id)?.intro ?? "";
+};

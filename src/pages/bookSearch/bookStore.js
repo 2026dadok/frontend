@@ -117,6 +117,16 @@ export const addToMyLibrary = async (book) => {
   return "added";
 };
 
+// 서재(나의 서재·공동 서재)에 담긴 책의 일부 값을 고친다. (예: 뒤늦게 가져온 책 소개)
+export const updateShelfBook = (bookId, patch) => {
+  [KEYS.myLibrary, KEYS.sharedLibrary].forEach((key) => {
+    const list = read(key, []);
+    if (list.some((b) => b.id === bookId)) {
+      write(key, list.map((b) => (b.id === bookId ? { ...b, ...patch } : b)));
+    }
+  });
+};
+
 // 나의 서재에서 책을 삭제한다. "removed" | "error"
 // 삭제는 DB에 반영되어야 하므로 백엔드(DELETE /library/books)가 성공했을 때만 지운다.
 // 서버가 실패하거나 아직 없으면 책은 그대로 남는다.
