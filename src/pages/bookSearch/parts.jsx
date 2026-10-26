@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { fetchTotalXp } from "../home/homeApi";
+import xpIcon from "../../images/icon-xp.png";
 
 // 책 검색 페이지 여러 화면에서 같이 쓰는 작은 컴포넌트 모음.
 
@@ -117,3 +119,24 @@ export const Toast = ({ message }) =>
       {message}
     </div>
   ) : null;
+
+// 오른쪽 위의 내 전체 XP (아이콘은 숫자와 같은 색으로 칠한다)
+export const XpTotal = () => {
+  const [totalXp, setTotalXp] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    Promise.resolve()
+      .then(fetchTotalXp)
+      .then((v) => alive && v != null && setTotalXp(v))
+      .catch((e) => console.error(e));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return (
+    <div className="bs-xp">
+      <i style={{ maskImage: `url(${xpIcon})`, WebkitMaskImage: `url(${xpIcon})` }} aria-hidden="true" />
+      <span>{totalXp}</span>
+    </div>
+  );
+};

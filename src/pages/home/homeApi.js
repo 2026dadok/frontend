@@ -2,7 +2,8 @@
 // 아직 백엔드/다른 페이지가 없는 항목은 TODO + 빈 값(또는 더미)으로 둔다.
 
 import { fetchBestsellers } from "../bookSearch/bookSearchApi";
-import { getMe, getMyLibrary, getSharedLibrary } from "../bookSearch/bookStore";
+import { ensureAttendance } from "../../api/attendance";
+import { getMyLibrary, getSharedLibrary } from "../bookSearch/bookStore";
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
@@ -44,25 +45,11 @@ export const fetchDailyQuests = () =>
 // 홈에 들어올 때마다 목록을 다시 받아 백엔드가 준 done 값을 그대로 보여준다.
 //   - 책 읽은 시간: 책 덮기 → addStudyTime (pages/timer/timerApi.js, PUT /times/edit_time)
 //   - 새 책 등록:   나의 서재 추가 → POST /library/books (책 검색 페이지에서 이미 전송)
-//   - 출석:        아래 checkAttendance (POST /quests/attendance)
-
-// 일일 출석 체크. 하루 1회만 가능하므로 오늘 성공한 적이 있으면 다시 보내지 않는다.
-// 실패(이미 출석했거나 서버 문제)는 조용히 넘긴다. 달성 여부는 퀘스트 목록의 done 으로만 판단한다.
-export const checkAttendance = async () => {
-  const today = new Date().toLocaleDateString("sv-SE"); // yyyy-MM-dd (사용자 기기 날짜)
-  const storageKey = `attendanceDate:${getMe().key}`;
-  try {
-    if (localStorage.getItem(storageKey) === today) return;
-    const res = await fetch("/quests/attendance", { method: "POST", headers: authHeaders() });
-    if (res.ok) localStorage.setItem(storageKey, today);
-  } catch {
-    // 서버가 아직 준비되지 않았을 때 등: 다음에 홈에 들어올 때 다시 시도한다
-  }
-};
+//   - 출석:        src/api/attendance.js (POST /quests/attendance, 프런트가 직접 보냄)
 
 // 홈에서 쓰는 일일 퀘스트: 출석을 먼저 알린 뒤 목록을 받아 출석 결과까지 반영한다.
 export const loadDailyQuests = async () => {
-  await checkAttendance();
+  await ensureAttendance();
   return fetchDailyQuests();
 };
 

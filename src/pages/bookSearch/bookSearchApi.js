@@ -2,6 +2,8 @@
 // 키는 .env.local 의 YES24_API_KEY → vite.config.js 프록시(/yes24)가 X-Api-Key 헤더로 붙인다.
 // 문서: https://developers.yes24.com/api-doc/ (category-bestseller-monthly, goods-item-list)
 
+import { classifyGenre, GENRE_OPTIONS, NOVEL_RAW_CATEGORY } from "./genres";
+
 const YES24 = "/yes24/v1";
 const YES24_BOOK_CATEGORY_ID = "001"; // 국내도서 (홈 추천도서와 동일)
 const PAGE_SIZE = 20;
@@ -59,14 +61,16 @@ const formatCreators = (names) =>
     ? `${names[0]} 외 ${names.length - 1}명`
     : names.join(", ");
 
-// YES24 분류 "국내도서-소설/시/희곡" → "소설" (서고의 분류 필터에 쓴다)
-const toCategory = (sortName = "") => {
+// YES24 분류 "국내도서-소설/시/희곡" → "소설/시/희곡"
+const toRawCategory = (sortName = "") => {
   const part = String(sortName).split("-")[1] ?? String(sortName);
-  return part.split("/")[0].trim();
+  return part.trim();
 };
 
 // 화면에서는 이 형태만 쓴다.
 const toBook = (item) => {
+  const rawCategory = toRawCategory(item.goodsSortNm);
+  const intro = cleanText(item.contentDetail?.bookIntroduction || item.contentDetail?.bookSummary);
   const { creators, translators } = parseAuthors(item.author);
   const author = formatCreators(creators); // 저자만 (서재 저장·"~ 지음" 표기용)
   const withTranslator = translators.length ? `${author} (옮김 ${formatCreators(translators)})` : author;
@@ -78,9 +82,10 @@ const toBook = (item) => {
     authorNames: creators, // 저자 일치 판단용 (번역가 제외)
     mainAuthor: creators[0] ?? "",
     publisher: item.publisher ?? "",
-    category: toCategory(item.goodsSortNm),
+    rawCategory,
+    genre: classifyGenre({ rawCategory, title: item.title ?? "", intro }), // 큰 장르(서재 분류용)
     cover: item.cover ?? "",
-    intro: cleanText(item.contentDetail?.bookIntroduction || item.contentDetail?.bookSummary),
+    intro,
     pages: item.pages ?? null, // detail=Y 일 때만 내려온다. 없으면 null
     link: item.link ?? "",
   };
@@ -107,9 +112,9 @@ const toPage = (json, page) => {
 };
 
 // 1번 화면: 월별 베스트셀러
-export const fetchBestsellers = async (page = 1) => {
+export const fetchBestsellers = async (page = 1, categoryId = YES24_BOOK_CATEGORY_ID) => {
   const params = new URLSearchParams({
-    categoryId: YES24_BOOK_CATEGORY_ID,
+    categoryId,
     page: String(page),
     pageSize: String(PAGE_SIZE),
     detail: "Y",
@@ -127,6 +132,18 @@ export const searchBooks = async (query, page = 1) => {
     detail: "Y",
   });
   return toPage(await getJson(`${YES24}/goods/itemList?${params}`), page);
+};
+
+// 1번 화면: 장르별 인기 책.
+// 카테고리가 있는 장르(에세이, 인문 …)는 그 카테고리의 월별 베스트셀러,
+// 로맨스·판타지처럼 카테고리가 없는 장르는 검색 결과에서 소설만 남긴다.
+export const fetchGenreBooks = async (genre, page = 1) => {
+  const option = GENRE_OPTIONS.find((g) => g.value === genre) ?? GENRE_OPTIONS[0];
+  if (option.query) {
+    const result = await searchBooks(option.query, page);
+    return { ...result, books: result.books.filter((b) => b.rawCategory === NOVEL_RAW_CATEGORY) };
+  }
+  return fetchBestsellers(page, option.categoryId);
 };
 
 // 3번 화면: 이 작가의 다른 작품

@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../routes";
 import { daysSince, getMe } from "./bookStore";
 import { Avatar } from "./parts";
 
@@ -17,9 +19,10 @@ const Progress = ({ label, percent }) => (
 );
 
 // 7번 화면: 함께 읽기가 시작된 공동서재
-// TODO: 진행률은 백엔드 연결 후 (읽은 쪽수 / 전체 쪽수)로 교체. 지금은 0%.
-const SharedLibrary = ({ book, friend }) => {
+// 진행률(myPercent, friendPercent)은 부모가 내려준다. TODO: 백엔드 연결 후 (읽은 쪽수 / 전체 쪽수)로 계산.
+const SharedLibrary = ({ book, friend, myPercent = 0, friendPercent = 0 }) => {
   const me = getMe();
+  const navigate = useNavigate();
   return (
     <>
       <img className="bs-co-cover" src={book.cover} alt={book.title} />
@@ -31,13 +34,16 @@ const SharedLibrary = ({ book, friend }) => {
         </p>
 
         <div className="bs-shared-cards">
-          <Progress label={`${me.displayName} (나)`} percent={0} />
-          <Progress label={friend.friendName} percent={0} />
+          <Progress label={`${me.displayName} (나)`} percent={myPercent} />
+          <Progress label={friend.friendName} percent={friendPercent} />
         </div>
 
-        {/* TODO: 감상평 보기 동작은 감상문 페이지가 만들어진 뒤 연결 */}
-        <button type="button" className="bs-pill-btn wide">친구 감상평 보기</button>
-        <button type="button" className="bs-pill-btn wide">내 감상평 보기</button>
+        <button type="button" className="bs-pill-btn wide" onClick={() => navigate(`${PATHS.review}?who=friend`, { state: { book } })}>
+          친구 감상평 보기
+        </button>
+        <button type="button" className="bs-pill-btn wide" onClick={() => navigate(PATHS.review, { state: { book } })}>
+          내 감상평 보기
+        </button>
       </div>
     </>
   );

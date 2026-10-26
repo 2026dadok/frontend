@@ -1,0 +1,109 @@
+/* 감상문. 위아래로 스크롤되는 페이지라 100vh 로 고정하지 않는다. 디자인 기준 가로 1419 를 가로 폭에 맞춰 줄인다. */
+.review-page { position: relative; min-height: 100vh; color: #222; }
+.review-page button { font-family: inherit; color: inherit; cursor: pointer; }
+.review-stage { zoom: var(--s, 1); width: calc((100vw - 103px) / var(--s, 1)); }
+.review-canvas { position: relative; width: 1419px; margin: 0 auto; padding: 66px 0 150px 186px; }
+
+/* 오른쪽 위 XP 는 스크롤해도 제자리 */
+.review-xp { position: fixed; top: 0; right: 0; width: 220px; height: 70px; z-index: 5; pointer-events: none; }
+
+.review-title { font-size: 22px; font-weight: 400; }
+.review-title strong { font-weight: 700; }
+
+/* 책 소개 카드 */
+.review-book {
+  position: relative; width: 950px; height: 329px; margin-top: 14px; padding: 20px 0 0 18px;
+  display: flex; gap: 26px; overflow: hidden;
+  background: #fff; border: 1px solid #fbe7e2; border-radius: 22px; box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+}
+.review-book figure { flex: none; width: 178px; text-align: center; }
+.review-cover { position: relative; width: 178px; height: 262px; }
+.review-cover img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); }
+.review-badge {
+  position: absolute; top: -18px; left: -26px; width: 60px; height: 60px; border-radius: 50%;
+  background: #f4c84a; color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.review-book figcaption { margin-top: 10px; font-size: 17px; }
+.review-intro {
+  flex: 1; padding-right: 28px; font-size: 16px; line-height: 1.75; color: #666; white-space: pre-line; word-break: keep-all;
+  -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); /* 아래쪽이 흐려진다 */
+}
+
+.review-divider { width: 950px; margin: 32px 0 38px; border: 0; border-top: 1px solid #e8d9d6; }
+
+/* 일차별 감상문 카드 (한 줄에 3개) */
+.review-grid { width: 950px; display: grid; grid-template-columns: repeat(3, 300px); gap: 25px 25px; }
+.review-day {
+  height: 242px; display: flex; flex-direction: column; overflow: hidden;
+  background: #fff; border-radius: 24px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+.review-day h3 { padding: 14px 18px 8px; font-size: 16px; font-weight: 400; }
+.review-day-body { flex: 1; min-height: 0; padding: 8px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #fcf7f5; }
+.review-day-text {
+  font-size: 13.5px; line-height: 1.7; text-align: center; word-break: keep-all;
+  display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
+}
+.review-day-empty { font-size: 13.5px; color: #555; text-align: center; }
+.review-write-btn { height: 36px; padding: 0 36px; border: 1px solid #fbe7e2; border-radius: 18px; background: #fff; font-size: 15px; box-shadow: 0 1px 4px rgba(240, 190, 180, 0.2); }
+.review-write-btn:hover { background: #f1f1f1; }
+.review-day time { padding: 12px 20px 14px; text-align: right; font-size: 12px; color: #888; }
+
+.review-mascot { position: absolute; right: 120px; bottom: 20px; width: 170px; }
+.review-none { padding: 200px 0 0 186px; font-size: 18px; color: #888; }
+.review-none a { margin-left: 8px; color: #5fb887; }
+
+/* 글이 있는 일차 카드는 눌러서 전체 보기 */
+.review-day.clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.review-day.clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.13); }
+.review-day.clickable:focus-visible { outline: 2px solid #8fe0b0; }
+
+/* ───────── 감상문 팝업 (전체 보기 / 쓰기) ───────── */
+.review-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  background: rgba(110, 85, 85, 0.28);
+}
+.review-modal { zoom: var(--s, 1); position: relative; width: 650px; }
+.review-modal-card {
+  display: flex; flex-direction: column; max-height: calc(86vh / var(--s, 1)); overflow: hidden;
+  background: #fff; border-radius: 28px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+}
+.review-modal-card header { padding: 34px 44px 26px; }
+.review-modal-card h2 { font-size: 24px; font-weight: 500; color: #444; }
+.review-modal-text {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 56px 56px; background: #fdf8f6;
+  font-size: 16px; line-height: 1.95; text-align: center; white-space: pre-line; word-break: keep-all;
+  scrollbar-width: thin; scrollbar-color: #ecd3cd transparent;
+}
+.review-modal-card time { padding: 18px 44px 22px; text-align: right; font-size: 17px; color: #777; }
+
+.review-modal-arrow {
+  position: absolute; top: 50%; width: 52px; height: 52px; margin-top: -26px; padding: 0; border: 0; border-radius: 50%;
+  background: #fff; color: #111; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center;
+}
+.review-modal-arrow:hover { background: #f1f1f1; }
+.review-modal-arrow.next { right: -26px; }
+.review-modal-arrow.prev { left: -26px; }
+
+/* 감상문 쓰기 */
+.review-modal-card.write { background: #fff; }
+.review-write-body { padding: 22px 28px; background: #fdf8f6; display: flex; flex-direction: column; gap: 22px; }
+.review-write-book { display: flex; align-items: center; gap: 22px; padding: 14px 18px; background: #fff; border-radius: 18px; box-shadow: 0 2px 8px rgba(240, 190, 180, 0.18); }
+.review-write-book img { width: 100px; height: 148px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
+.review-write-book strong { font-size: 20px; font-weight: 600; }
+.review-write-book p { margin-top: 6px; font-size: 15px; color: #555; }
+.review-write-field { position: relative; display: block; }
+.review-write-field textarea {
+  width: 100%; height: 310px; padding: 18px 20px 44px; resize: none; outline: none;
+  background: #fff; border: 2px solid #f1e3df; border-radius: 18px; font: inherit; font-size: 16px; line-height: 1.7;
+}
+.review-write-field textarea:focus { border-color: #8fe0b0; }
+.review-write-field textarea::placeholder { color: #999; }
+.review-write-count { position: absolute; right: 20px; bottom: 14px; font-size: 15px; color: #888; }
+.review-modal-card footer { padding: 16px 28px 18px; display: flex; justify-content: flex-end; gap: 10px; background: #fff; }
+.review-modal-card footer button { height: 38px; padding: 0 20px; border-radius: 19px; font-size: 14px; }
+.review-modal-card footer .skip { background: #fff; border: 1px solid #ecd3cd; }
+.review-modal-card footer .skip:hover { background: #f1f1f1; }
+.review-modal-card footer .done { background: #d8f5e5; border: 1px solid #b9ecd0; color: #2f8f5e; font-weight: 600; }
+.review-modal-card footer .done:hover:not(:disabled) { background: #c6efd9; }
+.review-modal-card footer .done:disabled { opacity: 0.5; cursor: default; }

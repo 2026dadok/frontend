@@ -10,6 +10,7 @@ const KEYS = {
   sharedLibrary: "sharedLibraryBooks",
   reviews: "bookReviews",
   adders: "bookAdders", // { [bookId]: [서재에 추가한 사람 key, ...] }
+  commentaries: "bookCommentaries", // { [bookId]: [{ day, content, date }, ...] }
 };
 
 const read = (key, fallback) => {
@@ -70,7 +71,9 @@ const toShelfBook = (book) => ({
   author: book.author,
   publisher: book.publisher,
   totalPage: book.pages,
-  category: book.category ?? "",
+  category: book.genre ?? "", // 큰 장르 (서재의 분류 필터)
+  intro: book.intro ?? "", // 감상문 화면의 책 소개
+  addedAt: new Date().toISOString(), // 감상문 화면의 'N일차' 계산 기준
   completed: false,
 });
 
@@ -106,26 +109,28 @@ export const addToMyLibrary = async (book) => {
     author: book.author,
     total_page: book.pages,
   });
-  // TODO: 서버가 돌려주는 책 번호의 필드 이름은 백엔드와 확인 (지금은 book_id / id 를 추측)
-  const serverBookId = data?.book_id ?? data?.data?.book_id ?? data?.id ?? null;
+  // 백엔드 답변: 등록하면 book_id(정수 번호)를 돌려준다. 응답에서 어느 위치에 오는지는 확인 필요 (지금은 book_id / data.book_id / id 를 찾는다)
+  const rawId = data?.book_id ?? data?.data?.book_id ?? data?.id ?? null;
+  const serverBookId = rawId !== null && Number.isInteger(Number(rawId)) ? Number(rawId) : null;
   if (!write(KEYS.myLibrary, [{ ...toShelfBook(book), serverBookId }, ...list])) return "error";
   markAdded(book.id);
   return "added";
 };
 
 // 나의 서재에서 책을 삭제한다. "removed" | "error"
-// 서버에 등록된 책(serverBookId 있음)은 DELETE /library/books 가 성공해야 지우고,
-// 서버에 올라가지 않은 책(백엔드 연결 전에 담은 책)은 브라우저에서만 지운다.
+// 삭제는 DB에 반영되어야 하므로 백엔드(DELETE /library/books)가 성공했을 때만 지운다.
+// 서버가 실패하거나 아직 없으면 책은 그대로 남는다.
+// 서버에 보내는 book_id 는 등록할 때 서버가 돌려준 정수 번호다. (백엔드 확인: book_id 는 int 번호)
+// 번호를 모르는 책은 서버에 삭제를 요청할 수 없어서 지우지 않는다.
+// 삭제가 확인되면 "서재에 추가한 사람 수"(책 상세의 별점 옆 숫자)에서도 내가 빠진다.
 export const removeFromMyLibrary = async (bookId) => {
   const list = getMyLibrary();
   const book = list.find((b) => b.id === bookId);
   if (!book) return "removed";
-  if (book.serverBookId != null) {
-    const { ok } = await requestServer("DELETE", "/library/books", { book_id: book.serverBookId });
-    if (!ok) return "error";
-  }
+  if (!Number.isInteger(book.serverBookId)) return "error";
+  const { ok } = await requestServer("DELETE", "/library/books", { book_id: book.serverBookId });
+  if (!ok) return "error";
   if (!write(KEYS.myLibrary, list.filter((b) => b.id !== bookId))) return "error";
-  // "서재에 추가한 사람 수"에서도 내 기록을 뺀다 (공동 서재에 아직 있으면 그대로 센다)
   const adders = read(KEYS.adders, {});
   const me = getMe().key;
   const stillShared = getSharedLibrary().some((b) => b.id === bookId);
@@ -156,6 +161,24 @@ export const addToSharedLibrary = (book, friend) => {
   if (!write(KEYS.sharedLibrary, [record, ...list])) return null;
   markAdded(book.id);
   return record;
+};
+
+// ───────── 감상문 ─────────
+// 내 감상문: { day, content, date } 목록. TODO: 감상문 조회 API가 정해지면 교체 (명세서: 작성 POST /library/commentaries)
+export const getCommentaries = (bookId) => (read(KEYS.commentaries, {})[bookId] ?? []);
+
+// 감상문(300자 이하)을 쓴다. 백엔드(POST /library/commentaries: book_id, content)에 먼저 보내고,
+// 서버가 없거나 실패해도 화면에 보이도록 브라우저에도 저장한다. "saved" | "error"
+// (서버의 책 번호(serverBookId)를 모르는 책은 서버에 보내지 않고 브라우저에만 저장한다)
+// TODO: 백엔드가 준비되면 서버 실패 시 저장하지 않는 쪽으로 바꿀지 정한다
+export const addCommentary = async (book, day, content) => {
+  if (Number.isInteger(book.serverBookId)) {
+    await requestServer("POST", "/library/commentaries", { book_id: book.serverBookId, content });
+  }
+  const all = read(KEYS.commentaries, {});
+  const list = (all[book.id] ?? []).filter((c) => c.day !== day); // 같은 일차는 하나만
+  const next = [{ day, content, date: new Date().toISOString() }, ...list];
+  return write(KEYS.commentaries, { ...all, [book.id]: next }) ? "saved" : "error";
 };
 
 // 시작일로부터 지난 날짜 수 (D+N). 자정 기준.

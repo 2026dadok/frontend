@@ -1,13 +1,18 @@
 import { ScrollArea, ListStatus } from "./parts";
+import { GENRE_OPTIONS } from "./genres";
 
 // 1번 화면: 베스트셀러 목록
-const BookList = ({ list, onOpen }) => {
+const BookList = ({ list, genre, onGenreChange, onOpen }) => {
   const { books, loading, error, hasMore, loadMore } = list;
   return (
     <>
       <div className="bs-sort">
-        <select aria-label="정렬" defaultValue="bestseller">
-          <option value="bestseller">베스트셀러순</option>
+        <select aria-label="장르" value={genre} onChange={(e) => onGenreChange(e.target.value)}>
+          {GENRE_OPTIONS.map((g) => (
+            <option key={g.value} value={g.value}>
+              {g.label}
+            </option>
+          ))}
         </select>
       </div>
 

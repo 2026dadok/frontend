@@ -88,4 +88,5 @@
 .lib-cal-cell { aspect-ratio: 1; border-radius: 3px; }
 .lib-cal-cell.empty { background: transparent; }
 
-.lib-mascot { position: absolute; left: 1177px; top: 769px; width: 192px; }
+/* 두더지: dokddage.png 를 좌우로 뒤집어서 쓴다 */
+.lib-mole { position: absolute; left: 1183px; top: 766px; width: 196px; transform: scaleX(-1); }

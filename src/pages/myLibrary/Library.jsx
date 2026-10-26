@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import CompleteBadge from "../../components/CompleteBadge";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
-import { fetchTotalXp } from "../home/homeApi";
-import { SearchBar, Toast } from "../bookSearch/parts";
+import { SearchBar, Toast, XpTotal } from "../bookSearch/parts";
 import { getMyLibrary, getSharedLibrary, removeFromMyLibrary } from "../bookSearch/bookStore";
 import ReadingCalendar from "./ReadingCalendar";
 import { fetchReadingLog } from "./libraryApi";
-import xpIcon from "../../images/icon-xp.png";
-import mascotImg from "../../images/mascot-reading.png";
+import moleImg from "../../images/dokddage.png";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas, .bs-search, .bs-xp)을 책 검색과 같이 쓴다
 import "./Library.css";
 
@@ -60,7 +59,6 @@ const Library = () => {
   const [menuId, setMenuId] = useState(null); // 메뉴가 열린 책
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState("");
-  const [totalXp, setTotalXp] = useState(0);
   const toastTimer = useRef(null);
   const rootRef = useRef(null);
   const log = useMemo(() => fetchReadingLog(), []);
@@ -73,17 +71,6 @@ const Library = () => {
   const items = [...shown, null]; // null = 맨 끝의 + 칸
   const pageItems = items.slice(page * SLOTS_PER_PAGE, (page + 1) * SLOTS_PER_PAGE);
   const lastPage = Math.max(0, Math.ceil(items.length / SLOTS_PER_PAGE) - 1);
-
-  useEffect(() => {
-    let alive = true;
-    Promise.resolve()
-      .then(fetchTotalXp)
-      .then((v) => alive && v != null && setTotalXp(v))
-      .catch((e) => console.error(e));
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
@@ -141,8 +128,13 @@ const Library = () => {
   };
 
   // TODO: 타이머/감상문 페이지가 만들어지면 해당 페이지에서 state.book 을 받아 쓴다
+  // 나의 서재: 책 메뉴(바로 읽기 / 감상문 쓰기 / 삭제), 공동 서재: 그 책의 공동서재 페이지로 이동
+  const openBook = (book) => {
+    if (tab === "shared") navigate(PATHS.sharedLibrary, { state: { record: book } });
+    else setMenuId(menuId === book.id ? null : book.id);
+  };
   const readNow = (book) => navigate(PATHS.timer, { state: { book } });
-  const writeReview = (book) => navigate(PATHS.review, { state: { book } });
+  const writeReview = (book) => navigate(`${PATHS.review}?write=1`, { state: { book } });
 
   const deleteBook = async (book) => {
     setMenuId(null);
@@ -161,10 +153,7 @@ const Library = () => {
 
   return (
     <div className="bs" ref={rootRef}>
-      <div className="bs-xp">
-        <i style={{ maskImage: `url(${xpIcon})`, WebkitMaskImage: `url(${xpIcon})` }} aria-hidden="true" />
-        <span>{totalXp}</span>
-      </div>
+      <XpTotal />
 
       <div className="bs-stage" style={{ "--s": scale }}>
         <div className="bs-canvas">
@@ -214,12 +203,12 @@ const Library = () => {
                       <button
                         type="button"
                         className={`lib-book ${menuId === book.id ? "selected" : ""}`}
-                        aria-haspopup="menu"
-                        aria-expanded={menuId === book.id}
-                        onClick={() => setMenuId(menuId === book.id ? null : book.id)}
+                        aria-haspopup={tab === "my" ? "menu" : undefined}
+                        aria-expanded={tab === "my" ? menuId === book.id : undefined}
+                        onClick={() => openBook(book)}
                       >
                         <img src={book.cover} alt={book.title} />
-                        {book.completed && <span className="lib-badge">완독</span>}
+                        {book.completed && <CompleteBadge className="lib-badge" />}
                       </button>
                       {menuId === book.id && (
                         <div className="lib-menu" role="menu">
@@ -252,7 +241,7 @@ const Library = () => {
             <ReadingCalendar year={new Date().getFullYear()} log={log} />
           </section>
 
-          <img className="lib-mascot" src={mascotImg} alt="" />
+          <img className="lib-mole" src={moleImg} alt="" />
           <Toast message={toast} />
         </div>
       </div>

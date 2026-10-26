@@ -1,0 +1,7 @@
+/* 내가 먼저 완독했을 때 맨 위에 뜨는 제목 */
+.shared-win {
+  position: absolute; top: 26px; left: 0; right: 0; text-align: center;
+  font-size: 40px; font-weight: 600; letter-spacing: 0.3em; color: #a9a9a9;
+}
+.shared-empty { position: absolute; top: 300px; left: 0; right: 0; text-align: center; font-size: 18px; color: #888; }
+.shared-empty a { margin-left: 8px; color: #5fb887; }

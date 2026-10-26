@@ -1,0 +1,15 @@
+/* 사이드바(103px)를 뺀 본문 가운데, 화면 맨 위에 뜬다 */
+.xp-toast {
+  position: fixed; top: 10px; left: calc(103px + (100vw - 103px) / 2); transform: translateX(-50%);
+  z-index: 100; padding: 9px 26px 9px 18px;
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 18px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  animation: xp-toast-in 0.25s ease-out;
+}
+.xp-toast i { flex: none; width: 28px; height: 28px; background: #a6e8bf; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
+.xp-toast p { font-size: 12px; font-weight: 500; line-height: 1.5; text-align: center; color: #222; }
+
+@keyframes xp-toast-in {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}

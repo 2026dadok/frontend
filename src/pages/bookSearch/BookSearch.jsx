@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { fetchTotalXp } from "../home/homeApi";
-import { fetchBestsellers, searchBooks } from "./bookSearchApi";
+import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
 import { addToMyLibrary, getMe, requestCoReading } from "./bookStore";
 import useInfiniteBooks from "./useInfiniteBooks";
-import { SearchBar, Toast } from "./parts";
+import { SearchBar, Toast, XpTotal } from "./parts";
 import BookList from "./BookList";
 import SearchResults from "./SearchResults";
 import BookDetail from "./BookDetail";
 import CoInvite from "./CoInvite";
 import SharedLibrary from "./SharedLibrary";
 import useFitScale from "../../hooks/useFitScale";
-import xpIcon from "../../images/icon-xp.png";
 import "./BookSearch.css";
 
 const TOAST_MS = 2000;
@@ -30,27 +28,17 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
   const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
   const [toast, setToast] = useState("");
-  const [totalXp, setTotalXp] = useState(0);
   const toastTimer = useRef(null);
   const flowTimer = useRef(null);
 
-  const bestsellers = useInfiniteBooks(fetchBestsellers);
+  const [genre, setGenre] = useState("bestseller"); // 1번 화면에서 고른 장르
+  const genreLoader = useCallback((page) => fetchGenreBooks(genre, page), [genre]);
+  const bestsellers = useInfiniteBooks(genreLoader);
   const searchLoader = useCallback(
     (page) => (term ? searchBooks(term, page) : Promise.resolve(EMPTY_PAGE)),
     [term]
   );
   const results = useInfiniteBooks(searchLoader);
-
-  useEffect(() => {
-    let alive = true;
-    Promise.resolve()
-      .then(fetchTotalXp)
-      .then((v) => alive && v != null && setTotalXp(v))
-      .catch((e) => console.error(e));
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   useEffect(
     () => () => {
@@ -120,16 +108,13 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
 
   return (
     <div className="bs">
-      <div className="bs-xp">
-        <i style={{ maskImage: `url(${xpIcon})`, WebkitMaskImage: `url(${xpIcon})` }} aria-hidden="true" />
-        <span>{totalXp}</span>
-      </div>
+      <XpTotal />
 
       <div className="bs-stage" style={{ "--s": scale }}>
         <div className="bs-canvas">
           {showSearchBar && <SearchBar value={query} onChange={setQuery} onSubmit={handleSearch} />}
 
-          {view === "list" && <BookList list={bestsellers} onOpen={openBook} />}
+          {view === "list" && <BookList list={bestsellers} genre={genre} onGenreChange={setGenre} onOpen={openBook} />}
           {view === "results" && (
             <SearchResults
               results={results}

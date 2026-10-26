@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CompleteBadge from "../../components/CompleteBadge";
 import { Link, useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
@@ -58,7 +59,7 @@ const Shelf = ({ title, books, to }) => {
         {slots.map((b) => (
           <Link key={`${b.id}-${b.friendId ?? ""}`} to={to} className="home-shelf-book" aria-label={`${b.title} 서고에서 보기`}>
             <img src={b.cover} alt={b.title} />
-            {b.completed && <span className="home-badge">완독</span>}
+            {b.completed && <CompleteBadge className="home-badge" />}
           </Link>
         ))}
         <Link to={PATHS.search} className="home-shelf-add" aria-label={`${title}에 책 추가 (책 검색으로 이동)`}>
