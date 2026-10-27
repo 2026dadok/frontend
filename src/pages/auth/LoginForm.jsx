@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AuthLayout from "./components/AuthLayout";
 import { LineInput } from "./components/LineInput";
+import { login } from "../../api/auth";
 import "./LoginForm.css";
 
 const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
@@ -27,15 +28,8 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
     if (!validate()) return;
 
     try {
-      const res = await fetch("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, passwd }),
-      });
-
-      if (!res.ok) throw new Error("로그인 실패");
-
-      const data = await res.json();
+      const { ok, data } = await login(name, passwd); // 명세서: 요청 ID, passward
+      if (!ok) throw new Error("로그인 실패");
       onLoginSuccess(data);
     } catch (err) {
       console.error(err);

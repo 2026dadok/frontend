@@ -1,6 +1,6 @@
-// 완독 뱃지. src/images/badge-complete.png 파일을 넣으면 그 이미지로, 없으면 노란 원에 "완독" 글자로 보여준다.
+// 완독 뱃지. src/images/wandok.png 파일이 있으면 그 이미지로, 없으면 노란 원에 "완독" 글자로 보여준다.
 // (파일이 없어도 빌드가 깨지지 않도록 import.meta.glob 으로 있는지 확인한다)
-const badgeFiles = import.meta.glob("../images/badge-complete.png", {
+const badgeFiles = import.meta.glob("../images/wandok.png", {
   eager: true,
   query: "?url",
   import: "default",

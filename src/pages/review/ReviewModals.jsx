@@ -12,6 +12,15 @@ const useEscape = (onClose) => {
   }, [onClose]);
 };
 
+// 팝업 안쪽 오른쪽 위의 회색 동그란 닫기 버튼 (마우스를 올리면 빨간색)
+const CloseButton = ({ onClick }) => (
+  <button type="button" className="review-modal-close" aria-label="닫기" onClick={onClick}>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  </button>
+);
+
 const Overlay = ({ scale, onClose, children, label }) => (
   <div className="review-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
     <div className="review-modal" style={{ "--s": scale }} role="dialog" aria-modal="true" aria-label={label}>
@@ -36,6 +45,7 @@ export const CommentaryDetailModal = ({ scale, label, entry, onPrev, onNext, onC
       <div className="review-modal-card">
         <header>
           <h2>{label}</h2>
+          <CloseButton onClick={onClose} />
         </header>
         <div className="review-modal-text">{entry.content}</div>
         <time>{formatDate(entry.date)}</time>
@@ -63,6 +73,7 @@ export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClo
       >
         <header>
           <h2>이 책의 감상문 쓰기 | {day}일차</h2>
+          <CloseButton onClick={onClose} />
         </header>
 
         <div className="review-write-body">

@@ -5,7 +5,7 @@ import { showXpToast } from "../components/xpToast/xpToastBus";
 // 서버가 받아주면 화면 맨 위에 XP 알림창을 띄운다.
 // 퀘스트 달성 여부는 퀘스트 목록의 done 값으로만 판단한다. (홈이 목록을 다시 받아 보여준다)
 
-const ATTENDANCE_XP = 10; // TODO: 서버 응답에 xp 가 있으면 그 값을 쓴다 (없으면 일일 퀘스트의 출석 XP 10)
+const ATTENDANCE_XP = 10; // 서버 응답에 reward_xp 가 없을 때만 쓰는 기본값
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
@@ -21,7 +21,8 @@ const checkAttendance = async () => {
     if (!res.ok) return;
     localStorage.setItem(storageKey, today);
     const data = await res.json().catch(() => null);
-    showXpToast({ title: "일일 출석 보상", xp: data?.xp ?? data?.data?.xp ?? ATTENDANCE_XP });
+    // 명세서: POST /quests/attendance → message, reward_xp
+    showXpToast({ title: "일일 출석 보상", xp: data?.reward_xp ?? data?.data?.reward_xp ?? ATTENDANCE_XP });
   } catch {
     // 서버가 아직 준비되지 않았을 때 등
   }

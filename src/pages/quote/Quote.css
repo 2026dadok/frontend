@@ -1,0 +1,118 @@
+/* 나의 인용구 노트. 위아래로 스크롤되는 페이지라 100vh 로 고정하지 않는다. 디자인 기준 가로 1419 를 가로 폭에 맞춰 줄이고, 넓은 창에서는 줄이 늘어난다. */
+.quote-page { position: relative; min-height: 100vh; color: #222; }
+.quote-page button { font-family: inherit; color: inherit; cursor: pointer; }
+.quote-stage { zoom: var(--s, 1); width: calc((100vw - 103px) / var(--s, 1)); }
+.quote-canvas { padding: 100px 207px 140px 154px; }
+
+/* 오른쪽 위 XP 는 스크롤해도 제자리 */
+.quote-xp { position: fixed; top: 0; right: 0; width: 220px; height: 70px; z-index: 5; pointer-events: none; }
+
+.quote-canvas h1 { font-size: 34px; font-weight: 500; line-height: 1.3; }
+
+/* 정렬 칩 */
+.quote-sorts { margin-top: 24px; display: flex; gap: 4px; }
+.quote-sorts button {
+  height: 29px; padding: 0 16px; border: 1px solid #f0e4e1; border-radius: 15px; background: #fff;
+  font-size: 13px; color: #555; box-shadow: 0 1px 3px rgba(240, 190, 180, 0.15);
+}
+.quote-sorts button.on { border-color: #f2b9ae; color: #222; font-weight: 600; }
+.quote-sorts button:hover { background: #f1f1f1; }
+
+/* 인용구 줄 */
+.quote-list { margin-top: 12px; display: flex; flex-direction: column; gap: 9px; }
+.quote-row {
+  position: relative; box-sizing: border-box; height: 90px; border: 2px solid transparent; border-radius: 28px;
+  background: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09); cursor: pointer; outline: none;
+}
+.quote-row:hover, .quote-row:focus-visible, .quote-row.active { border-color: #8fe0b0; }
+.quote-row-band { position: absolute; left: 0; right: 0; top: 18px; bottom: 18px; background: #fdf7f5; }
+
+/* 문장: 가운데 정렬. 따옴표는 문장 영역의 왼쪽 위 / 오른쪽 아래 모서리 */
+.quote-row-text {
+  position: absolute; left: 49px; width: 560px; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; text-align: center; white-space: nowrap;
+}
+.quote-row-text span { display: block; max-width: calc(100% - 64px); overflow: hidden; text-overflow: ellipsis; } /* 양쪽 따옴표 안쪽에서 잘리고 ... 이 나온다 */
+.quote-row-text::before, .quote-row-text::after { position: absolute; font-family: Georgia, "Times New Roman", "Noto Serif KR", serif; font-weight: 700; font-size: 26px; color: #a8928d; line-height: 1; }
+.quote-row-text::before { content: "“"; left: 6px; top: 14px; }
+.quote-row-text::after { content: "”"; right: 6px; bottom: 10px; }
+
+/* 책 이름 | 쪽수 | 날짜 */
+.quote-row-meta { position: absolute; right: 49px; top: 0; bottom: 0; display: flex; align-items: center; font-size: 15px; color: #aaa; transition: right .1s; }
+.quote-row-meta strong { font-weight: 400; color: #333; }
+.quote-row-meta span { margin-left: 12px; padding-left: 12px; border-left: 1px solid #e3e3e3; }
+.quote-row:hover .quote-row-meta, .quote-row:focus-within .quote-row-meta, .quote-row.active .quote-row-meta { right: 60px; }
+
+/* ••• : 마우스를 올린 줄에만 보인다 */
+.quote-row-more {
+  position: absolute; right: 18px; top: 50%; width: 28px; height: 20px; margin-top: -10px; padding: 0; border: 0; background: none;
+  display: flex; align-items: center; justify-content: center; gap: 3px; opacity: 0;
+}
+.quote-row-more i { width: 5px; height: 5px; border-radius: 50%; background: #333; }
+.quote-row:hover .quote-row-more, .quote-row:focus-within .quote-row-more, .quote-row.active .quote-row-more { opacity: 1; }
+
+/* ••• 메뉴 */
+.quote-row-menu {
+  position: absolute; right: 6px; top: 68px; z-index: 20; padding: 6px; display: flex; gap: 5px;
+  background: #fff; border-radius: 26px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+.quote-row-menu button {
+  min-width: 92px; height: 34px; padding: 0 14px; border: 1px solid #ece5e3; border-radius: 17px; background: #fff; font-size: 14px;
+}
+.quote-row-menu button:hover { background: #f1f1f1; }
+
+/* 맨 아래 + 칸 */
+.quote-add { height: 130px; padding: 10px; border: 0; border-radius: 28px; background: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09); }
+.quote-add span {
+  display: flex; align-items: center; justify-content: center; height: 100%;
+  border: 1.5px dashed #b9ecd0; border-radius: 20px; background: #f7fffb;
+}
+.quote-add span::before {
+  content: "+"; width: 44px; height: 44px; border-radius: 50%; background: #5fd496; color: #fff;
+  font-size: 34px; line-height: 42px; text-align: center;
+}
+.quote-add:hover span { background: #eefcf4; }
+
+/* ───────── 팝업 (보기 / 수정 / 추가) ───────── */
+.quote-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  background: rgba(110, 85, 85, 0.28);
+}
+.quote-modal { zoom: var(--s, 1); width: 728px; max-height: calc(92vh / var(--s, 1)); background: #fff; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18); }
+.quote-modal header { padding: 25px 22px 13px; font-size: 20px; line-height: 1.2; color: #888; letter-spacing: 0.02em; }
+
+.quote-modal-body { position: relative; min-height: 278px; max-height: calc(64vh / var(--s, 1)); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ecd3cd transparent; display: flex; justify-content: center; padding: 84px 150px; background: #fdf8f6; } /* 위·아래 여백은 따옴표 자리. 글이 길어도 따옴표와 겹치지 않는다 */
+/* 글이 짧으면 세로 가운데, 칸을 넘으면 맨 위부터 시작해서 스크롤된다. (align-items: center 는 넘칠 때 위쪽이 잘려서 margin: auto 를 쓴다) */
+.quote-modal-body .inner { position: relative; width: 100%; min-width: 0; margin: auto 0; }
+.quote-modal-body .text { width: 100%; min-width: 0; }
+.quote-modal-body p, .quote-modal-body textarea {
+  width: 100%; font-size: 26px; line-height: 1.95; text-align: center; color: #555; white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere; /* 띄어쓰기 없이 긴 글은 줄 중간에서 끊는다 */
+}
+.quote-modal-body textarea { display: block; padding: 0; border: 0; outline: none; resize: none; overflow: hidden; background: transparent; font-family: inherit; } /* 높이는 JS 가 글에 맞춘다. 너무 길면 문장 영역이 스크롤된다 */
+.quote-modal-body textarea::placeholder { color: #aaa; }
+.quote-modal-body .mark { position: absolute; font-family: Georgia, "Times New Roman", "Noto Serif KR", serif; font-weight: 700; font-size: 60px; line-height: 1; color: #a58b86; }
+.quote-modal-body .mark.open { left: -4px; top: -38px; }
+.quote-modal-body .mark.close { right: -2px; bottom: -70px; }
+
+.quote-modal footer { padding: 15px 21px 16px; text-align: right; font-size: 17px; color: #777; }
+.quote-modal footer.with-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.quote-modal-actions { width: 100%; padding-top: 14px; border-top: 1px solid #f1d9d9; display: flex; justify-content: flex-end; gap: 6px; }
+.quote-modal-actions button { width: 66px; height: 30px; border: 1px solid #ecd3cd; border-radius: 15px; background: #fff; font-size: 12px; color: #444; }
+.quote-modal-actions button:hover:not(:disabled) { background: #f1f1f1; }
+.quote-modal-actions button.done { border-color: #b9ecd0; }
+.quote-modal-actions button:disabled { opacity: 0.45; cursor: default; }
+
+/* 추가 팝업의 < 책 | 쪽 > : 책 이름이 잘리지 않게 칸이 글에 맞춰 넓어진다 */
+.quote-modal footer .pick { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
+.quote-modal footer .pick select {
+  max-width: 480px; height: 30px; padding: 0 22px 0 6px; border: 0; border-bottom: 1px dashed #d6c3be; border-radius: 0; background: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 2px center; background-size: 14px;
+  font: inherit; color: #555; text-align: center; text-align-last: center; cursor: pointer;
+  -webkit-appearance: none; appearance: none; text-overflow: ellipsis;
+}
+.quote-modal footer .pick select:focus-visible, .quote-modal footer .pick input:focus-visible { outline: none; border-bottom: 1px solid #8fe0b0; }
+.quote-modal footer .pick input { width: 56px; height: 30px; padding: 0; border: 0; border-bottom: 1px dashed #d6c3be; background: transparent; font: inherit; color: #555; text-align: center; outline: none; -moz-appearance: textfield; }
+.quote-modal footer .pick input::placeholder { color: #aaa; }
+.quote-modal footer .pick input::-webkit-outer-spin-button, .quote-modal footer .pick input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.quote-modal footer .pick em { font-style: normal; color: #aaa; }

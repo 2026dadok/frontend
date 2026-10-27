@@ -23,26 +23,25 @@
 .review-cover-inner { position: relative; height: 100%; max-width: 100%; }
 .review-cover-inner img { height: 100%; width: auto; max-width: 178px; display: block; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); }
 .review-badge {
-  position: absolute; top: -18px; left: -26px; width: 60px; height: 60px; border-radius: 50%;
-  background: #f4c84a; color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  position: absolute; top: -34px; left: -36px; width: 78px; height: 94px;
+  background: #f4c84a; color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
 }
 .review-book figcaption {
   flex: none; margin-top: 10px; font-size: 17px; line-height: 1.4;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; overflow-wrap: anywhere;
 }
-/* 책 소개: 칸을 넘으면 위아래로 스크롤. 기본은 위쪽 검정 → 아래쪽 회색, 스크롤하면 회색 자리에 올라온 글이 검정으로 바뀐다 */
+/* 책 소개: 칸을 넘으면 위아래로 스크롤. 글이 더 남은 가장자리는 흰색 그라데이션을 덮어서 회색처럼 흐려 보이게 한다.
+   (--top / --bottom 은 JS 가 스크롤 위치에 맞춰 0~1 로 넣는다) */
+.review-intro-wrap { position: relative; flex: 1; min-height: 0; display: flex; }
 .review-intro {
   flex: 1; min-height: 0; overflow-y: auto; padding-right: 28px;
-  font-size: 16px; line-height: 1.75; color: #222; white-space: pre-line; word-break: keep-all;
+  font-size: 16px; line-height: 1.75; color: #222; white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere;
   scrollbar-width: thin; scrollbar-color: #ecd3cd transparent;
 }
-/* 글자색을 칸(스크롤 영역)에 고정된 그라데이션으로 칠해서, 글이 움직여도 색은 위치를 따라간다 */
-.review-intro[data-fade="on"] {
-  background-image: linear-gradient(to bottom, #222 0%, #222 52%, #b8b8b8 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-}
 .review-intro:focus-visible { outline: 2px solid #8fe0b0; outline-offset: 4px; border-radius: 6px; }
+.review-intro-fade { position: absolute; left: 0; right: 12px; height: 96px; pointer-events: none; }
+.review-intro-fade.top { top: 0; opacity: var(--top, 0); background: linear-gradient(to bottom, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0)); }
+.review-intro-fade.bottom { bottom: 0; opacity: var(--bottom, 0); background: linear-gradient(to top, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0)); }
 
 .review-divider { width: 950px; margin: 32px 0 38px; border: 0; border-top: 1px solid #e8d9d6; }
 
@@ -55,7 +54,7 @@
 .review-day h3 { padding: 14px 18px 8px; font-size: 16px; font-weight: 400; }
 .review-day-body { flex: 1; min-height: 0; padding: 8px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #fcf7f5; }
 .review-day-text {
-  font-size: 13.5px; line-height: 1.7; text-align: center; word-break: keep-all;
+  font-size: 13.5px; line-height: 1.7; text-align: center; word-break: keep-all; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
 }
 .review-day-empty { font-size: 13.5px; color: #555; text-align: center; }
@@ -82,14 +81,22 @@
   display: flex; flex-direction: column; max-height: calc(86vh / var(--s, 1)); overflow: hidden;
   background: #fff; border-radius: 28px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
 }
-.review-modal-card header { padding: 34px 44px 26px; }
+.review-modal-card header { position: relative; padding: 34px 96px 26px 44px; }
 .review-modal-card h2 { font-size: 24px; font-weight: 500; color: #444; }
 .review-modal-text {
   flex: 1; min-height: 0; overflow-y: auto; padding: 56px 56px; background: #fdf8f6;
-  font-size: 16px; line-height: 1.95; text-align: center; white-space: pre-line; word-break: keep-all;
+  font-size: 16px; line-height: 1.95; text-align: center; white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere;
   scrollbar-width: thin; scrollbar-color: #ecd3cd transparent;
 }
-.review-modal-card time { padding: 18px 44px 22px; text-align: right; font-size: 17px; color: #777; }
+.review-modal-card time { flex: none; padding: 18px 44px 22px; text-align: right; font-size: 17px; color: #777; }
+
+/* 닫기 버튼: 팝업 안쪽 오른쪽 위의 회색 동그라미. 마우스를 올리면 빨간색 */
+.review-modal-close {
+  position: absolute; top: 26px; right: 30px; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: #e8e8e8; color: #555; display: flex; align-items: center; justify-content: center;
+  transition: background-color .15s, color .15s;
+}
+.review-modal-close:hover { background: #e5484d; color: #fff; }
 
 .review-modal-arrow {
   position: absolute; top: 50%; width: 52px; height: 52px; margin-top: -26px; padding: 0; border: 0; border-radius: 50%;

@@ -28,13 +28,15 @@ const LoginPage = () => {
       onGoToSignup={() => navigate(PATHS.signup)}
       onFindAccount={() => navigate(PATHS.find)}
       onLoginSuccess={(data) => {
-        if (!data?.token) {
+        // 명세서: 로그인 응답은 accessToken, refreshToken, ID
+        if (!data?.accessToken) {
           alert("로그인 응답에 토큰이 없습니다.");
           return;
-        }    
-        const { token, ...profile } = data;
-        localStorage.setItem("token", token);
-        // 닉네임/이름 등 화면에 쓸 내 정보 (예: 책 검색 > 공동서재)
+        }
+        const { accessToken, refreshToken, ...profile } = data;
+        localStorage.setItem("token", accessToken); // 다른 API 호출이 이 값을 Authorization 헤더에 쓴다
+        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+        // 화면에 쓸 내 정보 (예: 책 검색 > 공동서재). 로그인 응답에는 ID 만 있다.
         localStorage.setItem("user", JSON.stringify(profile));
         navigate(PATHS.main, { replace: true });
       }}

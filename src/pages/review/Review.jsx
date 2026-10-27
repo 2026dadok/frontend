@@ -15,12 +15,18 @@ import "./Review.css";
 
 const TOAST_MS = 2000;
 
-// 책 소개가 넘치면(스크롤 가능) 아래쪽 글은 회색으로 두고, 스크롤해서 올라오면 검정이 된다. 맨 끝까지 내리면 전부 검정.
-// (CSS 의 data-fade="on" 일 때만 회색 그라데이션을 쓴다)
+// 책 소개가 칸을 넘치면(스크롤 가능) 글이 더 남아 있는 가장자리를 흐리게(회색처럼) 보이게 한다.
+//   맨 위: 아래쪽만 / 중간: 위·아래 모두 / 맨 끝: 위쪽만 (내리면 위로 올라간 글이 회색이 된다)
+// 글 위에 흰색 그라데이션을 덮는 방식이다. --top, --bottom (0~1) = 위·아래에 가려진 글의 양(FADE_RANGE 이상이면 1).
+// 칸을 넘지 않는 짧은 소개는 둘 다 0이라 전부 검정.
+const FADE_RANGE = 80; // px
+const clamp01 = (n) => Math.min(1, Math.max(0, n));
 const updateIntroFade = (el) => {
-  const overflow = el.scrollHeight - el.clientHeight > 2;
-  const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-  el.dataset.fade = overflow && !atEnd ? "on" : "off";
+  const hiddenAbove = el.scrollTop;
+  const hiddenBelow = el.scrollHeight - el.clientHeight - el.scrollTop;
+  const wrap = el.parentElement;
+  wrap.style.setProperty("--top", clamp01(hiddenAbove / FADE_RANGE).toFixed(3));
+  wrap.style.setProperty("--bottom", clamp01(hiddenBelow / FADE_RANGE).toFixed(3));
 };
 
 const DayCard = ({ day, entry, completed, canWrite, onOpen, onWrite }) => (
@@ -168,17 +174,21 @@ const Review = () => {
               </div>
               <figcaption>{book.title}</figcaption>
             </figure>
-            <p
-              className="review-intro"
-              tabIndex={0}
-              aria-label="책 소개"
-              ref={(el) => el && updateIntroFade(el)}
-              onScroll={(e) => updateIntroFade(e.currentTarget)}
-            >
-              {book.intro ||
-                introFetched[book.id] ||
-                (introFetched[book.id] === undefined ? "책 소개를 불러오는 중…" : "등록된 책 소개가 없습니다.")}
-            </p>
+            <div className="review-intro-wrap">
+              <p
+                className="review-intro"
+                tabIndex={0}
+                aria-label="책 소개"
+                ref={(el) => el && updateIntroFade(el)}
+                onScroll={(e) => updateIntroFade(e.currentTarget)}
+              >
+                {book.intro ||
+                  introFetched[book.id] ||
+                  (introFetched[book.id] === undefined ? "책 소개를 불러오는 중…" : "등록된 책 소개가 없습니다.")}
+              </p>
+              <i className="review-intro-fade top" aria-hidden="true" />
+              <i className="review-intro-fade bottom" aria-hidden="true" />
+            </div>
           </section>
 
           <hr className="review-divider" />

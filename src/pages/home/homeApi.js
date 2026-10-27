@@ -58,8 +58,8 @@ export const loadDailyQuests = async () => {
 export const fetchTotalXp = async () => 0;
 
 // ───────── 오늘의 문장 (인용구 노트) ─────────
-// TODO: quote 페이지 완성 후 저장 방식에 맞게 교체. 지금은 localStorage "quotes" 사용
-// 형태: { text, author, book }
+// 인용구 노트(pages/quote/quoteStore.js)가 저장한 localStorage "quotes" 에서 하나를 고른다.
+// 형태: { text, author, book, ... }  TODO: 인용구 조회 API가 정해지면 교체
 export const fetchRandomQuote = () => {
   try {
     const list = JSON.parse(localStorage.getItem("quotes") ?? "[]");

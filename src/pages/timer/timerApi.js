@@ -5,21 +5,24 @@
 // 읽은 시간만 보내면 백엔드가 오늘 읽은 시간을 합쳐서 퀘스트 달성 여부를 계산하고,
 // 홈의 퀘스트 목록(GET /quests/daily)에 done 값으로 내려준다.
 
-// 이번에 읽은 시간을 백엔드에 보낸다. 성공하면 true.
-// TODO: study_time 의 단위(분/초)는 백엔드와 확인. 명세서에는 "양의 정수"라고만 되어 있다.
-export const addStudyTime = async (bookId, studyTime) => {
-  if (!Number.isInteger(studyTime) || studyTime <= 0) return false;
+// 이번에 읽은 시간을 백엔드에 보낸다. 명세서: POST /times (bookID, readtime) → message, today_readtime
+// bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id)다. 성공하면 오늘 읽은 시간(today_readtime)을 돌려준다.
+// TODO: readtime 의 단위(분/초)는 백엔드와 확인. 명세서에는 단위가 없다.
+export const addStudyTime = async (bookID, readtime) => {
+  if (!Number.isInteger(bookID) || !Number.isInteger(readtime) || readtime <= 0) return null;
   try {
-    const res = await fetch("/times/edit_time", {
-      method: "PUT",
+    const res = await fetch("/times", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
       },
-      body: JSON.stringify({ book_id: bookId, study_time: studyTime }),
+      body: JSON.stringify({ bookID, readtime }),
     });
-    return res.ok;
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    return { todayReadtime: data?.today_readtime ?? null };
   } catch {
-    return false;
+    return null;
   }
 };

@@ -21,7 +21,15 @@ export default defineConfig(({ mode }) => {
     },
   }
   if (env.BACKEND_URL) {
-    for (const path of BACKEND_PATHS) proxy[path] = { target: env.BACKEND_URL, changeOrigin: true }
+    for (const path of BACKEND_PATHS) {
+      proxy[path] = {
+        target: env.BACKEND_URL,
+        changeOrigin: true,
+        // 브라우저 주소창으로 들어온 화면 이동(예: /auth/log_page)은 백엔드로 보내지 않고 프런트 화면을 보여준다.
+        // 화면 주소와 API 주소가 /auth/... 로 겹쳐도 충돌하지 않게 하기 위해서다. fetch 호출은 그대로 백엔드로 간다.
+        bypass: (req) => (req.headers.accept?.includes('text/html') ? '/index.html' : undefined),
+      }
+    }
   }
 
   return {

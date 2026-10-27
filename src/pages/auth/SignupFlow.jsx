@@ -3,6 +3,7 @@ import SignupForm from "./SignupForm";
 import EmailVerify from "./EmailVerify";
 import AuthBirth from "./AuthBirth";
 import AuthGoalTime from "./AuthGoalTime";
+import { signup } from "../../api/auth";
 
 const SignupFlow = ({ onComplete, onFindAccount }) => {
   const [step, setStep] = useState("signup");
@@ -27,23 +28,20 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
   const handleGoalNext = async (values) => {
     const goal_time = `${values.HRS}:${values.MIN}:${values.SEC}`;
 
+    // 명세서: name, ID, passward. 회원 테이블에는 닉네임이 없고 이름(user_name)과 아이디(user_id)만 있다.
+    // 이름 칸에는 화면의 "닉네임" 입력을 보낸다. TODO: 이메일·생일·목표 시간의 키 이름과 목표 시간 단위는 백엔드와 확인
     const payload = {
-      nickname: signupData.nickname,
-      name: signupData.loginId,
-      passwd: signupData.password,
+      name: signupData.nickname,
+      ID: signupData.loginId,
+      passward: signupData.password,
       email: signupData.email,
-      birthday: signupData.birthday,
+      birthdate: signupData.birthday,
       goal_time,
     };
 
     try {
-      const res = await fetch("/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("서버 응답 오류");
+      const { ok } = await signup(payload);
+      if (!ok) throw new Error("서버 응답 오류");
 
       onComplete();
     } catch (err) {

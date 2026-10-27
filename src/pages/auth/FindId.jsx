@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { LineInput } from "./components/LineInput";
+import { EMAIL_PURPOSE, findId, sendEmailCode, toExpireSeconds, verifyEmailCode } from "../../api/auth";
 
 const VERIFY_TIME = 5 * 60;
 const RESEND_COOLDOWN = 60;
@@ -49,15 +50,22 @@ const FindId = ({ onBackToLogin }) => {
     return `${m}:${s}`;
   };
 
-  const handleStartVerify = () => {
+  const handleStartVerify = async () => {
     if (!email) {
       alert("이메일을 입력하세요.");
       return;
     }
     if (resendCooldown > 0) return;
 
+    // 명세서: POST /auth/email_send (email, purpose) → message, expiresIn
+    const { ok, data } = await sendEmailCode(email, EMAIL_PURPOSE.findId);
+    if (!ok) {
+      alert("인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
+      return;
+    }
+
     setCodeSent(true);
-    setSecondsLeft(VERIFY_TIME);
+    setSecondsLeft(toExpireSeconds(data?.expiresIn, VERIFY_TIME));
     setResendCooldown(RESEND_COOLDOWN);
     setResendKey((prev) => prev + 1);
   };
@@ -77,22 +85,13 @@ const FindId = ({ onBackToLogin }) => {
     }
 
     try {
-      const verifyRes = await fetch("/auth/email-verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      });
-      if (!verifyRes.ok) throw new Error("인증 실패");
+      const verified = await verifyEmailCode(email, code); // 명세서: POST /auth/email_verify
+      if (!verified.ok) throw new Error("인증 실패");
 
-      const res = await fetch("/auth/find-id", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error("조회 실패");
+      const { ok, data } = await findId(email); // 명세서: POST /auth/find_id (email) → ID
+      if (!ok || !data?.ID) throw new Error("조회 실패");
 
-      const data = await res.json();
-      setFoundId(data.name);
+      setFoundId(data.ID);
     } catch (err) {
       console.error(err);
       alert("아이디 조회 중 오류가 발생했습니다.");

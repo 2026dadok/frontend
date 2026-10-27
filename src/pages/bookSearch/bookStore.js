@@ -40,7 +40,7 @@ const authHeaders = () => ({
 });
 
 // 서버에 요청하고 { ok, data } 를 돌려준다. 서버가 없거나 응답이 JSON 이 아니어도 예외 없이 처리한다.
-const requestServer = async (method, url, body) => {
+export const requestServer = async (method, url, body) => {
   try {
     const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
     const data = await res.json().catch(() => null);
@@ -57,8 +57,8 @@ const postToServer = async (url, body) => (await requestServer("POST", url, body
 export const getMe = () => {
   const user = read(KEYS.user, {}) ?? {};
   return {
-    key: String(user.name ?? user.id ?? "me"), // 리뷰 작성자 구분용
-    displayName: user.nickname || user.name || "나",
+    key: String(user.ID ?? user.name ?? user.id ?? "me"), // 리뷰 작성자 구분용 (로그인 아이디)
+    displayName: user.name || user.ID || "나", // TODO: 표시 이름은 user_name. 로그인 응답에는 없어서 내 정보 API에서 받아와야 한다
   };
 };
 
@@ -177,13 +177,13 @@ export const addToSharedLibrary = (book, friend) => {
 // 내 감상문: { day, content, date } 목록. TODO: 감상문 조회 API가 정해지면 교체 (명세서: 작성 POST /library/commentaries)
 export const getCommentaries = (bookId) => (read(KEYS.commentaries, {})[bookId] ?? []);
 
-// 감상문(300자 이하)을 쓴다. 백엔드(POST /library/commentaries: book_id, content)에 먼저 보내고,
+// 감상문을 쓴다. 백엔드(POST /bookstore/feelings: bookID, feeling_content → feeling_id, new_achievements)에 먼저 보내고,
 // 서버가 없거나 실패해도 화면에 보이도록 브라우저에도 저장한다. "saved" | "error"
 // (서버의 책 번호(serverBookId)를 모르는 책은 서버에 보내지 않고 브라우저에만 저장한다)
 // TODO: 백엔드가 준비되면 서버 실패 시 저장하지 않는 쪽으로 바꿀지 정한다
 export const addCommentary = async (book, day, content) => {
   if (Number.isInteger(book.serverBookId)) {
-    await requestServer("POST", "/library/commentaries", { book_id: book.serverBookId, content });
+    await requestServer("POST", "/bookstore/feelings", { bookID: book.serverBookId, feeling_content: content });
   }
   const all = read(KEYS.commentaries, {});
   const list = (all[book.id] ?? []).filter((c) => c.day !== day); // 같은 일차는 하나만

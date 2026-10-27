@@ -11,7 +11,15 @@ import moleImg from "../../images/dokddage.png";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas, .bs-search, .bs-xp)을 책 검색과 같이 쓴다
 import "./Library.css";
 
-const SLOTS_PER_PAGE = 5; // 한 화면에 책 4권 + 마지막의 + 칸
+// 디자인 기준(가로 1419)에서는 한 화면에 책 4권 + 마지막의 + 칸 = 5칸. 창이 넓으면 카드가 늘어나서 더 많이 들어간다.
+const DESIGN_CANVAS_W = 1419;
+const SIDEBAR_W = 103;
+const SHELF_LEFT = 109;
+const SHELF_RIGHT = 112;
+const SHELF_SIDE_SPACE = 16 + 41 + 36 + 41 + 22; // 서재 카드 안 양쪽의 화살표·여백
+const BOOK_W = 169;
+const BOOK_GAP = 37;
+const MAX_MOLE_RATIO = 1.5;
 const ALL = "전체";
 const TOAST_MS = 2000;
 
@@ -40,9 +48,25 @@ const Arrow = ({ direction, hidden, onClick }) => (
   </button>
 );
 
+// 창 너비가 바뀔 때마다 다시 그리기 위한 값
+const useWindowWidth = () => {
+  const [width, setWidth] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return width;
+};
+
 // 서고: 나의 서재 / 공동 서재(토글) + 독서 달력
 const Library = () => {
   const scale = useFitScale();
+  // 화면 틀(디자인 px 기준 너비). 창이 넓으면 1419보다 커져서 카드·달력이 가로로 늘어난다.
+  const canvasW = Math.max(DESIGN_CANVAS_W, (useWindowWidth() - SIDEBAR_W) / scale);
+  const booksAreaW = canvasW - SHELF_LEFT - SHELF_RIGHT - SHELF_SIDE_SPACE;
+  const slotsPerPage = Math.max(1, Math.floor((booksAreaW + BOOK_GAP) / (BOOK_W + BOOK_GAP)));
+  const moleRatio = Math.min(MAX_MOLE_RATIO, canvasW / DESIGN_CANVAS_W);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") === "shared" ? "shared" : "my";
@@ -69,8 +93,9 @@ const Library = () => {
   );
   const shown = category === ALL ? books : books.filter((b) => (b.category || "기타") === category);
   const items = [...shown, null]; // null = 맨 끝의 + 칸
-  const pageItems = items.slice(page * SLOTS_PER_PAGE, (page + 1) * SLOTS_PER_PAGE);
-  const lastPage = Math.max(0, Math.ceil(items.length / SLOTS_PER_PAGE) - 1);
+  const lastPage = Math.max(0, Math.ceil(items.length / slotsPerPage) - 1);
+  const currentPage = Math.min(page, lastPage); // 창이 넓어져 한 화면에 더 들어가면 마지막 쪽을 넘지 않게
+  const pageItems = items.slice(currentPage * slotsPerPage, (currentPage + 1) * slotsPerPage);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
@@ -152,11 +177,11 @@ const Library = () => {
   const title = tab === "my" ? "나의 서재" : "공동 서재";
 
   return (
-    <div className="bs" ref={rootRef}>
+    <div className="bs lib-page" ref={rootRef}>
       <XpTotal />
 
       <div className="bs-stage" style={{ "--s": scale }}>
-        <div className="bs-canvas">
+        <div className="bs-canvas" style={{ width: canvasW, "--mole": moleRatio }}>
           <SearchBar value={query} onChange={setQuery} onSubmit={goSearch} />
 
           <section className="lib-card lib-shelf">
@@ -195,7 +220,7 @@ const Library = () => {
             </div>
 
             <div className="lib-row">
-              <Arrow direction="prev" hidden={page === 0} onClick={() => { setPage((p) => p - 1); setMenuId(null); }} />
+              <Arrow direction="prev" hidden={currentPage === 0} onClick={() => { setPage((p) => p - 1); setMenuId(null); }} />
               <div className="lib-books">
                 {pageItems.map((book, i) =>
                   book ? (
@@ -233,7 +258,7 @@ const Library = () => {
                   )
                 )}
               </div>
-              <Arrow direction="next" hidden={page >= lastPage} onClick={() => { setPage((p) => p + 1); setMenuId(null); }} />
+              <Arrow direction="next" hidden={currentPage >= lastPage} onClick={() => { setPage((p) => p + 1); setMenuId(null); }} />
             </div>
           </section>
 
