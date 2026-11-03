@@ -14,4 +14,6 @@ export const PATHS = {
   timer: "/timer",
   review: "/review",
   settings: "/settings",
+  terms: "/terms",
+  privacy: "/privacy",
 };

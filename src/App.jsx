@@ -15,6 +15,8 @@ import MyPage from "./pages/myPage/MyPage";
 import EditInfo from "./pages/myPage/EditInfo";
 import Timer from "./pages/timer/Timer";
 import Landing from "./pages/landing/Landing";
+import LegalPage from "./pages/legal/LegalPage";
+import { PRIVACY, TERMS } from "./pages/legal/legalDocs";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -71,6 +73,8 @@ const App = () => (
     <Routes>
       <Route path="/" element={<Navigate to={PATHS.guest} replace />} />
       <Route path={PATHS.guest} element={<Landing />} />
+      <Route path={PATHS.terms} element={<LegalPage doc={TERMS} />} />
+      <Route path={PATHS.privacy} element={<LegalPage doc={PRIVACY} />} />
       <Route path={PATHS.login} element={<LoginPage />} />
       <Route path={PATHS.signup} element={<SignupPage />} />
       <Route path={PATHS.find} element={<FindPage />} />

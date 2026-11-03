@@ -13,6 +13,7 @@ import weeklyRankImg from "../../images/weeklyRank.png";
 import signUpImg from "../../images/signUp.png";
 import chooseImg from "../../images/choose.png";
 import recordImg from "../../images/record.png";
+import SiteFooter from "./SiteFooter";
 import "./Landing.css";
 
 // 로그인 전 첫 화면(서비스 소개).
@@ -181,22 +182,7 @@ const Landing = () => {
         </section>
       </main>
 
-      {/* TODO: 임시 푸터. 들어갈 내용(팀 정보·문의처 등)이 정해지면 교체 */}
-      <footer className="ld-footer">
-        <div>
-          <strong>다독다독</strong>
-          <span>다독(多讀)이 다독이는 곳</span>
-        </div>
-        <nav aria-label="푸터 메뉴">
-          {NAV.map((item) => (
-            <button key={item.id} type="button" onClick={() => scrollToSection(item.id)}>
-              {item.label}
-            </button>
-          ))}
-          <button type="button" onClick={goLogin}>로그인</button>
-        </nav>
-        <small>© 2026 다독다독. All rights reserved.</small>
-      </footer>
+      <SiteFooter onSection={scrollToSection} />
     </div>
   );
 };

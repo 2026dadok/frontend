@@ -107,18 +107,22 @@
 .ld-guide-cards p { margin-top: 12px; font-size: 16px; line-height: 1.5; color: #777; white-space: pre-line; }
 .ld-shot.small { margin-top: 20px; }
 
-/* ───────── 임시 푸터 ───────── */
+/* ───────── 푸터 (첫 화면 · 이용약관 · 개인정보 처리방침) ───────── */
 .ld-footer {
-  padding: 36px max(20px, calc((100% - 1290px) / 2));
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 36px max(20px, calc((100% - 1290px) / 2)) 28px;
   background: #fff; border-top: 1px solid #f0e3e1; color: #888; font-size: 14px;
 }
-.ld-footer div { display: flex; align-items: baseline; gap: 12px; }
+.ld-footer-top, .ld-footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.ld-footer-bottom { margin-top: 22px; padding-top: 18px; border-top: 1px solid #f5ebe9; }
+.ld-footer-brand { display: flex; align-items: baseline; gap: 12px; }
 .ld-footer strong { font-size: 18px; color: #3fbf82; }
 .ld-footer nav { display: flex; gap: 22px; }
 .ld-footer nav button { padding: 0; border: 0; background: none; font-size: 14px; color: #777; }
 .ld-footer nav button:hover { color: #333; }
-.ld-footer small { width: 100%; font-size: 12px; color: #aaa; }
+.ld-footer-legal a { font-size: 13px; color: #888; text-decoration: none; }
+.ld-footer-legal a.strong { font-weight: 700; color: #555; } /* 개인정보 처리방침은 눈에 띄게 (관례) */
+.ld-footer-legal a:hover { color: #222; text-decoration: underline; }
+.ld-footer small { font-size: 12px; color: #aaa; }
 
 /* 좁은 화면: 한 줄로 쌓는다 */
 @media (max-width: 900px) {
