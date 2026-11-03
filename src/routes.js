@@ -5,6 +5,7 @@ export const PATHS = {
   find: "/auth/idpw_found",
   signup: "/signup",
   mypage: "/mypage",
+  mypageEdit: "/mypage/edit",
   rank: "/rank",
   search: "/search",
   library: "/library",

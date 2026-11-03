@@ -10,6 +10,9 @@ import Library from "./pages/myLibrary/Library";
 import SharedLibraryPage from "./pages/sharedLibrary/SharedLibraryPage";
 import Review from "./pages/review/Review";
 import BookSearch from "./pages/bookSearch/BookSearch";
+import WeeklyRank from "./pages/weeklyRank/WeeklyRank";
+import MyPage from "./pages/myPage/MyPage";
+import EditInfo from "./pages/myPage/EditInfo";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -72,8 +75,9 @@ const App = () => (
       {/* TODO: 개발 중 임시로 인증 없이 열어둠. 완성 후 RequireAuth로 감싸기 */}
       <Route element={<Layout />}>
         <Route path={PATHS.main} element={<Home />} />
-        <Route path={PATHS.mypage} element={<div>마이페이지</div>} />
-        <Route path={PATHS.rank} element={<div>주간 경쟁</div>} />
+        <Route path={PATHS.mypage} element={<MyPage />} />
+        <Route path={PATHS.mypageEdit} element={<EditInfo />} />
+        <Route path={PATHS.rank} element={<WeeklyRank />} />
         <Route path={PATHS.search} element={<BookSearch />} />
         <Route path={PATHS.library} element={<Library />} />
         {/* TODO: 타이머 페이지가 만들어지면 교체 (서고 책 메뉴의 바로 읽기) */}

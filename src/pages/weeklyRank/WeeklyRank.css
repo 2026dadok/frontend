@@ -1,0 +1,74 @@
+/* 주간 경쟁. 디자인 기준 크기(1419 x 967)의 .bs-canvas 안에 위치를 직접 잡는다. */
+.rk-card {
+  position: absolute; background: #fff; border: 1px solid #fbe7e2; border-radius: 26px;
+  box-shadow: 0 2px 10px rgba(240, 190, 180, 0.12);
+}
+.rk-empty { font-size: 14px; color: #999; align-self: center; }
+
+/* ───────── 티어 ───────── */
+.rk-tier { left: 129px; top: 58px; width: 294px; height: 296px; padding: 10px 0 0 10px; } /* 디자인(270 x 272)보다 조금 크게. 아래 순위 카드(364)와 겹치지 않게 */
+/* 티어 이미지에 둥근 배경이 그려져 있어서 그대로 보여준다. 높이를 맞추면 주황 칸 둘레에 흰 테두리가 고르게 남고,
+   캐릭터가 오른쪽으로 튀어나온 부분(동~백금)만 테두리 위로 살짝 걸친다 */
+.rk-tier-art { height: 276px; width: auto; display: block; }
+.rk-tier-art.empty {
+  width: 272px;
+  border-radius: 22px; background: #f2ad6f;
+  display: flex; align-items: center; justify-content: center;
+  color: #f7c99e; font-size: 96px; font-weight: 800;
+}
+
+/* ───────── 경쟁자들이 읽는 책 ───────── */
+.rk-competitors { position: absolute; left: 440px; top: 84px; right: 140px; }
+.rk-competitors h2 { font-size: 18px; font-weight: 600; }
+.rk-competitor-books { display: flex; gap: 27px; height: 208px; margin-top: 18px; }
+.rk-competitor-books button {
+  flex: none; width: 142px; height: 208px; padding: 0; border: 0; background: none; border-radius: 6px;
+  transition: transform .15s;
+}
+.rk-competitor-books button:hover { transform: translateY(-3px); }
+.rk-competitor-books img {
+  width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+/* ───────── 순위 ───────── */
+.rk-ranking { left: 129px; top: 364px; width: 838px; height: 588px; }
+.rk-ranking h2 { position: absolute; left: 27px; top: 26px; font-size: 24px; font-weight: 600; }
+.rk-ranking ul { list-style: none; }
+/* 내 순위: 맨 위에 따로 고정 */
+.rk-mine {
+  position: absolute; left: 37px; right: 37px; top: 81px; height: 57px;
+  border: 1px solid #fbe7e2; border-radius: 18px; box-shadow: 0 2px 8px rgba(240, 190, 180, 0.25);
+}
+.rk-mine .rk-row { height: 100%; padding: 0 22px 0 15px; }
+/* 아래 목록: 구분선 밑에서 스크롤된다 */
+.rk-list {
+  position: absolute; left: 23px; right: 23px; top: 153px; bottom: 12px; padding-top: 23px;
+  border-top: 2px solid #f6eeec; overflow-y: auto;
+}
+.rk-list .rk-row { height: 68px; padding: 0 28px 0 29px; }
+.rk-row { display: flex; align-items: center; gap: 14px; }
+.rk-rank { flex: none; width: 32px; font-size: 16px; font-weight: 500; }
+.rk-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.rk-name { flex: 1; min-width: 0; font-size: 19px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rk-time { flex: none; font-size: 18px; }
+
+/* ───────── 읽고 있는 책 ───────── */
+.rk-reading { left: 993px; top: 377px; width: 272px; height: 575px; }
+.rk-pages { position: absolute; right: 21px; top: 18px; font-size: 18px; }
+.rk-reading-cover {
+  position: absolute; left: 28px; top: 51px; width: 219px; height: 323px;
+  object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+.rk-reading-empty { position: absolute; left: 0; right: 0; top: 200px; text-align: center; font-size: 15px; color: #999; }
+.rk-progress { position: absolute; left: 20px; right: 21px; top: 394px; display: flex; align-items: center; gap: 10px; }
+.rk-progress .track { flex: 1; height: 10px; border-radius: 5px; background: #f3f3f3; overflow: hidden; }
+.rk-progress .track div { height: 100%; border-radius: 5px; background: #74e2ab; }
+.rk-progress span { width: 34px; font-size: 13px; text-align: right; }
+.rk-reading-actions { position: absolute; left: 21px; right: 21px; top: 438px; display: flex; flex-direction: column; gap: 28px; }
+.rk-reading-actions button {
+  height: 37px; border: 1px solid #fbe7e2; border-radius: 18px; background: #fff;
+  box-shadow: 0 1px 4px rgba(240, 190, 180, 0.3); font-size: 15px;
+}
+.rk-reading-actions button:hover:not(:disabled) { background: #fffaf8; }
+.rk-reading-actions button:disabled { cursor: default; color: #bbb; }

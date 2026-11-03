@@ -95,7 +95,7 @@
 .lib-cal-days { width: 24px; display: grid; grid-template-rows: repeat(7, 1fr); row-gap: 3px; font-size: 12px; color: #dfaab0; text-align: center; align-items: center; }
 .lib-cal-grid { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(53, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: 3px; }
 .lib-cal-cell { aspect-ratio: 1; border-radius: 3px; }
-.lib-cal-cell.empty { background: transparent; }
+.lib-cal-cell.empty { background: transparent; box-sizing: border-box; border: 1.5px dashed #f8dfe1; } /* 올해가 아닌 칸: 테두리만 그려 자리만 채운다 */
 
 /* 두더지: dokddage.png 를 좌우로 뒤집어서 쓴다 */
 .lib-mole { position: absolute; right: 32px; bottom: 22px; width: calc(196px * var(--mole, 1)); transform: scaleX(-1); transform-origin: center; } /* 오른쪽 아래 구석 (디자인). 넓은 창에서는 조금 커진다 */

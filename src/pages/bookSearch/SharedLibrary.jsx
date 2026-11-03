@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
+import useMyImage from "../../hooks/useMyImage";
 import { daysSince, getMe } from "./bookStore";
 import { Avatar } from "./parts";
 
-const Progress = ({ label, percent }) => (
+const Progress = ({ label, percent, image }) => (
   <section className="bs-shared-card">
-    <Avatar size={81} />
+    {image ? <img className="bs-shared-avatar" src={image} alt="" /> : <Avatar size={81} />}
     <div className="bs-shared-info">
       <strong>{label}</strong>
       <div className="bs-shared-bar">
@@ -22,7 +23,10 @@ const Progress = ({ label, percent }) => (
 // 진행률(myPercent, friendPercent)은 부모가 내려준다. TODO: 백엔드 연결 후 (읽은 쪽수 / 전체 쪽수)로 계산.
 const SharedLibrary = ({ book, friend, myPercent = 0, friendPercent = 0 }) => {
   const me = getMe();
+  const myImage = useMyImage("profile"); // 마이페이지에서 바꾼 내 프로필 사진
   const navigate = useNavigate();
+  // 이름을 모를 때(로그인 정보 없음) "나 (나)" 로 겹치지 않게
+  const myLabel = me.displayName === "나" ? "나" : `${me.displayName} (나)`;
   return (
     <>
       <img className="bs-co-cover" src={book.cover} alt={book.title} />
@@ -34,7 +38,8 @@ const SharedLibrary = ({ book, friend, myPercent = 0, friendPercent = 0 }) => {
         </p>
 
         <div className="bs-shared-cards">
-          <Progress label={`${me.displayName} (나)`} percent={myPercent} />
+          <Progress label={myLabel} percent={myPercent} image={myImage} />
+          {/* TODO: 친구 프로필 사진은 공동서재 API(members)에 사진 주소가 오면 image 로 넘긴다 */}
           <Progress label={friend.friendName} percent={friendPercent} />
         </div>
 

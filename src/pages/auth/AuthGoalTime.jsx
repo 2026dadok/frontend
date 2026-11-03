@@ -5,8 +5,7 @@ const AuthGoalTime = ({ name, onNext }) => {
   const fields = [
     { label: "HRS", options: range(0, 23).map((h) => h.padStart(2, "0")) },
     { label: "MIN", options: range(0, 59).map((m) => m.padStart(2, "0")) },
-    { label: "SEC", options: range(0, 59).map((s) => s.padStart(2, "0")) },
-  ];
+  ]; // 목표 시간은 시·분만 받는다 (초 없음)
 
   const validate = (values) => {
     const allSelected = Object.values(values).every((v) => v !== null);

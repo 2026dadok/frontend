@@ -135,11 +135,19 @@ a.home-shelf-book { display: block; cursor: pointer; }
 .home-quote-bubble {
   position: absolute; left: 0; top: 0; width: 282px; height: 135px; padding: 22px 26px;
   display: grid; /* 기본/호버 내용을 같은 자리에 겹쳐 놓고 투명도로 전환 */
+  grid-template-columns: minmax(0, 1fr); /* 긴 문장이 칸을 넓혀 말풍선 밖으로 나가지 않게 */
+  grid-template-rows: minmax(0, 1fr);
   background: #fffefb; border-radius: 22px; box-shadow: 0 4px 12px rgba(0,0,0,.1);
   font-size: 15px; line-height: 1.7; word-break: keep-all;
 }
-.home-quote-default, .home-quote-hover { grid-area: 1 / 1; transition: opacity .2s; }
-.home-quote-default { display: flex; flex-direction: column; justify-content: space-between; }
+.home-quote-default, .home-quote-hover { grid-area: 1 / 1; min-width: 0; min-height: 0; transition: opacity .2s; }
+.home-quote-default { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+/* 띄어쓰기 없는 긴 문장도 줄바꿈하고, 넘치면 말줄임(…) */
+.home-quote-default p {
+  overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.home-quote-default small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-quote-hover {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
   text-align: center; opacity: 0; pointer-events: none;
