@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
 import logoImg from "../../images/dadokdadok.png";
+import laptopImg from "../../images/laptop.png";
 import "./Landing.css";
 
 // 로그인 전 첫 화면(서비스 소개).
 // 화면 캡처 이미지는 src/images/landing 에 아래 이름으로 넣으면 자동으로 들어간다. 없으면 빈 자리(카드)로 보인다.
-//   hero, feature-library, feature-shared, feature-timer, feature-rank, guide-signup, guide-read, guide-record
+//   feature-library, feature-shared, feature-timer, feature-rank, guide-signup, guide-read, guide-record
 //   (확장자 png / jpg / jpeg / webp)
 const LANDING_IMAGES = Object.fromEntries(
   Object.entries(import.meta.glob("../../images/landing/*.{png,jpg,jpeg,webp}", { eager: true, import: "default" })).map(
@@ -124,7 +125,7 @@ const Landing = () => {
           <HeroLogo />
           <p className="ld-hero-title">다독(多讀)이 다독이는 곳</p>
           <p className="ld-hero-sub">나의 독서 기록부터 함께 읽는 공동서재까지, 다독다독이 당신의 다독을 응원합니다.</p>
-          <Shot name="hero" label="다독다독 화면 모음" className="hero" />
+          <img className="ld-shot hero" src={laptopImg} alt="다독다독 화면 모음" />
         </section>
 
         <section id="intro" className="ld-intro">

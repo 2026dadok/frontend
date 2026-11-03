@@ -7,12 +7,12 @@ import { Avatar, XpTotal } from "../bookSearch/parts";
 import { getMe } from "../bookSearch/bookStore";
 import { showXpToast } from "../../components/xpToast/xpToastBus";
 import { currentWeekKey, fetchWeekCompetition, formatMinutes } from "./weeklyRankApi";
-import tierBronze from "../../images/동.png";
-import tierSilver from "../../images/은.png";
-import tierGold from "../../images/금.png";
-import tierDiamond from "../../images/금강.png";
-import tierPlatinum from "../../images/백금.png";
-import tierByeongyeon from "../../images/병연티어.png";
+import tierBronze from "../../images/tier-bronze.png";
+import tierSilver from "../../images/tier-silver.png";
+import tierGold from "../../images/tier-gold.png";
+import tierDiamond from "../../images/tier-diamond.png";
+import tierPlatinum from "../../images/tier-platinum.png";
+import tierByeongyeon from "../../images/tier-byeongyeon.png";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas, .bs-xp)을 책 검색과 같이 쓴다
 import "./WeeklyRank.css";
 
