@@ -1,0 +1,73 @@
+/* 타이머. 사이드바 없이 화면 전체에 디자인 크기(1520 x 988)로 그리고, 창이 작으면 zoom(--s)으로 통째로 줄인다. */
+.tm { position: fixed; inset: 0; background: #fff5f3; }
+.tm-stage { position: relative; zoom: var(--s, 1); width: 1520px; height: 988px; margin: 0 auto; }
+.tm .bs-toast { position: fixed; }
+
+/* 왼쪽 위 인용구 노트 버튼 */
+.tm .tm-note {
+  position: absolute; left: 20px; top: 18px; width: 80px; height: 80px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: #fff; color: #f6cfd0;
+}
+.tm .tm-note:hover { color: #f0b3b5; }
+
+/* 가운데 말풍선. 꼬리는 아래 두더지를 가리킨다 */
+.tm-bubble {
+  position: absolute; left: 313px; top: 228px; width: 958px; height: 438px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid #f8e3e3; border-radius: 219px;
+  box-shadow: 0 10px 30px rgba(240, 190, 180, 0.12);
+}
+.tm-bubble::after {
+  content: ""; position: absolute; left: 50%; top: 100%; width: 40px; height: 52px; transform: translateX(-50%);
+  background: #fff; clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+/* 시계를 숨기면 말풍선이 낮아지고 꼬리가 길어진다 (디자인) */
+.tm-bubble.short { top: 278px; height: 330px; }
+.tm-bubble.short::after { height: 110px; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.tm-mole { position: absolute; left: 700px; top: 738px; width: 222px; transform: scaleX(-1); }
+
+.tm-question { font-size: 28px; color: #444; }
+.tm-question.big { font-size: 32px; color: #222; }
+
+.tm-buttons { margin-top: 50px; display: flex; gap: 13px; }
+.tm-buttons.wide { gap: 45px; }
+.tm-buttons button, .tm-add button {
+  width: 160px; height: 48px; border: 0; border-radius: 24px; background: #e3f9ec; color: #333; font-size: 24px;
+}
+.tm-buttons button:hover:not(:disabled), .tm-add button:hover { background: #cff3de; }
+.tm-buttons button.long { width: 244px; }
+.tm-buttons button:disabled { cursor: default; opacity: 0.6; }
+
+/* 목표 시간 입력 (시 : 분) */
+.tm-time { margin-top: 30px; display: flex; align-items: center; font-size: 72px; font-weight: 700; color: #000; }
+.tm-time .time-part { display: flex; align-items: center; gap: 22px; margin-left: 22px; }
+.tm-time .time-part:first-child { margin-left: 0; }
+.tm-time input {
+  width: 104px; height: 80px; padding: 0; border: 0; border-radius: 6px; outline: none;
+  background: #fbf0ef; font: inherit; color: inherit; text-align: center;
+}
+.tm-time input:focus { background: #f8e2df; }
+.tm-time.small { margin-top: 0; font-size: 32px; }
+.tm-time.small .time-part { gap: 8px; margin-left: 8px; }
+.tm-time.small .time-part:first-child { margin-left: 0; }
+.tm-time.small input { width: 56px; height: 44px; }
+
+/* 읽는 중: 위 문구 + 읽은 시간. 누르면 시간을 숨기거나 보인다 */
+.tm-clock { padding: 0; border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.tm-sub { font-size: 22px; color: #555; }
+.tm-elapsed { font-size: 60px; font-weight: 600; color: #000; letter-spacing: 0.02em; }
+
+/* 시간 추가 입력 */
+.tm-add { margin-top: 50px; display: flex; align-items: center; gap: 14px; font-size: 20px; color: #555; }
+.tm-add button { width: 96px; height: 44px; font-size: 20px; }
+
+/* 읽은 쪽수 입력 */
+.tm-pages { display: flex; flex-direction: column; align-items: center; }
+.tm-pages input {
+  width: 184px; height: 80px; margin-top: 36px; padding: 0; border: 1px solid #f6e6e4; border-radius: 8px; outline: none;
+  background: #fbf3f2; font-size: 36px; text-align: center; color: #222; -moz-appearance: textfield;
+}
+.tm-pages input::-webkit-outer-spin-button, .tm-pages input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.tm-pages input:focus { border-color: #f0b9ab; }
+.tm-pages .tm-buttons { margin-top: 36px; }

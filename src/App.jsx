@@ -13,6 +13,8 @@ import BookSearch from "./pages/bookSearch/BookSearch";
 import WeeklyRank from "./pages/weeklyRank/WeeklyRank";
 import MyPage from "./pages/myPage/MyPage";
 import EditInfo from "./pages/myPage/EditInfo";
+import Timer from "./pages/timer/Timer";
+import Landing from "./pages/landing/Landing";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -68,11 +70,13 @@ const App = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Navigate to={PATHS.guest} replace />} />
-      <Route path={PATHS.guest} element={<div>로그인 전 메인</div>} />
+      <Route path={PATHS.guest} element={<Landing />} />
       <Route path={PATHS.login} element={<LoginPage />} />
       <Route path={PATHS.signup} element={<SignupPage />} />
       <Route path={PATHS.find} element={<FindPage />} />
       {/* TODO: 개발 중 임시로 인증 없이 열어둠. 완성 후 RequireAuth로 감싸기 */}
+      {/* 타이머는 사이드바 없이 화면 전체를 쓴다 */}
+      <Route path={PATHS.timer} element={<Timer />} />
       <Route element={<Layout />}>
         <Route path={PATHS.main} element={<Home />} />
         <Route path={PATHS.mypage} element={<MyPage />} />
@@ -80,8 +84,6 @@ const App = () => (
         <Route path={PATHS.rank} element={<WeeklyRank />} />
         <Route path={PATHS.search} element={<BookSearch />} />
         <Route path={PATHS.library} element={<Library />} />
-        {/* TODO: 타이머 페이지가 만들어지면 교체 (서고 책 메뉴의 바로 읽기) */}
-        <Route path={PATHS.timer} element={<div>타이머</div>} />
         <Route path={PATHS.review} element={<Review />} />
         <Route path={PATHS.sharedLibrary} element={<SharedLibraryPage />} />
         <Route path={PATHS.quote} element={<Quote />} />

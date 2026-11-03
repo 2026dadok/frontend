@@ -35,9 +35,9 @@ const Achievement = ({ item, onUse }) => {
       <span className="mp-ach-xp">{item.xp}XP</span>
     </>
   );
-  // 달성한 업적은 눌러서 칭호로 쓸 수 있다
+  // 달성한 업적은 눌러서 사용할 수 있다. 사용 중인 업적은 주간 경쟁 등에서 이름 앞에 붙는다
   return item.achieved && !item.used ? (
-    <button type="button" className="mp-ach" title="칭호로 사용하기" onClick={() => onUse(item)}>
+    <button type="button" className="mp-ach" title="이 업적 사용하기 (이름 앞에 표시)" onClick={() => onUse(item)}>
       {body}
     </button>
   ) : (
@@ -65,7 +65,7 @@ const MyPage = () => {
 
   const chooseTitle = async (item) => {
     if (!(await applyTitle(item.id))) {
-      showToast("칭호를 바꾸지 못했어요.");
+      showToast("업적을 바꾸지 못했어요.");
       return;
     }
     setData((prev) => {
@@ -74,7 +74,7 @@ const MyPage = () => {
         .sort((a, b) => Number(b.used) - Number(a.used));
       return { ...prev, title: item.title, achieved };
     });
-    showToast(`'${item.title}' 칭호를 사용해요.`);
+    showToast(`'${item.title}' 업적을 사용해요.`);
   };
 
   return (

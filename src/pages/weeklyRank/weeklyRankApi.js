@@ -20,7 +20,7 @@ const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 const toRanker = (raw, me = false) => ({
   rank: toNumber(pick(raw, "rank", "ranking", "my_rank")) || null, // 0 이나 값 없음은 "-위"
   name: pick(raw, "name", "user_name", "nickname", "ID") ?? "",
-  title: pick(raw, "title", "title_name", "user_title") ?? "", // 칭호 (예: 스테디셀러)
+  title: pick(raw, "title", "title_name", "user_title", "achievement", "achievement_name") ?? "", // 이름 앞에 붙는 업적 (마이페이지에서 사용 중인 업적, 예: 스테디셀러)
   minutes: toNumber(pick(raw, "reading_time", "readtime", "week_readtime", "minutes")) ?? 0,
   image: pick(raw, "profile_image", "profileimage", "image", "imageurl") ?? "",
   me,
