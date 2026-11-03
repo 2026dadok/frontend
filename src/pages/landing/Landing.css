@@ -21,17 +21,23 @@
 /* ───────── 첫 화면 ───────── */
 .ld-hero { padding: 120px 20px 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
-/* 로고: 한자처럼 생긴 글자는 원래 로고 이미지의 왼쪽 부분만 보여 주고(잘라 보이기), '다독'은 글자로 쓴다 */
-.ld-logo { display: flex; align-items: center; gap: 26px; height: 155px; margin: 0; }
-.ld-logo-glyph {
-  display: block; height: 155px; width: 162px; overflow: hidden; /* 로고 이미지(2560 x 971)에서 앞 글자 부분: 가로 1013 */
-  animation: ld-from-left 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.ld-logo-glyph img { display: block; height: 100%; width: auto; max-width: none; }
-.ld-logo-text {
-  font-size: 176px; line-height: 1; font-weight: 900; letter-spacing: -0.02em;
-  color: #b8f5d9; -webkit-text-stroke: 2px #46cf8d; paint-order: stroke fill;
-  animation: ld-from-right 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+/* 로고. --h 는 글자 높이. 위치·크기 비율은 원래 로고 이미지(dadokdadok.png)를 재서 맞췄다 */
+.ld-logo { --h: 155px; display: flex; align-items: center; height: var(--h); margin: 0; }
+/* 앞 글자: '다'(왼쪽에서) + '독'(오른쪽에서, 위에 겹침). 세 이미지 모두 글자 상자와 같은 크기라 제자리에 딱 겹친다 */
+.ld-logo-glyph { position: relative; flex: none; width: calc(var(--h) * 1.044); height: var(--h); }
+.ld-logo-glyph img { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; max-width: none; }
+.ld-logo-glyph .da { animation: ld-from-left 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ld-logo-glyph .dok { z-index: 1; animation: ld-from-right 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* 다 겹칠 무렵 합친 글자가 위에서 서서히 나타나 안쪽 선만 지운다 */
+.ld-logo-glyph .merged { z-index: 2; animation: ld-fade-in 0.35s ease-out 0.95s both; }
+/* 뒤의 '다독': 움직이지 않는다 */
+.ld-logo-rest { display: flex; align-items: center; margin-left: calc(var(--h) * 0.114); }
+.ld-logo-rest img { display: block; max-width: none; }
+.ld-logo-rest .da { width: calc(var(--h) * 0.712); height: var(--h); }
+/* 독 이미지는 위아래·왼쪽에 여백이 있어서 글자 크기와 위치를 '다'에 맞춘다 */
+.ld-logo-rest .dok {
+  width: calc(var(--h) * 0.7355); height: calc(var(--h) * 1.034);
+  margin: calc(var(--h) * -0.026) 0 calc(var(--h) * -0.008) calc(var(--h) * 0.062);
 }
 @keyframes ld-from-left {
   from { opacity: 0; transform: translateX(-50vw); }
@@ -41,21 +47,18 @@
   from { opacity: 0; transform: translateX(50vw); }
   to { opacity: 1; transform: none; }
 }
+@keyframes ld-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .ld-logo-glyph, .ld-logo-text { animation: none; }
+  .ld-logo-glyph img { animation: none; }
+  .ld-logo-glyph .da, .ld-logo-glyph .dok { visibility: hidden; }
 }
 
 .ld-hero-title { margin-top: 38px; font-size: 40px; font-weight: 700; color: #444; letter-spacing: 0.02em; }
 .ld-hero-sub { margin-top: 30px; font-size: 20px; color: #777; letter-spacing: 0.04em; }
 
-/* 화면 이미지 자리. 이미지가 없으면 빈 카드로 보인다 */
-.ld-shot { display: block; width: 100%; border-radius: 12px; object-fit: contain; }
-.ld-shot.empty {
-  min-height: 200px; display: flex; align-items: center; justify-content: center;
-  border: 1.5px dashed #f0d6d2; background: #fffaf9; color: #c9a9a3; font-size: 15px;
-}
+/* 화면 캡처 이미지. 원래 크기보다 키우지 않고, 칸이 좁으면 줄인다 */
+.ld-shot { display: block; max-width: 100%; height: auto; margin: 0 auto; } /* 너비는 JSX 에서 정한다 (좁은 화면에서는 칸에 맞게 줄어든다) */
 .ld-shot.hero { width: min(1340px, 100%); margin-top: 70px; }
-.ld-shot.hero.empty { min-height: 320px; }
 
 /* ───────── 서비스 소개 ───────── */
 .ld-intro { padding: 120px 20px 0; text-align: center; }
@@ -75,6 +78,7 @@
 .ld-feature.tinted { background: #fdf7f6; }
 .ld-feature.reverse { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
 .ld-feature.reverse .ld-feature-text { order: 2; }
+.ld-feature.text-only { grid-template-columns: 1fr; } /* 이미지 없는 기능(독서 타이머): 글만 */
 .ld-feature-text { padding-left: 64px; }
 .ld-feature.reverse .ld-feature-text { padding-left: 0; }
 .ld-feature h3 { margin: 14px 0 20px; font-size: 30px; font-weight: 400; color: #333; letter-spacing: 0.06em; }
@@ -101,8 +105,7 @@
 .ld-guide-cards svg { margin-top: 20px; }
 .ld-guide-cards h3 { margin-top: 14px; font-size: 24px; font-weight: 700; color: #333; }
 .ld-guide-cards p { margin-top: 12px; font-size: 16px; line-height: 1.5; color: #777; white-space: pre-line; }
-.ld-shot.small { width: 216px; margin-top: 20px; }
-.ld-shot.small.empty { min-height: 155px; }
+.ld-shot.small { margin-top: 20px; }
 
 /* ───────── 임시 푸터 ───────── */
 .ld-footer {
@@ -122,9 +125,7 @@
   .ld-nav { gap: 28px; }
   .ld-nav button { font-size: 16px; }
   .ld-login { width: 90px; font-size: 15px; }
-  .ld-logo { height: 90px; gap: 14px; }
-  .ld-logo-glyph { height: 90px; width: 94px; }
-  .ld-logo-text { font-size: 102px; }
+  .ld-logo { --h: 90px; }
   .ld-hero-title { font-size: 28px; }
   .ld-hero-sub { font-size: 16px; }
   .ld-feature, .ld-feature.reverse { grid-template-columns: 1fr; gap: 30px; }

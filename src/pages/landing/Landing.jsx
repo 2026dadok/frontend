@@ -1,33 +1,32 @@
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
-import logoImg from "../../images/dadokdadok.png";
+import daImg from "../../images/da.png";
+import dokImg from "../../images/dok.png";
+import glyphImg from "../../images/dadok-glyph.png";
+import glyphDaImg from "../../images/glyph-da.png";
+import glyphDokImg from "../../images/glyph-dok.png";
 import laptopImg from "../../images/laptop.png";
+
+import myLibraryImg from "../../images/myLibrary.webp";
+import sharedLibraryImg from "../../images/sharedLibrary.png";
+import weeklyRankImg from "../../images/weeklyRank.png";
+import signUpImg from "../../images/signUp.png";
+import chooseImg from "../../images/choose.png";
+import recordImg from "../../images/record.png";
 import "./Landing.css";
 
 // 로그인 전 첫 화면(서비스 소개).
-// 화면 캡처 이미지는 src/images/landing 에 아래 이름으로 넣으면 자동으로 들어간다. 없으면 빈 자리(카드)로 보인다.
-//   feature-library, feature-shared, feature-timer, feature-rank, guide-signup, guide-read, guide-record
-//   (확장자 png / jpg / jpeg / webp)
-const LANDING_IMAGES = Object.fromEntries(
-  Object.entries(import.meta.glob("../../images/landing/*.{png,jpg,jpeg,webp}", { eager: true, import: "default" })).map(
-    ([path, url]) => [path.split("/").pop().replace(/\.\w+$/, ""), url]
-  )
+// 화면 캡처 이미지는 보여 줄 너비(width)를 정해 둔다. 같은 이름으로 2배·3배 크기 파일을 넣으면 크기는 그대로, 더 선명하게 보인다.
+const Shot = ({ src, label, width, className }) => (
+  <img className={`ld-shot ${className ?? ""}`} src={src} alt={label} style={{ width }} />
 );
-
-const Shot = ({ name, label, className }) =>
-  LANDING_IMAGES[name] ? (
-    <img className={`ld-shot ${className ?? ""}`} src={LANDING_IMAGES[name]} alt={label} />
-  ) : (
-    <div className={`ld-shot empty ${className ?? ""}`} role="img" aria-label={label}>
-      {label}
-    </div>
-  );
 
 const FEATURES = [
   {
     no: "01",
     title: "나의 서재",
-    image: "feature-library",
+    image: myLibraryImg,
+    width: 660,
     text: [
       "내가 완독한 책과 읽고 있는 책을 한 눈에 볼 수 있습니다.",
       "오늘 읽은 만큼 물드는 캘린더, 그 색들이 모여 나의 독서 계절을 그려요.",
@@ -37,7 +36,8 @@ const FEATURES = [
   {
     no: "02",
     title: "공동 서재",
-    image: "feature-shared",
+    image: sharedLibraryImg,
+    width: 370,
     text: [
       "친구나 취향이 비슷한 사람과 같은 책을 함께 읽는 서재를 만들 수 있어요.",
       "서로의 진행 상황을 실시간으로 확인하면서, 혼자 읽을 때보다 더 오래 완독을 이어갈 수 있어요.",
@@ -47,7 +47,7 @@ const FEATURES = [
   {
     no: "03",
     title: "독서 타이머",
-    image: "feature-timer",
+    image: null, // 디자인에 이미지가 없다 (글만)
     text: [
       "읽을 책을 고르면, 오늘 읽을 만큼의 시간을 스톱워치처럼 맞추고 시작해요.",
       "정해진 시간만큼만 읽으니 부담 없이 시작할 수 있고, 그 시간이 하루하루 조금씩 늘어나요.",
@@ -57,7 +57,8 @@ const FEATURES = [
   {
     no: "04",
     title: "주간 경쟁",
-    image: "feature-rank",
+    image: weeklyRankImg,
+    width: 520,
     text: [
       "매주 비슷한 속도로 읽는 사람들과 나란히 서서, 함께 한 주를 완주해요.",
       "쌓인 시간과 페이지가 순위가 되고, 그 순위가 다시 다음 페이지를 넘기게 하는 힘이 돼요.",
@@ -80,9 +81,9 @@ const GuideIcon = ({ name }) => (
 );
 
 const GUIDES = [
-  { no: "01", icon: "person", title: "회원가입하기", text: "간단한 정보만 입력하고\n여정을 시작해요", image: "guide-signup" },
-  { no: "02", icon: "book", title: "책을 선택하고 읽기", text: "마음에 드는 책을 선택하고\n지금 바로 읽기 시작하세요", image: "guide-read" },
-  { no: "03", icon: "write", title: "그 날을 기록하기", text: "나의 독서를 기록해요", image: "guide-record" },
+  { no: "01", icon: "person", title: "회원가입하기", text: "간단한 정보만 입력하고\n여정을 시작해요", image: signUpImg, width: 238 },
+  { no: "02", icon: "book", title: "책을 선택하고 읽기", text: "마음에 드는 책을 선택하고\n지금 바로 읽기 시작하세요", image: chooseImg, width: 251 },
+  { no: "03", icon: "write", title: "그 날을 기록하기", text: "나의 독서를 기록해요", image: recordImg, width: 189 },
 ];
 
 const NAV = [
@@ -93,13 +94,21 @@ const NAV = [
 
 const scrollToSection = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
-// 로고: 한자처럼 생긴 글자(이미지)는 왼쪽에서, '다독'(글자)은 오른쪽에서 들어와 가운데서 만난다
+// 로고: 앞의 한자처럼 생긴 글자는 '다'와 '독'을 겹친 모양이다.
+// '다'(glyph-da.png)는 왼쪽에서, '독'(glyph-dok.png)은 오른쪽에서 들어와 겹친다(독이 위).
+// 두 조각은 합친 글자(dadok-glyph.png)와 선 위치가 똑같게 그린 것이라, 마지막에 합친 글자가 위에서 서서히 나타나면
+// 글자 안쪽에 겹쳐 있던 선만 사라지고 나머지는 움직이지 않는다. 뒤의 '다독'은 그대로 둔다.
 const HeroLogo = () => (
   <h1 className="ld-logo" aria-label="다독다독">
     <span className="ld-logo-glyph" aria-hidden="true">
-      <img src={logoImg} alt="" />
+      <img className="da" src={glyphDaImg} alt="" />
+      <img className="dok" src={glyphDokImg} alt="" />
+      <img className="merged" src={glyphImg} alt="" />
     </span>
-    <span className="ld-logo-text" aria-hidden="true">다독</span>
+    <span className="ld-logo-rest" aria-hidden="true">
+      <img className="da" src={daImg} alt="" />
+      <img className="dok" src={dokImg} alt="" />
+    </span>
   </h1>
 );
 
@@ -142,7 +151,7 @@ const Landing = () => {
         <section id="features" className="ld-features">
           <h2>주요 기능</h2>
           {FEATURES.map((f, i) => (
-            <article key={f.no} className={`ld-feature ${i % 2 ? "reverse tinted" : ""}`}>
+            <article key={f.no} className={`ld-feature ${i % 2 ? "reverse tinted" : ""} ${f.image ? "" : "text-only"}`}>
               <div className="ld-feature-text">
                 <span className="ld-badge">{f.no}</span>
                 <h3>{f.title}</h3>
@@ -150,7 +159,7 @@ const Landing = () => {
                   <p key={line}>{line}</p>
                 ))}
               </div>
-              <Shot name={f.image} label={`${f.title} 화면 이미지`} />
+              {f.image && <Shot src={f.image} width={f.width} label={`${f.title} 화면`} />}
             </article>
           ))}
         </section>
@@ -165,7 +174,7 @@ const Landing = () => {
                 <GuideIcon name={g.icon} />
                 <h3>{g.title}</h3>
                 <p>{g.text}</p>
-                <Shot name={g.image} label={`${g.title} 화면 이미지`} className="small" />
+                <Shot src={g.image} width={g.width} label={`${g.title} 화면`} className="small" />
               </li>
             ))}
           </ol>
