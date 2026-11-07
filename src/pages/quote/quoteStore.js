@@ -7,7 +7,7 @@
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id). 인용구는 200자 이하(DB varchar 200).
 // 즐겨찾기는 명세서·DB 어디에도 없어서 브라우저에서만 처리한다. TODO: 백엔드와 확인
 
-import { requestServer } from "../bookSearch/bookStore";
+import { requestServer } from "../../api/client";
 
 const KEY = "quotes";
 export const MAX_QUOTE_LENGTH = 200;

@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { PATHS } from "./routes";
-import SignupFlow from "./pages/auth/SignupFlow";    // 1번: 경로 수정
-import LoginForm from "./pages/auth/LoginForm";      // 1번
-import FindAccount from "./pages/auth/FindAccount";  // 1번
+import SignupFlow from "./pages/auth/SignupFlow";
+import LoginForm from "./pages/auth/LoginForm";
+import FindAccount from "./pages/auth/FindAccount";
 import Layout from "./components/layouts/layout";
 import Home from "./pages/home/Home";
 import Quote from "./pages/quote/Quote";
@@ -78,9 +78,10 @@ const App = () => (
       <Route path={PATHS.login} element={<LoginPage />} />
       <Route path={PATHS.signup} element={<SignupPage />} />
       <Route path={PATHS.find} element={<FindPage />} />
-      {/* TODO: 개발 중 임시로 인증 없이 열어둠. 완성 후 RequireAuth로 감싸기 */}
+      {/* TODO: 아래 화면들은 개발 중이라 로그인 없이 열어 둠. 완성 후 RequireAuth 로 감싸기 */}
       {/* 타이머는 사이드바 없이 화면 전체를 쓴다 */}
       <Route path={PATHS.timer} element={<Timer />} />
+      {/* Layout 안의 화면은 왼쪽에 사이드바가 붙는다 */}
       <Route element={<Layout />}>
         <Route path={PATHS.main} element={<Home />} />
         <Route path={PATHS.mypage} element={<MyPage />} />
@@ -93,7 +94,7 @@ const App = () => (
         <Route path={PATHS.quote} element={<Quote />} />
         <Route path={PATHS.settings} element={<div>설정</div>} />
       </Route>
-      {/* 5번: 맨 아래에 추가 */}
+      {/* 없는 주소는 첫 화면으로 */}
       <Route path="*" element={<Navigate to={PATHS.guest} replace />} />
     </Routes>
   </BrowserRouter>

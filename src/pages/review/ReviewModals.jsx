@@ -1,16 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useEscape from "../../hooks/useEscape";
 import { formatDate } from "./format";
 
 const MAX_LENGTH = 300; // 명세서: 감상문 300자 이하
-
-// Esc 를 누르면 닫는다
-const useEscape = (onClose) => {
-  useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-};
 
 // 팝업 안쪽 오른쪽 위의 회색 동그란 닫기 버튼 (마우스를 올리면 빨간색)
 const CloseButton = ({ onClick }) => (

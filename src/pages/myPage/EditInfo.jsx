@@ -13,6 +13,7 @@ import "./MyPage.css";
 
 const MAX_PASSWORD = 50; // 회원가입과 같은 규칙
 const GO_BACK_MS = 800;
+
 const Field = ({ label, icon, children, extra }) => (
   <label className="ei-field">
     <span className="ei-label">{label}</span>
@@ -156,7 +157,8 @@ const EditInfo = () => {
               <section className="ei-section">
                 <h2>계정</h2>
                 <Field label="이메일" icon="mail" extra={form.google && <span className="ei-chip">Google 연동</span>}>
-                  <input type="email" value={form.email} readOnly tabIndex={-1} aria-readonly="true" /> {/* 이메일은 바꿀 수 없다 */}
+                  {/* 이메일은 바꿀 수 없다 */}
+                  <input type="email" value={form.email} readOnly tabIndex={-1} aria-readonly="true" />
                 </Field>
 
                 {passwordOpen ? (

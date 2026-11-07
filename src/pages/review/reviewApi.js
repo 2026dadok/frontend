@@ -2,7 +2,7 @@
 import { getCommentaries } from "../bookSearch/bookStore";
 
 // 감상문 목록: [{ day, content, date }]  (day = 몇 일차, date = ISO 날짜)
-// TODO: 명세서에 감상문 조회 API가 없다. 정해지면 내 것 / 친구 것을 서버에서 받아온다. (GET /bookstore/feeling_page 는 화면 주소로 보임)
+// TODO: 백엔드 연결 후 GET /bookstore/feeling_page 로 내 것 / 친구 것을 받아온다
 export const fetchMyCommentaries = (bookId) => getCommentaries(bookId);
 export const fetchFriendCommentaries = () => [];
 

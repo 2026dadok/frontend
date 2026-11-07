@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import useFitScale from "../../hooks/useFitScale";
+import useToast from "../../hooks/useToast";
 import { getMyLibrary } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { QuoteAddModal, QuoteDetailModal, QuoteEditModal } from "./QuoteModals";
 import { DEMO_QUOTES, addQuote, formatShort, getQuotes, removeQuote, toggleFavorite, updateQuote } from "./quoteStore";
 import "../bookSearch/BookSearch.css"; // 알림창(.bs-toast)과 오른쪽 위 XP(.bs-xp) 모양을 같이 쓴다
 import "./Quote.css";
-
-const TOAST_MS = 2000;
 
 const SORTS = [
   { value: "latest", label: "최신순" }, // 나중에 쓴 인용구가 위
@@ -79,9 +78,7 @@ const Quote = () => {
   const [editId, setEditId] = useState(null);
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef(null);
-  const rootRef = useRef(null);
+  const [toast, showToast] = useToast();
 
   const quotes = useMemo(
     () => sortQuotes(demo ? DEMO_QUOTES : getQuotes(), sort),
@@ -94,13 +91,6 @@ const Quote = () => {
     [version]
   );
   const byId = (id) => quotes.find((q) => q.id === id) ?? null;
-
-  const showToast = useCallback((message) => {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), TOAST_MS);
-  }, []);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // ••• 메뉴 밖을 누르거나 Esc 를 누르면 닫는다
   useEffect(() => {
@@ -179,7 +169,7 @@ const Quote = () => {
   const editing = byId(editId);
 
   return (
-    <div className="quote-page" ref={rootRef}>
+    <div className="quote-page">
       <div className="quote-xp">
         <XpTotal />
       </div>

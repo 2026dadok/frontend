@@ -32,7 +32,7 @@ const SharedLibrary = ({ book, friend, myPercent = 0, friendPercent = 0 }) => {
       <img className="bs-co-cover" src={book.cover} alt={book.title} />
       <div className="bs-co-right wide">
         <p className="bs-co-day">함께 읽은 지 D+{daysSince(friend.startedAt)}</p>
-        <h1>{me.displayName}님과 {friend.friendName}님의 공동서재</h1>
+        <h1>{me.displayName === "나" ? "나와" : `${me.displayName}님과`} {friend.friendName}님의 공동서재</h1>
         <p className="bs-shared-sub">
           {[book.publisher, book.author && `${book.author} 지음`].filter(Boolean).join(" | ")}
         </p>

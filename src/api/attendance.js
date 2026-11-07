@@ -1,4 +1,5 @@
 import { getMe } from "../pages/bookSearch/bookStore";
+import { authHeaders } from "./client";
 import { showXpToast } from "../components/xpToast/xpToastBus";
 
 // 일일 출석. 출석은 백엔드가 알려주는 게 아니라 프런트가 직접 보낸다. (POST /quests/attendance, 로그인 상태, 하루 1회)
@@ -6,10 +7,6 @@ import { showXpToast } from "../components/xpToast/xpToastBus";
 // 퀘스트 달성 여부는 퀘스트 목록의 done 값으로만 판단한다. (홈이 목록을 다시 받아 보여준다)
 
 const ATTENDANCE_XP = 10; // 서버 응답에 reward_xp 가 없을 때만 쓰는 기본값
-
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
-});
 
 // 오늘 이미 성공했으면 다시 보내지 않는다. 실패(이미 출석했거나 서버 문제)는 조용히 넘기고 다음에 다시 시도한다.
 const checkAttendance = async () => {

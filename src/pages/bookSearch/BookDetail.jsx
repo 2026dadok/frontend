@@ -24,7 +24,6 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
   const [editing, setEditing] = useState(false); // 내 리뷰 수정 중인지
   const [others, setOthers] = useState(null); // null = 불러오는 중
 
-
   useEffect(() => {
     let alive = true;
     fetchAuthorOtherBooks(book)
@@ -42,7 +41,8 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
   const addedCount = getAddedCount(book.id); // 서재에 추가한 사람 수 (추가 버튼을 누르면 부모가 다시 그려서 갱신)
   // 내 리뷰도 이 목록에 같이 들어간다 (최신순)
   const reviewList = [...reviews].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const foldable = book.intro.length > INTRO_FOLD_LENGTH;
+  const intro = book.intro ?? ""; // 주간 경쟁에서 오는 책은 소개가 없을 수 있다
+  const foldable = intro.length > INTRO_FOLD_LENGTH;
 
   const submitReview = async () => {
     // 이미 쓴 리뷰: 처음엔 잠겨 있고 [수정]을 눌러야 고칠 수 있다. 저장은 백엔드가 받아줘야 반영된다.
@@ -118,7 +118,7 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
           <section>
             <h2>책 소개</h2>
             <p className={`bs-intro ${foldable && !expanded ? "folded" : ""}`}>
-              {book.intro || "등록된 책 소개가 없습니다."}
+              {intro || "등록된 책 소개가 없습니다."}
             </p>
             {foldable && (
               <button type="button" className="bs-link-btn bs-fold" onClick={() => setExpanded((v) => !v)}>

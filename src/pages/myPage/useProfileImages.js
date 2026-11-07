@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import { setMyImage, shrinkImage } from "../../api/myImages";
 import useMyImage from "../../hooks/useMyImage";
+import useToast from "../../hooks/useToast";
 import { resetImage, uploadImage } from "./myPageApi";
-
-const TOAST_MS = 2000;
 
 // 프로필/배경 이미지와 바꾸기. 고르면 바로 화면에 보여주고 서버에 올린다.
 // 이미지는 공용 저장소(api/myImages)에 넣어서 주간 경쟁·공동서재의 내 사진도 같이 바뀐다.
@@ -11,16 +10,7 @@ const TOAST_MS = 2000;
 const useProfileImages = () => {
   const profile = useMyImage("profile");
   const background = useMyImage("background");
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef(null);
-
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-
-  const showToast = useCallback((message) => {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), TOAST_MS);
-  }, []);
+  const [toast, showToast] = useToast();
 
   // 서버가 준 이미지 주소를 저장한다. 빈 값(서버 없음·임시값)은 브라우저에 있던 사진을 지우지 않는다
   const setImages = useCallback((images) => {

@@ -1,14 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import useEscape from "../../hooks/useEscape";
 import { MAX_QUOTE_LENGTH, formatFull } from "./quoteStore";
-
-// Esc 를 누르면 닫는다
-const useEscape = (onClose) => {
-  useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-};
 
 // 어두운 배경 + 가운데 팝업. 배경을 누르면 닫힌다. (팝업 크기는 화면 배율(scale)에 맞춰 같이 줄어든다)
 const Frame = ({ scale, onClose, label, children }) => (

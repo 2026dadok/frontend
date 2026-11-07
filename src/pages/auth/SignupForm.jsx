@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AuthLayout from "./components/AuthLayout";
 import { LineInput } from "./components/LineInput";
+import { checkId } from "../../api/auth";
 import "./SignupForm.css";
 
 const SignupForm = ({ onNext, onFindAccount }) => {
@@ -33,8 +34,14 @@ const SignupForm = ({ onNext, onFindAccount }) => {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validate()) return;
+    // 이미 있는 아이디면 여기서 막는다. 서버가 없으면(data 없음) 일단 넘어가고 가입할 때 서버가 판단한다.
+    const { data } = await checkId(loginId.trim());
+    if (data?.available === false) {
+      alert("이미 사용 중인 아이디입니다.");
+      return;
+    }
     onNext({ nickname: nickname.trim(), loginId: loginId.trim(), password });
   };
 

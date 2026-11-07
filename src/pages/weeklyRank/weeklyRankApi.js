@@ -4,16 +4,12 @@
 // TODO: 백엔드가 필드 이름을 정하면 normalize 함수의 후보 이름을 그것 하나로 줄인다.
 // TODO: 읽은 시간 단위(분/초)는 백엔드와 확인. 지금은 분으로 본다. (독서 시간 저장 POST /times 와 같은 단위)
 
+import { authHeaders, pick } from "../../api/client";
 import { searchBooks } from "../bookSearch/bookSearchApi";
 import { getMe } from "../bookSearch/bookStore";
 
 const COMPETITOR_BOOKS_MAX = 5;
 
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
-});
-
-const pick = (obj, ...names) => names.map((n) => obj?.[n]).find((v) => v != null && v !== "");
 const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 
 // 순위 한 줄: { rank, name, title, minutes, image, me }
@@ -63,6 +59,7 @@ const loadReadingBook = async (raw) => {
   return {
     ...book,
     id: String(pick(raw, "book_id", "bookID", "id") ?? book.id ?? ""),
+    serverBookId: toNumber(pick(raw, "book_id", "bookID")), // 타이머가 읽은 시간·쪽수를 서버에 보낼 때 쓴다
     readPage,
     totalPage,
     percent: Math.max(0, Math.min(100, percent)),

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { PATHS } from "../../routes";
 import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
-import { addToMyLibrary, getMe, requestCoReading } from "./bookStore";
+import { addToMyLibrary, getMe, getMyLibrary, requestCoReading } from "./bookStore";
 import useInfiniteBooks from "./useInfiniteBooks";
 import { SearchBar, Toast, XpTotal } from "./parts";
 import BookList from "./BookList";
@@ -10,10 +11,10 @@ import BookDetail from "./BookDetail";
 import CoInvite from "./CoInvite";
 import SharedLibrary from "./SharedLibrary";
 import useFitScale from "../../hooks/useFitScale";
+import useToast from "../../hooks/useToast";
 import "./BookSearch.css";
 
-const TOAST_MS = 2000;
-const START_TOAST_MS = 1500;
+const START_TOAST_MS = 2500;
 
 const EMPTY_PAGE = { books: [], total: 0, hasMore: false };
 
@@ -21,15 +22,14 @@ const EMPTY_PAGE = { books: [], total: 0, hasMore: false };
 //   list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
 const BookSearchFlow = ({ initialBook, initialQuery }) => {
   const scale = useFitScale();
+  const navigate = useNavigate();
   const [view, setView] = useState(initialBook ? "detail" : initialQuery ? "results" : "list"); // 홈 추천 도서에서 오면 상세부터, 서고 검색창에서 오면 결과부터
   const [query, setQuery] = useState(initialQuery); // 검색창에 적힌 글자
   const [term, setTerm] = useState(initialQuery); // 마지막으로 검색한 단어
   const [book, setBook] = useState(initialBook); // 선택한 책
   const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef(null);
-  const flowTimer = useRef(null);
+  const [toast, showToast] = useToast();
 
   const [genre, setGenre] = useState("bestseller"); // 1번 화면에서 고른 장르
   const genreLoader = useCallback((page) => fetchGenreBooks(genre, page), [genre]);
@@ -39,20 +39,6 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
     [term]
   );
   const results = useInfiniteBooks(searchLoader);
-
-  useEffect(
-    () => () => {
-      clearTimeout(toastTimer.current);
-      clearTimeout(flowTimer.current);
-    },
-    []
-  );
-
-  const showToast = useCallback((message, ms = TOAST_MS) => {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), ms);
-  }, []);
 
   // 같은 검색어면 다시 불러오지 않고 결과 화면으로 돌아간다. 다른 검색어면 새로 검색한다.
   const handleSearch = () => {
@@ -85,24 +71,27 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
   // 친구는 실제 사용자여야 하고, 상대가 수락해야 함께 읽기가 시작된다.
   // 여기서는 요청(POST /library/joints)만 보내고, 공동서재(7번)는 만들지 않는다.
   // TODO: 수락 여부를 알 수 있는 API(요청 목록/상태 조회)가 생기면 수락된 요청부터 addToSharedLibrary + 7번 화면으로 연결
-  const startTogether = async ({ id }) => {
+  const startTogether = async ({ id, name }) => {
     if (id === getMe().key) {
       showToast("자기 자신과는 함께 읽을 수 없어요.");
       return;
     }
     setStarting(true);
-    const sent = await requestCoReading(id);
+    const sent = await requestCoReading(id, name);
     setStarting(false);
     if (!sent) {
       showToast("함께 읽기를 요청하지 못했어요. 아이디를 확인해주세요.");
       return;
     }
-    showToast("함께 읽기를 요청했어요. 친구가 수락하면 시작돼요.", START_TOAST_MS + 1000);
+    showToast("함께 읽기를 요청했어요. 친구가 수락하면 시작돼요.", START_TOAST_MS);
     setView("detail");
   };
 
-  // TODO: 타이머 페이지가 만들어지면 선택한 책으로 타이머 페이지에 이동
-  const readNow = () => {};
+  // 타이머로 간다. 서재에 담아 둔 책이면 서버 번호(serverBookId)를 같이 넘겨서 읽은 기록이 서버에 저장되게 한다.
+  const readNow = (b) => {
+    const shelf = getMyLibrary().find((item) => item.id === b.id);
+    navigate(PATHS.timer, { state: { book: { ...b, totalPage: b.pages, ...shelf } } });
+  };
 
   const showSearchBar = view === "list" || view === "results" || view === "detail";
 

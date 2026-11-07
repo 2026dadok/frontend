@@ -1,16 +1,21 @@
-# React + Vite
+# 다독다독
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+독서 기록 서비스의 프론트엔드입니다. (React + Vite)
 
-Currently, two official plugins are available:
+## 실행
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+`.env.local` 에 아래 값을 넣습니다. (git 에 올라가지 않습니다)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+YES24_API_KEY=YES24 키
+BACKEND_URL=http://localhost:8080
+```
 
-## Expanding the ESLint configuration
+## 코드 설명
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+[docs/코드설명](docs/코드설명/README.md) 을 보세요.

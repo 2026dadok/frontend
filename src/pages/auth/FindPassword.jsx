@@ -1,82 +1,32 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { LineInput } from "./components/LineInput";
+import useEmailTimer from "./useEmailTimer";
+import { requestPasswordReset, resetPassword, verifyEmailCode } from "../../api/auth";
 
-const VERIFY_TIME = 5 * 60;
-const RESEND_COOLDOWN = 60;
-
+// 비밀번호 찾기: 이메일로 인증번호 받기 → 인증번호 확인 → 새 비밀번호 저장
+// 명세서: POST /auth/rest-passwrod (email), POST /auth/email_verify (email, code), POST /auth/pw_reset (token, newpassward)
 const FindPassword = ({ onBackToLogin }) => {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(VERIFY_TIME);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const [resendKey, setResendKey] = useState(0);
-  const [verified, setVerified] = useState(false);
+  const [token, setToken] = useState(null); // 인증에 성공하면 채워진다. 값이 있으면 새 비밀번호 화면을 보여준다
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const timerRef = useRef(null);
-  const cooldownRef = useRef(null);
-
-  useEffect(() => {
-    if (!codeSent) return;
-    timerRef.current = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [codeSent, resendKey]);
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    cooldownRef.current = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(cooldownRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(cooldownRef.current);
-  }, [resendKey, resendCooldown]);
-
-  const formatTime = (sec) => {
-    const m = String(Math.floor(sec / 60)).padStart(2, "0");
-    const s = String(sec % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  };
+  const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
 
   const handleStartVerify = async () => {
-  if (!name || !email) {
-    alert("아이디와 이메일을 입력하세요.");
-    return;
-  }
-  if (resendCooldown > 0) return;
+    if (!email) {
+      alert("이메일을 입력하세요.");
+      return;
+    }
+    if (resendCooldown > 0) return;
 
-  try {
-    const res = await fetch("/auth/find-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email }),
-    });
-    if (!res.ok) throw new Error("발송 실패");
-  } catch (err) {
-    console.error(err);
-    alert("아이디와 이메일이 일치하지 않습니다.");
-    return;
-  }
-
-  setCodeSent(true);
-  setSecondsLeft(VERIFY_TIME);
-  setResendCooldown(RESEND_COOLDOWN);
-  setResendKey((prev) => prev + 1);
-};
+    const { ok, data } = await requestPasswordReset(email);
+    if (!ok) {
+      alert("인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
+      return;
+    }
+    startTimer(data?.expiresIn);
+  };
 
   const handleVerify = async () => {
     if (secondsLeft === 0) {
@@ -88,19 +38,13 @@ const FindPassword = ({ onBackToLogin }) => {
       return;
     }
 
-    try {
-      const res = await fetch("/auth/email-verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      });
-      if (!res.ok) throw new Error("인증 실패");
-
-      setVerified(true);
-    } catch (err) {
-      console.error(err);
+    const { ok, data } = await verifyEmailCode(email, code);
+    if (!ok) {
       alert("인증번호가 올바르지 않습니다.");
+      return;
     }
+    // TODO: pw_reset 의 token 을 어디서 받는지 명세서에 없다. 응답에 token 이 없으면 인증번호를 그대로 쓴다. 백엔드와 확인
+    setToken(data?.token ?? code);
   };
 
   const handleResetPassword = async () => {
@@ -117,38 +61,21 @@ const FindPassword = ({ onBackToLogin }) => {
       return;
     }
 
-    try {
-      const res = await fetch("/auth/find-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, new_passwd: newPassword }),
-      });
-      if (!res.ok) throw new Error("재설정 실패");
-
-      alert("비밀번호가 변경되었습니다.");
-      onBackToLogin();
-    } catch (err) {
-      console.error(err);
+    const { ok } = await resetPassword(token, newPassword);
+    if (!ok) {
       alert("비밀번호 재설정 중 오류가 발생했습니다.");
+      return;
     }
+    alert("비밀번호가 변경되었습니다.");
+    onBackToLogin();
   };
 
-  if (verified) {
+  if (token) {
     return (
       <div className="fa-step">
         <p className="fa-subtitle">비밀번호 재설정</p>
-        <LineInput
-          placeholder="비밀번호"
-          type="password"
-          value={newPassword}
-          onChange={setNewPassword}
-        />
-        <LineInput
-          placeholder="비밀번호 확인"
-          type="password"
-          value={newPasswordConfirm}
-          onChange={setNewPasswordConfirm}
-        />
+        <LineInput placeholder="비밀번호" type="password" value={newPassword} onChange={setNewPassword} />
+        <LineInput placeholder="비밀번호 확인" type="password" value={newPasswordConfirm} onChange={setNewPasswordConfirm} />
         <button type="button" className="fa-submit" onClick={handleResetPassword}>
           로그인
         </button>
@@ -158,25 +85,15 @@ const FindPassword = ({ onBackToLogin }) => {
 
   return (
     <div className="fa-step">
-      <LineInput placeholder="아이디" value={name} onChange={setName} />
       <LineInput placeholder="이메일" type="email" value={email} onChange={setEmail} />
 
       <div className="ev-code-row">
         <LineInput placeholder="인증번호 6자리 입력" value={code} onChange={setCode} />
-        {codeSent && <span className="ev-timer">{formatTime(secondsLeft)}</span>}
+        {codeSent && <span className="ev-timer">{timeText}</span>}
       </div>
 
-      <button
-        type="button"
-        className="fa-send-link"
-        onClick={handleStartVerify}
-        disabled={resendCooldown > 0}
-      >
-        {resendCooldown > 0
-          ? `다시 받기 (${resendCooldown}초)`
-          : codeSent
-          ? "다시 받기"
-          : "인증번호 받기"}
+      <button type="button" className="fa-send-link" onClick={handleStartVerify} disabled={resendCooldown > 0}>
+        {sendLabel}
       </button>
 
       {codeSent && (

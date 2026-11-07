@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CompleteBadge from "../../components/CompleteBadge";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
+import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
 import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
@@ -12,8 +13,6 @@ import { formatDate } from "./format";
 import mascotImg from "../../images/mascot.png";
 import "../bookSearch/BookSearch.css"; // 알림창(.bs-toast)과 오른쪽 위 XP(.bs-xp) 모양을 같이 쓴다
 import "./Review.css";
-
-const TOAST_MS = 2000;
 
 // 책 소개가 칸을 넘치면(스크롤 가능) 글이 더 남아 있는 가장자리를 흐리게(회색처럼) 보이게 한다.
 //   맨 위: 아래쪽만 / 중간: 위·아래 모두 / 맨 끝: 위쪽만 (내리면 위로 올라간 글이 회색이 된다)
@@ -69,10 +68,12 @@ const Review = () => {
   const demo = params.get("demo") === "1"; // 디자인 확인용 예시 데이터
 
   // 누른 책. 주소로 바로 들어오면 서재의 첫 책을 보여준다. (TODO: 책을 가리키는 값으로 교체)
-  const book = location.state?.book ?? getMyLibrary()[0] ?? getSharedLibrary()[0] ?? null;
+  // (첫 책은 처음 한 번만 읽는다. 그릴 때마다 읽으면 매번 새 객체가 되어 아래 계산이 계속 다시 돈다)
+  const [firstBook] = useState(() => getMyLibrary()[0] ?? getSharedLibrary()[0] ?? null);
+  const book = location.state?.book ?? firstBook;
 
   const [version, setVersion] = useState(0); // 감상문을 저장한 뒤 목록을 다시 읽기 위한 값
-  const [toast, setToast] = useState("");
+  const [toast, showToast] = useToast();
   const [saving, setSaving] = useState(false);
   const [openDay, setOpenDay] = useState(null); // 전체 보기 팝업에 열린 일차
 
@@ -94,7 +95,6 @@ const Review = () => {
     };
   }, [entries, book, demo]);
 
-  // 서고의 '감상문 쓰기'로 오면(?write=1) 오늘 일차의 감상문이 아직 없을 때 쓰기 팝업을 바로 연다
   // 서재에 소개가 저장되지 않은 책은 YES24에서 다시 가져와서 채운다. introFetched[책 id] 가 undefined 면 가져오는 중.
   const [introFetched, setIntroFetched] = useState({});
   useEffect(() => {
@@ -112,14 +112,10 @@ const Review = () => {
     };
   }, [book, introFetched]);
 
+  // 서고의 '감상문 쓰기'로 오면(?write=1) 오늘 일차의 감상문이 아직 없을 때 쓰기 팝업을 바로 연다
   const [writeDay, setWriteDay] = useState(() =>
     params.get("write") === "1" && !isFriend && book && !entries.some((e) => e.day === days[0]) ? days[0] : null
   );
-
-  const showToast = useCallback((message) => {
-    setToast(message);
-    setTimeout(() => setToast(""), TOAST_MS);
-  }, []);
 
   if (!book) {
     return (

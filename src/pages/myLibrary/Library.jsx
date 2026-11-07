@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CompleteBadge from "../../components/CompleteBadge";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
+import useToast from "../../hooks/useToast";
 import { SearchBar, Toast, XpTotal } from "../bookSearch/parts";
 import { getMyLibrary, getSharedLibrary, removeFromMyLibrary } from "../bookSearch/bookStore";
 import ReadingCalendar from "./ReadingCalendar";
@@ -21,7 +22,6 @@ const BOOK_W = 169;
 const BOOK_GAP = 37;
 const MAX_MOLE_RATIO = 1.5;
 const ALL = "전체";
-const TOAST_MS = 2000;
 
 const ICONS = {
   read: <path d="M4 5.5C6 4.5 9 4.5 12 6c3-1.5 6-1.5 8-.5V18c-2-1-5-1-8 .5-3-1.5-6-1.5-8-.5V5.5zM12 6v12.5" />,
@@ -82,8 +82,7 @@ const Library = () => {
   const [page, setPage] = useState(0);
   const [menuId, setMenuId] = useState(null); // 메뉴가 열린 책
   const [query, setQuery] = useState("");
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef(null);
+  const [toast, showToast] = useToast();
   const rootRef = useRef(null);
   const log = useMemo(() => fetchReadingLog(), []);
 
@@ -96,8 +95,6 @@ const Library = () => {
   const lastPage = Math.max(0, Math.ceil(items.length / slotsPerPage) - 1);
   const currentPage = Math.min(page, lastPage); // 창이 넓어져 한 화면에 더 들어가면 마지막 쪽을 넘지 않게
   const pageItems = items.slice(currentPage * slotsPerPage, (currentPage + 1) * slotsPerPage);
-
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // 메뉴/드롭다운 밖을 누르거나 Esc 를 누르면 닫는다
   useEffect(() => {
@@ -120,12 +117,6 @@ const Library = () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, []);
-
-  const showToast = useCallback((message) => {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), TOAST_MS);
   }, []);
 
   const switchTab = (next) => {
@@ -152,7 +143,6 @@ const Library = () => {
     navigate(PATHS.search, { state: { query: word } });
   };
 
-  // TODO: 타이머/감상문 페이지가 만들어지면 해당 페이지에서 state.book 을 받아 쓴다
   // 나의 서재: 책 메뉴(바로 읽기 / 감상문 쓰기 / 삭제), 공동 서재: 그 책의 공동서재 페이지로 이동
   const openBook = (book) => {
     if (tab === "shared") navigate(PATHS.sharedLibrary, { state: { record: book } });
@@ -243,11 +233,9 @@ const Library = () => {
                           <button type="button" role="menuitem" onClick={() => writeReview(book)}>
                             <MenuIcon name="write" /> 감상문 쓰기
                           </button>
-                          {tab === "my" && (
-                            <button type="button" role="menuitem" onClick={() => deleteBook(book)}>
-                              <MenuIcon name="trash" /> 삭제
-                            </button>
-                          )}
+                          <button type="button" role="menuitem" onClick={() => deleteBook(book)}>
+                            <MenuIcon name="trash" /> 삭제
+                          </button>
                         </div>
                       )}
                     </div>

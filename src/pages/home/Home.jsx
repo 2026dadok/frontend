@@ -182,7 +182,6 @@ const Home = () => {
       <div className="home-stage" style={{ "--s": scale }}>
         <div className="home-grid">
           <div className="home-left">
-            {/* TODO: 서고 페이지에 나의 서재/공동 서재 화면이 생기면 tab 값으로 해당 화면을 연다 */}
             <Shelf title="나의 서재" books={myBooks} to={`${PATHS.library}?tab=my`} />
             <Shelf title="공동 서재" books={sharedBooks} to={`${PATHS.library}?tab=shared`} />
             <Recommend books={recommended} onOpen={openRecommended} />

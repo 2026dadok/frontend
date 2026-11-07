@@ -1,54 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { LineInput } from "./components/LineInput";
-import { EMAIL_PURPOSE, findId, sendEmailCode, toExpireSeconds, verifyEmailCode } from "../../api/auth";
-
-const VERIFY_TIME = 5 * 60;
-const RESEND_COOLDOWN = 60;
+import useEmailTimer from "./useEmailTimer";
+import { EMAIL_PURPOSE, findId, sendEmailCode, verifyEmailCode } from "../../api/auth";
 
 const FindId = ({ onBackToLogin }) => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(VERIFY_TIME);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const [resendKey, setResendKey] = useState(0);
+  const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
   const [foundId, setFoundId] = useState(null);
-  const timerRef = useRef(null);
-  const cooldownRef = useRef(null);
-
-  useEffect(() => {
-    if (!codeSent) return;
-    timerRef.current = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [codeSent, resendKey]);
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    cooldownRef.current = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(cooldownRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(cooldownRef.current);
-  }, [resendKey, resendCooldown]);
-
-  const formatTime = (sec) => {
-    const m = String(Math.floor(sec / 60)).padStart(2, "0");
-    const s = String(sec % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  };
 
   const handleStartVerify = async () => {
     if (!email) {
@@ -64,10 +23,7 @@ const FindId = ({ onBackToLogin }) => {
       return;
     }
 
-    setCodeSent(true);
-    setSecondsLeft(toExpireSeconds(data?.expiresIn, VERIFY_TIME));
-    setResendCooldown(RESEND_COOLDOWN);
-    setResendKey((prev) => prev + 1);
+    startTimer(data?.expiresIn);
   };
 
   const handleFindId = async () => {
@@ -116,7 +72,7 @@ const FindId = ({ onBackToLogin }) => {
 
       <div className="ev-code-row">
         <LineInput placeholder="인증번호 6자리 입력" value={code} onChange={setCode} />
-        {codeSent && <span className="ev-timer">{formatTime(secondsLeft)}</span>}
+        {codeSent && <span className="ev-timer">{timeText}</span>}
       </div>
 
       <button
@@ -125,11 +81,7 @@ const FindId = ({ onBackToLogin }) => {
         onClick={handleStartVerify}
         disabled={resendCooldown > 0}
       >
-        {resendCooldown > 0
-          ? `다시 받기 (${resendCooldown}초)`
-          : codeSent
-          ? "다시 받기"
-          : "인증번호 받기"}
+        {sendLabel}
       </button>
 
       {codeSent && (

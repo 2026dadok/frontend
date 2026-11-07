@@ -5,7 +5,7 @@
 // 읽은 시간만 보내면 백엔드가 오늘 읽은 시간을 합쳐서 퀘스트 달성 여부를 계산하고,
 // 홈의 퀘스트 목록(GET /quests/daily)에 done 값으로 내려준다.
 
-import { requestServer } from "../bookSearch/bookStore";
+import { authHeaders, requestServer } from "../../api/client";
 
 // 이번에 읽은 시간을 백엔드에 보낸다. 명세서: POST /times (bookID, readtime) → message, today_readtime
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id)다. 성공하면 오늘 읽은 시간(today_readtime)을 돌려준다.
@@ -15,10 +15,7 @@ export const addStudyTime = async (bookID, readtime) => {
   try {
     const res = await fetch("/times", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
-      },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ bookID, readtime }),
     });
     if (!res.ok) return null;

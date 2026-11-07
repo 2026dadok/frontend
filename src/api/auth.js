@@ -34,6 +34,23 @@ export const findId = (email) => post("/auth/find_id", { email });
 // TODO: 이메일·생일·목표 시간을 보내는 키 이름과 목표 시간의 단위는 백엔드와 확인
 export const signup = (payload) => post("/auth/signup", payload);
 
+// 아이디 중복 확인: GET /auth/check_id?ID=... → available. 서버가 없으면 data 가 null 이다.
+export const checkId = async (ID) => {
+  try {
+    const res = await fetch(`/auth/check_id?ID=${encodeURIComponent(ID)}`);
+    return { ok: res.ok, data: await res.json().catch(() => null) };
+  } catch {
+    return { ok: false, data: null };
+  }
+};
+
+// 비밀번호 변경 메일 보내기: 요청 email → 응답 message
+// TODO: 명세서 주소 철자(rest-passwrod)가 오타 같다. 백엔드가 만든 실제 주소로 맞춘다.
+export const requestPasswordReset = (email) => post("/auth/rest-passwrod", { email });
+
+// 비밀번호 재설정: 요청 token, newpassward → 응답 message
+export const resetPassword = (token, newpassward) => post("/auth/pw_reset", { token, newpassward });
+
 // 인증번호 만료 시간(초). 서버가 expiresIn 을 주면 그 값을, 아니면 기본값을 쓴다.
 export const toExpireSeconds = (expiresIn, fallback) =>
   Number.isFinite(Number(expiresIn)) && Number(expiresIn) > 0 && Number(expiresIn) <= 3600 ? Number(expiresIn) : fallback;

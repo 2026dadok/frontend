@@ -2,14 +2,14 @@
 //   GET /users/my_page    → all_reading_time, sequence_day, all_reading_page, league_in5
 //   GET /users/edit_page  → name, birthdate, goal_time, email, passward
 //   PUT /users/edit_info  (profileimage, name, birthdate, goal_time, email, passward) → message
-//   PUT /users/title      (titleID) → message           : 업적을 칭호로 사용
+//   PUT /users/title      (titleID) → message           : 이름 앞에 붙일 업적 고르기
 //   PUT /users/image      (image) → imageurl            : 프로필·배경 변경
-// TODO: 명세서의 마이페이지 응답에 아이디·이름·칭호·프로필/배경 이미지·업적 목록이 없다. 백엔드와 필드 이름을 정하면 normalize 를 맞춘다.
+// TODO: 명세서의 마이페이지 응답에 아이디·이름·사용 중인 업적·프로필/배경 이미지·업적 목록이 없다. 백엔드와 필드 이름을 정하면 normalize 를 맞춘다.
 // TODO: 총 독서 시간 단위(분/초)는 백엔드와 확인. 지금은 분으로 본다. (주간 경쟁과 같은 단위)
 
-import { getMe, requestServer } from "../bookSearch/bookStore";
+import { authHeaders, pick, requestServer } from "../../api/client";
+import { getMe } from "../bookSearch/bookStore";
 
-const pick = (obj, ...names) => names.map((n) => obj?.[n]).find((v) => v != null && v !== "");
 const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
 // TODO: 백엔드 연결 후 삭제. 백엔드가 없거나 실패했을 때 화면 확인용으로 보여주는 임시값 (응답과 같은 형태)
@@ -109,7 +109,7 @@ export const saveEditInfo = async ({ name, birthdate, goalTime, email, password 
   return (await requestServer("PUT", "/users/edit_info", body)).ok;
 };
 
-// 업적을 칭호로 사용. 성공하면 true
+// 이름 앞에 붙일 업적을 고른다. 성공하면 true
 export const applyTitle = async (titleID) => (await requestServer("PUT", "/users/title", { titleID })).ok;
 
 // 프로필(kind: "profile") / 배경(kind: "background") 이미지 변경. 성공하면 서버의 이미지 주소, 실패하면 null
@@ -121,7 +121,7 @@ export const uploadImage = async (kind, file) => {
   try {
     const res = await fetch("/users/image", {
       method: "PUT",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token") ?? ""}` },
+      headers: authHeaders(), // Content-Type 은 브라우저가 파일 형식에 맞게 넣는다
       body: form,
     });
     if (!res.ok) return null;
@@ -137,4 +137,4 @@ export const uploadImage = async (kind, file) => {
 export const resetImage = async (kind) =>
   (await requestServer("PUT", "/users/image", { image: null, type: kind })).ok;
 
-export const formatHours =(minutes) => `${Math.floor(minutes / 60)}시간`;
+export const formatHours = (minutes) => `${Math.floor(minutes / 60)}시간`;

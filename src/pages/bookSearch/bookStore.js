@@ -1,8 +1,10 @@
-// 책 검색 페이지가 쓰는 임시 저장소 (localStorage).
+// 서재·공동서재·감상문·리뷰를 브라우저(localStorage)에 저장하는 임시 저장소.
 // TODO: 백엔드 API가 준비되면 이 파일의 함수 내부만 API 호출로 바꾸면 된다.
-//   - 나의 서재: POST /library/books (title, author, total_page)
-//   - 공동서재:  POST /library/joints (target_user_id)
-//   - 리뷰/별점: 리뷰 조회·등록 API (명세서에 아직 없음)
+//   - 나의 서재: POST /library/books 는 명세서가 bookID 인데 지금은 title, author, total_page 를 보낸다 (백엔드와 확인)
+//   - 목록 조회: GET /library/my_page, /library/joints_page, /bookstore/feeling_page 로 교체
+//   - 리뷰 등록: POST /books/reviews 로 교체
+
+import { requestServer } from "../../api/client";
 
 const KEYS = {
   user: "user", // 로그인 시 저장 (App.jsx)
@@ -30,27 +32,6 @@ const write = (key, value) => {
     return false;
   }
 };
-
-// ───────── 백엔드 호출 ─────────
-// 백엔드가 아직 개발 중이라, 호출이 실패하면 화면이 멈추지 않게 false 를 돌려주고 호출한 쪽이 대체 동작을 한다.
-// TODO: 인증 방식(Bearer 토큰 / 세션)은 백엔드 확정 후 확인
-const authHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
-});
-
-// 서버에 요청하고 { ok, data } 를 돌려준다. 서버가 없거나 응답이 JSON 이 아니어도 예외 없이 처리한다.
-export const requestServer = async (method, url, body) => {
-  try {
-    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
-    const data = await res.json().catch(() => null);
-    return { ok: res.ok, data };
-  } catch {
-    return { ok: false, data: null };
-  }
-};
-
-const postToServer = async (url, body) => (await requestServer("POST", url, body)).ok;
 
 // ───────── 내 정보 ─────────
 // 로그인 응답(token 제외)을 App.jsx 가 "user" 에 저장해 둔다. 필드명은 nickname / name 을 기대한다.
@@ -130,7 +111,7 @@ export const updateShelfBook = (bookId, patch) => {
 // 나의 서재에서 책을 삭제한다. "removed" | "error"
 // 삭제는 DB에 반영되어야 하므로 백엔드(DELETE /library/books)가 성공했을 때만 지운다.
 // 서버가 실패하거나 아직 없으면 책은 그대로 남는다.
-// 서버에 보내는 book_id 는 등록할 때 서버가 돌려준 정수 번호다. (백엔드 확인: book_id 는 int 번호)
+// 서버에 보내는 bookID 는 등록할 때 서버가 돌려준 정수 번호(book_id)다.
 // 번호를 모르는 책은 서버에 삭제를 요청할 수 없어서 지우지 않는다.
 // 삭제가 확인되면 "서재에 추가한 사람 수"(책 상세의 별점 옆 숫자)에서도 내가 빠진다.
 export const removeFromMyLibrary = async (bookId) => {
@@ -138,7 +119,7 @@ export const removeFromMyLibrary = async (bookId) => {
   const book = list.find((b) => b.id === bookId);
   if (!book) return "removed";
   if (!Number.isInteger(book.serverBookId)) return "error";
-  const { ok } = await requestServer("DELETE", "/library/books", { book_id: book.serverBookId });
+  const { ok } = await requestServer("DELETE", "/library/books", { bookID: book.serverBookId });
   if (!ok) return "error";
   if (!write(KEYS.myLibrary, list.filter((b) => b.id !== bookId))) return "error";
   const adders = read(KEYS.adders, {});
@@ -153,9 +134,9 @@ export const removeFromMyLibrary = async (bookId) => {
 // ───────── 공동 서재 ─────────
 export const getSharedLibrary = () => read(KEYS.sharedLibrary, []);
 
-// 함께 읽기 요청 (POST /library/joints). 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
-// TODO: target_user_id 가 로그인 아이디(name)인지 숫자 id 인지 백엔드와 확인
-export const requestCoReading = (friendId) => postToServer("/library/joints", { target_user_id: friendId });
+// 함께 읽기 요청. 명세서: POST /library/joints (joinID, name). 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
+export const requestCoReading = async (friendId, friendName) =>
+  (await requestServer("POST", "/library/joints", { joinID: friendId, name: friendName })).ok;
 
 // 같은 책을 같은 친구와 다시 시작하면 기존 기록(시작일)을 그대로 쓴다. 저장 실패 시 null.
 export const addToSharedLibrary = (book, friend) => {
@@ -174,7 +155,7 @@ export const addToSharedLibrary = (book, friend) => {
 };
 
 // ───────── 감상문 ─────────
-// 내 감상문: { day, content, date } 목록. TODO: 감상문 조회 API가 정해지면 교체 (명세서: 작성 POST /library/commentaries)
+// 내 감상문: { day, content, date } 목록. TODO: 백엔드 연결 후 GET /bookstore/feeling_page 로 교체
 export const getCommentaries = (bookId) => (read(KEYS.commentaries, {})[bookId] ?? []);
 
 // 감상문을 쓴다. 백엔드(POST /bookstore/feelings: bookID, feeling_content → feeling_id, new_achievements)에 먼저 보내고,
@@ -205,7 +186,7 @@ export const getReviews = (bookId) => (read(KEYS.reviews, {})[bookId] ?? []);
 
 // 내 리뷰 등록. 이미 내 리뷰가 있으면 덮어쓰지 않고 null (수정은 updateMyReview → 백엔드만).
 // 저장 실패 시에도 null. 성공하면 갱신된 목록을 돌려준다.
-// TODO: 리뷰 등록 API가 정해지면 서버 응답의 review_id 를 reviewId 에 저장한다 (수정·삭제에 필요)
+// TODO: POST /books/reviews (bookID, content, rating) 로 교체하고, 응답의 review_id 를 reviewId 에 저장한다 (수정·삭제에 필요)
 export const saveMyReview = (bookId, { rating, content }) => {
   const all = read(KEYS.reviews, {});
   const me = getMe();
@@ -223,7 +204,7 @@ export const saveMyReview = (bookId, { rating, content }) => {
   return write(KEYS.reviews, { ...all, [bookId]: next }) ? next : null;
 };
 
-// 내 리뷰 수정은 DB에 저장되어야 하므로 백엔드(PUT /bookstore/edit_reviews)가 성공했을 때만 화면 값을 바꾼다.
+// 내 리뷰 수정은 DB에 저장되어야 하므로 백엔드(PUT /books/reviews)가 성공했을 때만 화면 값을 바꾼다.
 // 서버가 받아주지 않으면 null (브라우저에는 아무것도 저장하지 않는다).
 export const updateMyReview = async (bookId, content) => {
   const all = read(KEYS.reviews, {});
@@ -231,16 +212,8 @@ export const updateMyReview = async (bookId, content) => {
   const list = all[bookId] ?? [];
   const mine = list.find((r) => r.userKey === me.key);
   if (!mine) return null;
-  try {
-    const res = await fetch("/bookstore/edit_reviews", {
-      method: "PUT",
-      headers: authHeaders(),
-      body: JSON.stringify({ review_id: mine.reviewId, content }),
-    });
-    if (!res.ok) return null;
-  } catch {
-    return null;
-  }
+  const { ok } = await requestServer("PUT", "/books/reviews", { reviewID: mine.reviewId, content, rating: mine.rating });
+  if (!ok) return null;
   const next = list.map((r) => (r.userKey === me.key ? { ...r, content } : r));
   return write(KEYS.reviews, { ...all, [bookId]: next }) ? next : null;
 };

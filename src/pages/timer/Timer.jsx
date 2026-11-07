@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
+import useToast from "../../hooks/useToast";
 import GoalTimeInput from "../../components/goalTime/GoalTimeInput";
 import { normalizeGoalTime } from "../../components/goalTime/goalTime";
 import { showXpToast } from "../../components/xpToast/xpToastBus";
@@ -18,7 +19,6 @@ import "./Timer.css";
 const DESIGN_W = 1520;
 const DESIGN_H = 988;
 const TICK_MS = 250;
-const TOAST_MS = 2000;
 const XP_TOAST_DELAY_MS = 300;
 
 const calcScale = () => Math.min(1, window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
@@ -85,8 +85,7 @@ const Timer = () => {
   const [page, setPage] = useState("");
   const [saving, setSaving] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef(null);
+  const [toast, showToast] = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -95,13 +94,6 @@ const Timer = () => {
       alive = false;
     };
   }, []);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-
-  const showToast = (message) => {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), TOAST_MS);
-  };
 
   const goalSeconds = toSeconds(goal);
   const reached = elapsed >= goalSeconds;
