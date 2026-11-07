@@ -15,7 +15,3 @@ npm run dev
 YES24_API_KEY=YES24 키
 BACKEND_URL=http://localhost:8080
 ```
-
-## 코드 설명
-
-[docs/코드설명](docs/코드설명/README.md) 을 보세요.

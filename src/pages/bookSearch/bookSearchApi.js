@@ -10,8 +10,8 @@ const PAGE_SIZE = 20;
 const OTHER_WORKS_LIMIT = 4;
 
 // 책 소개 글에 섞여 올 수 있는 HTML 태그/엔티티를 걷어낸다 (화면에는 순수 텍스트만 쓴다)
-const cleanText = (text = "") =>
-  String(text)
+const cleanText = (text) =>
+  String(text ?? "") // YES24 가 소개를 null 로 줄 때가 있다. String(null) 은 "null" 글자가 된다
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/p>/gi, "\n")
     .replace(/<[^>]+>/g, "")
