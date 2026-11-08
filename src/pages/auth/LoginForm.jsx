@@ -5,19 +5,19 @@ import { login } from "../../api/auth";
 import "./LoginForm.css";
 
 const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
-  const [name, setName] = useState(""); //id
-  const [passwd, setPasswd] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const validate = () => {
-    if (!name || !passwd) {
+    if (!email || !password) {
       alert("아이디와 비밀번호를 입력하세요.");
       return false;
     }
-    if (name.replace(/\s/g, "").length > 21) {
+    if (email.replace(/\s/g, "").length > 21) {
       alert("아이디는 공백 제외 21자 이내로 입력하세요.");
       return false;
     }
-    if (passwd.length > 50) {
+    if (password.length > 50) {
       alert("비밀번호는 50자 이내로 입력하세요.");
       return false;
     }
@@ -27,8 +27,11 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
   const handleLogin = async () => {
     if (!validate()) return;
 
+    // 추가: 전송 데이터 확인
+    console.log("로그인 시도 데이터:", { email, password });
+
     try {
-      const { ok, data } = await login(name, passwd); // 명세서: 요청 ID, passward
+      const { ok, data } = await login(email, password);
       if (!ok) throw new Error("로그인 실패");
       onLoginSuccess(data);
     } catch (err) {
@@ -46,12 +49,12 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
       <div className="login-form">
         <h1>로그인하기</h1>
 
-        <LineInput placeholder="아이디" value={name} onChange={setName} />
+        <LineInput placeholder="이메일" value={email} onChange={setEmail} />
         <LineInput
           placeholder="비밀번호"
           type="password"
-          value={passwd}
-          onChange={setPasswd}
+          value={password}
+          onChange={setPassword}
           onKeyDown={handleEnter}
         />
 

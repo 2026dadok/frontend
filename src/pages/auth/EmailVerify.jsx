@@ -90,7 +90,7 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     }
 
     try {
-      const { ok } = await verifyEmailCode(email, code); // 명세서: POST /auth/email_verify (email, code)
+      const { ok } = await verifyEmailCode(email, code, EMAIL_PURPOSE.signup);
       if (!ok) throw new Error("인증 실패");
 
       onNext({ email });

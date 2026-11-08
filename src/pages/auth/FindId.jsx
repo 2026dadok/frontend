@@ -6,6 +6,8 @@ const VERIFY_TIME = 5 * 60;
 const RESEND_COOLDOWN = 60;
 
 const FindId = ({ onBackToLogin }) => {
+  const [name, setName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -83,15 +85,19 @@ const FindId = ({ onBackToLogin }) => {
       alert("인증번호 6자리를 입력하세요.");
       return;
     }
+    if (!name || !birthDate) {
+      alert("이름과 생년월일을 입력하세요.");
+      return;
+    }
 
     try {
-      const verified = await verifyEmailCode(email, code); // 명세서: POST /auth/email_verify
+      const verified = await verifyEmailCode(email, code, EMAIL_PURPOSE.findId);
       if (!verified.ok) throw new Error("인증 실패");
 
-      const { ok, data } = await findId(email); // 명세서: POST /auth/find_id (email) → ID
-      if (!ok || !data?.ID) throw new Error("조회 실패");
+      const { ok, data } = await findId(name, birthDate, email);
+      if (!ok) throw new Error("조회 실패");
 
-      setFoundId(data.ID);
+      setFoundId(data); // 백엔드에서 email 문자열을 직접 반환
     } catch (err) {
       console.error(err);
       alert("아이디 조회 중 오류가 발생했습니다.");
@@ -112,6 +118,8 @@ const FindId = ({ onBackToLogin }) => {
 
   return (
     <div className="fa-step">
+      <LineInput placeholder="이름" value={name} onChange={setName} />
+      <LineInput placeholder="생년월일 (YYYY-MM-DD)" value={birthDate} onChange={setBirthDate} />
       <LineInput placeholder="이메일" type="email" value={email} onChange={setEmail} />
 
       <div className="ev-code-row">

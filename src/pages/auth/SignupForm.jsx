@@ -1,17 +1,27 @@
 import { useState } from "react";
 import AuthLayout from "./components/AuthLayout";
 import { LineInput } from "./components/LineInput";
+import { checkEmailDuplicate } from "../../api/auth";
+
 import "./SignupForm.css";
 
 const SignupForm = ({ onNext, onFindAccount }) => {
-  const [nickname, setNickname] = useState(""); // nickname
-  const [loginId, setLoginId] = useState("");           // id
+  const [nickname, setNickname] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [isEmailChecked, setIsEmailChecked] = useState(false);
+  const [isEmailAvailable, setIsEmailAvailable] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
 
   const validate = () => {
     if (!nickname.trim() || !loginId.trim() || !password || !passwordConfirm) {
       alert("모든 항목을 입력하세요.");
+      return false;
+    }
+    if (!isEmailChecked || !isEmailAvailable) {
+      alert("아이디(이메일) 중복 확인을 완료해주세요.");
       return false;
     }
     if (nickname.length > 10) {
@@ -33,6 +43,24 @@ const SignupForm = ({ onNext, onFindAccount }) => {
     return true;
   };
 
+  const handleCheckDuplicate = async () => {
+    if (!loginId.trim()) {
+      alert("아이디(이메일)를 입력하세요.");
+      return;
+    }
+    setCheckingEmail(true);
+    const { ok, data } = await checkEmailDuplicate(loginId.trim());
+    setCheckingEmail(false);
+    if (!ok) {
+      alert("중복 확인 중 오류가 발생했습니다.");
+      return;
+    }
+    const isDuplicate = data;
+    setIsEmailAvailable(!isDuplicate);
+    setIsEmailChecked(true);
+    alert(isDuplicate ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다.");
+  };
+
   const handleNext = () => {
     if (!validate()) return;
     onNext({ nickname: nickname.trim(), loginId: loginId.trim(), password });
@@ -48,7 +76,24 @@ const SignupForm = ({ onNext, onFindAccount }) => {
         <h1>회원 가입하기</h1>
 
         <LineInput placeholder="나의 이름" value={nickname} onChange={setNickname} />
-        <LineInput placeholder="아이디" value={loginId} onChange={setLoginId} />
+        <div className="id-input-wrapper">
+          <LineInput
+            placeholder="아이디"
+            value={loginId}
+            onChange={(val) => {
+              setLoginId(val);
+              setIsEmailChecked(false);
+            }}
+          />
+          <button type="button" className="check-btn" onClick={handleCheckDuplicate} disabled={checkingEmail}>
+            {checkingEmail ? "..." : "중복확인"}
+          </button>
+        </div>
+        {isEmailChecked && (
+          <span className={`status-msg ${isEmailAvailable ? "available" : "unavailable"}`}>
+            {isEmailAvailable ? "사용 가능한 아이디입니다." : "이미 사용 중인 아이디입니다."}
+          </span>
+        )}
         <LineInput
           placeholder="비밀번호"
           type="password"

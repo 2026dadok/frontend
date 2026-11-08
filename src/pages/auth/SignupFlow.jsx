@@ -26,18 +26,18 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
   };
 
   const handleGoalNext = async (values) => {
-    const goal_time = `${values.HRS}:${values.MIN}:${values.SEC}`;
+    // 목표 시간은 분 단위 정수
+    const defaultTimerTime = parseInt(values.HRS) * 60 + parseInt(values.MIN);
 
-    // 명세서: name, ID, passward. 회원 테이블에는 닉네임이 없고 이름(user_name)과 아이디(user_id)만 있다.
-    // 이름 칸에는 화면의 "닉네임" 입력을 보낸다. TODO: 이메일·생일·목표 시간의 키 이름과 목표 시간 단위는 백엔드와 확인
     const payload = {
       name: signupData.nickname,
-      ID: signupData.loginId,
-      passward: signupData.password,
+      password: signupData.password, 
       email: signupData.email,
-      birthdate: signupData.birthday,
-      goal_time,
+      birthDate: signupData.birthday, 
+      defaultTimerTime,
     };
+
+    console.log("회원가입 전송 데이터:", payload); // 추가
 
     try {
       const { ok } = await signup(payload);

@@ -1,18 +1,21 @@
+// vite.config.js 수정: 환경 변수 로딩 디버깅 및 안전한 백엔드 URL 설정
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
-// 백엔드 API 경로 (API 명세서 기준). BACKEND_URL 이 있을 때만 프록시로 넘긴다.
 const BACKEND_PATHS = ['/auth', '/library', '/quests', '/users', '/bookstore', '/books', '/times', '/main']
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // .env.local 값. VITE_ 접두사가 없어서 브라우저 코드에는 노출되지 않는다.
-  //   YES24_API_KEY=...             (YES24 키)
-  //   BACKEND_URL=http://...        (백엔드 서버 주소, 없으면 백엔드 프록시를 쓰지 않는다)
-  const env = loadEnv(mode, '.', '')
+  const env = loadEnv(mode, process.cwd(), '')
+  
+  // 디버깅용 로그 추가
+  console.log("Current working directory:", process.cwd());
+  console.log("Loaded environment variables:", env);
+  
+  // .env.local이 로드되지 않는 경우를 대비한 하드코딩된 폴백
+  const backendUrl = env.BACKEND_URL || 'http://127.0.0.1:8080';
+  console.log("Using backend URL:", backendUrl);
 
   const proxy = {
-    // 브라우저 /yes24/... → https://apis.yes24.com/... (CORS 회피 + 키는 여기서 헤더로 추가)
     '/yes24': {
       target: 'https://apis.yes24.com',
       changeOrigin: true,
@@ -20,15 +23,13 @@ export default defineConfig(({ mode }) => {
       headers: { 'X-Api-Key': env.YES24_API_KEY ?? '' },
     },
   }
-  if (env.BACKEND_URL) {
-    for (const path of BACKEND_PATHS) {
-      proxy[path] = {
-        target: env.BACKEND_URL,
-        changeOrigin: true,
-        // 브라우저 주소창으로 들어온 화면 이동(예: /auth/log_page)은 백엔드로 보내지 않고 프런트 화면을 보여준다.
-        // 화면 주소와 API 주소가 /auth/... 로 겹쳐도 충돌하지 않게 하기 위해서다. fetch 호출은 그대로 백엔드로 간다.
-        bypass: (req) => (req.headers.accept?.includes('text/html') ? '/index.html' : undefined),
-      }
+  
+  // 환경 변수 존재 여부와 관계없이 항상 프록시 적용
+  for (const path of BACKEND_PATHS) {
+    proxy[path] = {
+      target: backendUrl,
+      changeOrigin: true,
+      bypass: (req) => (req.headers.accept?.includes('text/html') ? '/index.html' : undefined),
     }
   }
 
