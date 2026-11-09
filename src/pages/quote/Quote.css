@@ -33,7 +33,7 @@
   font-size: 18px; text-align: center; white-space: nowrap;
 }
 .quote-row-text span { display: block; max-width: calc(100% - 64px); overflow: hidden; text-overflow: ellipsis; } /* 양쪽 따옴표 안쪽에서 잘리고 ... 이 나온다 */
-.quote-row-text::before, .quote-row-text::after { position: absolute; font-family: Georgia, "Times New Roman", "Noto Serif KR", serif; font-weight: 700; font-size: 26px; color: #a8928d; line-height: 1; }
+.quote-row-text::before, .quote-row-text::after { position: absolute; font-weight: 700; font-size: 26px; color: #a8928d; line-height: 1; }
 .quote-row-text::before { content: "“"; left: 6px; top: 14px; }
 .quote-row-text::after { content: "”"; right: 6px; bottom: 10px; }
 
@@ -90,7 +90,7 @@
 }
 .quote-modal-body textarea { display: block; padding: 0; border: 0; outline: none; resize: none; overflow: hidden; background: transparent; font-family: inherit; } /* 높이는 JS 가 글에 맞춘다. 너무 길면 문장 영역이 스크롤된다 */
 .quote-modal-body textarea::placeholder { color: #aaa; }
-.quote-modal-body .mark { position: absolute; font-family: Georgia, "Times New Roman", "Noto Serif KR", serif; font-weight: 700; font-size: 60px; line-height: 1; color: #a58b86; }
+.quote-modal-body .mark { position: absolute; font-weight: 700; font-size: 60px; line-height: 1; color: #a58b86; }
 .quote-modal-body .mark.open { left: -4px; top: -38px; }
 .quote-modal-body .mark.close { right: -2px; bottom: -70px; }
 
