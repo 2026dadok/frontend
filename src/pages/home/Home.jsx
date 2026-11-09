@@ -20,7 +20,7 @@ import giftBigIcon from "../../images/icon-gift-big.png";
 import giftSmallIcon from "../../images/icon-gift.png";
 import mascotImg from "../../images/mascot.png";
 
-const SHELF_MAX_BOOKS = 4; // 책 최대 4권 + 항상 마지막에 + 칸
+const SHELF_MAX_BOOKS = 5; // 책 최대 5권 + 항상 마지막에 + 칸
 
 // 백엔드 연결 전/실패 시 화면 확인용 (완료 여부·진행도는 백엔드 값만 사용, 프론트에서 체크하지 않음)
 const FALLBACK_WEEKLY = { title: "이번주에 300페이지 읽기", current: 0, goal: 300, xp: 20 };
