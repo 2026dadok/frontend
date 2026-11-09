@@ -4,7 +4,7 @@
 // TODO: 백엔드가 필드 이름을 정하면 normalize 함수의 후보 이름을 그것 하나로 줄인다.
 // TODO: 읽은 시간 단위(분/초)는 백엔드와 확인. 지금은 분으로 본다. (독서 시간 저장 POST /times 와 같은 단위)
 
-import { authHeaders, pick } from "../../api/client";
+import { authHeaders, isLoggedIn, pick } from "../../api/client";
 import { searchBooks } from "../bookSearch/bookSearchApi";
 import { getMe } from "../bookSearch/bookStore";
 
@@ -73,35 +73,21 @@ const toLastWeek = (raw) => {
   return { rank, xp: toNumber(pick(raw, "reward_xp", "xp", "gained_xp")) ?? 0 };
 };
 
-// TODO: 백엔드 연결 후 삭제. 백엔드가 없거나 실패했을 때 화면 확인용으로 보여주는 임시값 (응답과 같은 형태)
-const MOCK_COMPETITION = {
-  tier: "동",
-  competitors_books: ["9791141691370", "9791122092240", "9791199489561", "9788937460586", "9791124073483"],
-  my_rank: { rank: 12, title: "베스트셀러", reading_time: 637 },
-  ranking: [
-    { rank: 1, name: "최지수", title: "어느날 갑자기", reading_time: 8292 },
-    { rank: 2, name: "강효제", title: "스테디셀러", reading_time: 1389 },
-    { rank: 3, name: "임상혁", title: "완독의 맛", reading_time: 1123 },
-    { rank: 4, name: "김래현", title: "주경야독", reading_time: 1025 },
-    { rank: 5, name: "김지후", title: "꿈이 끝나는", reading_time: 924 },
-    { rank: 6, name: "이하랑", title: "목차 탈출 성공", reading_time: 672 },
-  ],
-  reading_book: { isbn: "9788936434120", read_page: 148, total_page: 312 },
-  last_week_result: { rank: 12, reward_xp: 90 },
-};
-
+// 서버가 없거나 실패하면 빈 값({})을 돌려준다. 아래에서 티어·책·순위가 모두 빈 화면이 된다.
 const requestCompetition = async () => {
   try {
     const res = await fetch("/main/week_competition", { headers: authHeaders() });
-    if (!res.ok) return MOCK_COMPETITION;
+    if (!res.ok) return {};
     const json = await res.json();
-    return json?.data ?? json;
+    return json?.data ?? json ?? {};
   } catch {
-    return MOCK_COMPETITION; // 서버가 없거나 응답이 JSON 이 아닐 때
+    return {}; // 서버가 없거나 응답이 JSON 이 아닐 때
   }
 };
 
+// 로그인하지 않았으면 서버에 묻지 않고 { needLogin: true } 만 돌려준다. 화면은 "로그인이 필요해요"를 보여준다.
 export const fetchWeekCompetition = async () => {
+  if (!isLoggedIn()) return { needLogin: true, tier: "", competitorBooks: [], ranking: [], readingBook: null, lastWeek: null };
   const data = await requestCompetition();
   const [competitorBooks, readingBook] = await Promise.all([
     loadCompetitorBooks(data.competitors_books),

@@ -34,6 +34,9 @@ const write = (key, value) => {
 };
 
 // ───────── 내 정보 ─────────
+// 로그인할 때 저장한 내 정보 그대로. 로그인하지 않았으면 빈 객체
+export const getSavedUser = () => (isLoggedIn() ? read(KEYS.user, {}) ?? {} : {});
+
 // 로그인 응답(token 제외)을 App.jsx 가 "user" 에 저장해 둔다. 필드명은 nickname / name 을 기대한다.
 export const getMe = () => {
   const user = read(KEYS.user, {}) ?? {};

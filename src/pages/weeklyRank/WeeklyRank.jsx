@@ -111,7 +111,7 @@ const WeeklyRank = () => {
             {TIER_IMAGES[data?.tier] ? (
               <img className="rk-tier-art" src={TIER_IMAGES[data.tier]} alt={`${data.tier} 티어`} />
             ) : (
-              data && <div className="rk-tier-art empty">{data.tier}</div> // 모르는 티어 값이면 이름만 보여준다
+              data?.tier && <div className="rk-tier-art empty">{data.tier}</div> // 모르는 티어 값이면 이름만 보여준다. 값이 없으면 빈 카드
             )}
           </section>
 
@@ -124,14 +124,15 @@ const WeeklyRank = () => {
                 </button>
               ))}
               {data && data.competitorBooks.length === 0 && (
-                <p className="rk-empty">아직 경쟁자들이 읽는 책이 없어요.</p>
+                <p className="rk-empty">{data.needLogin ? "로그인하면 경쟁자들이 읽는 책을 볼 수 있어요." : "아직 경쟁자들이 읽는 책이 없어요."}</p>
               )}
             </div>
           </section>
 
           <section className="rk-card rk-ranking">
             <h2>순위</h2>
-            {data && (
+            {data?.needLogin && <p className="rk-ranking-empty">로그인이 필요해요.</p>}
+            {data && !data.needLogin && (
               <>
                 <ul className="rk-mine">
                   <RankRow ranker={{ ...data.me, image: myImage || data.me.image }} />
@@ -141,6 +142,7 @@ const WeeklyRank = () => {
                     <RankRow key={`${ranker.name}-${i}`} ranker={ranker} />
                   ))}
                 </ul>
+                {data.ranking.length === 0 && <p className="rk-ranking-empty">아직 이번 주 순위가 없어요.</p>}
               </>
             )}
           </section>

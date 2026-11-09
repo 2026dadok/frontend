@@ -92,7 +92,7 @@ const MyPage = () => {
               <ProfileImage image={images.profile} size={139} />
               <ImagePencil label="프로필 사진 바꾸기" className="avatar" onPick={(file) => changeImage("profile", file)} canReset={Boolean(images.profile)} onReset={() => resetToDefault("profile")} />
             </div>
-            <h1 className="mp-id">{data.id}</h1>
+            <h1 className="mp-id">{data.needLogin ? "로그인이 필요해요." : data.id}</h1>
             <p className="mp-title">
               {data.title && <strong>{data.title} </strong>}
               {data.name}
@@ -120,6 +120,9 @@ const MyPage = () => {
                 ))}
               </div>
               {data.achieved.length > 0 && data.locked.length > 0 && <hr className="mp-ach-divider" />}
+              {data.achieved.length === 0 && data.locked.length === 0 && (
+                <p className="mp-ach-empty">{data.needLogin ? "로그인하면 업적을 볼 수 있어요." : "아직 업적이 없어요."}</p>
+              )}
               <div className="mp-achs">
                 {data.locked.map((item) => (
                   <Achievement key={item.id} item={item} />

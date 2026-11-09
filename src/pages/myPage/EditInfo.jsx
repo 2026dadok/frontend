@@ -95,6 +95,10 @@ const EditInfo = () => {
   const shownStatus = (key) => (passwords[key] || triedSave ? passwordStatus[key] : null);
 
   const save = async () => {
+    if (form.needLogin) {
+      showToast("로그인이 필요해요.");
+      return;
+    }
     if (!form.name.trim()) {
       showToast("이름을 입력해주세요.");
       return;
@@ -139,7 +143,7 @@ const EditInfo = () => {
                 <ProfileImage image={images.profile} size={111} />
                 <ImagePencil label="프로필 사진 바꾸기" className="avatar" onPick={(file) => changeImage("profile", file)} canReset={Boolean(images.profile)} onReset={() => resetToDefault("profile")} />
               </div>
-              <h1 className="ei-id">{form.id}</h1>
+              <h1 className="ei-id">{form.needLogin ? "로그인이 필요해요." : form.id}</h1>
 
               <section className="ei-section">
                 <h2>기본 정보</h2>

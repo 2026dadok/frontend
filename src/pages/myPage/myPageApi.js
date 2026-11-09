@@ -7,50 +7,20 @@
 // TODO: 명세서의 마이페이지 응답에 아이디·이름·사용 중인 업적·프로필/배경 이미지·업적 목록이 없다. 백엔드와 필드 이름을 정하면 normalize 를 맞춘다.
 // TODO: 총 독서 시간 단위(분/초)는 백엔드와 확인. 지금은 분으로 본다. (주간 경쟁과 같은 단위)
 
-import { authHeaders, pick, requestServer } from "../../api/client";
-import { getMe } from "../bookSearch/bookStore";
+import { authHeaders, isLoggedIn, pick, requestServer } from "../../api/client";
+import { getSavedUser } from "../bookSearch/bookStore";
 
 const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
-// TODO: 백엔드 연결 후 삭제. 백엔드가 없거나 실패했을 때 화면 확인용으로 보여주는 임시값 (응답과 같은 형태)
-const MOCK_MY_PAGE = {
-  ID: "goodboy_101",
-  name: "지원",
-  title: "베스트셀러",
-  profile_image: "",
-  background_image: "",
-  all_reading_time: 152 * 60,
-  sequence_day: 27,
-  all_reading_page: 4322,
-  league_in5: 0,
-  achievements: [
-    { id: 1, title: "베스트셀러", description: "베스트셀러로 지정된 책을 완독한다.", xp: 10, achieved: true, used: true },
-    { id: 2, title: "스테디셀러", description: "스테디셀러로 지정된 책을 완독한다.", xp: 10, achieved: true },
-    { id: 3, title: "목차 탈출 성공", description: "처음으로 책을 읽기 시작한다.", xp: 5, achieved: true },
-    { id: 4, title: "속독가", description: "처음 읽기 시작한 책을 한 번에 완독한다.", xp: 5 },
-    { id: 5, title: "정독가", description: "한 책을 완독할 때까지 책을 덮을 때마다 감상문을 쓴다.", xp: 10 },
-    { id: 6, title: "독서왕", description: "주간 경쟁 순위 10위권에 진입한다.", xp: 150 },
-    { id: 7, title: "다독왕", description: "주간 경쟁 순위 10위권으로 마무리한다.", xp: 100 },
-    { id: 8, title: "박제된 천재", description: "(조건 준비 중)", xp: 100 },
-  ],
-};
-
-// TODO: 백엔드 연결 후 삭제 (회원정보 수정 화면 임시값)
-const MOCK_EDIT_PAGE = {
-  ID: "goodboy_101",
-  name: "지원",
-  birthdate: "2010-01-27",
-  goal_time: "00:30",
-  email: "goodboy_101@gmail.com",
-  provider: "google",
-};
-
-// 서버 응답을 받고, 없거나 실패하면 임시값을 쓴다
-const load = async (url, mock) => {
+// 서버 응답을 받고, 없거나 실패하면 빈 값({})을 쓴다 (이름·업적·통계가 모두 빈 화면이 된다)
+const load = async (url) => {
   const { ok, data } = await requestServer("GET", url);
-  if (!ok || !data || typeof data !== "object") return mock;
+  if (!ok || !data || typeof data !== "object") return {};
   return data.data ?? data;
 };
+
+// 서버가 아이디·이름을 안 줄 때 쓰는 값: 로그인할 때 저장해 둔 내 정보. 없으면 빈 칸
+const savedUser = () => getSavedUser();
 
 // 업적 한 줄: { id, title, description, xp, achieved, used }
 const toAchievement = (raw) => ({
@@ -68,13 +38,16 @@ const sortAchievements = (list) => {
   return { achieved, locked: list.filter((a) => !a.achieved) };
 };
 
+// 로그인하지 않았으면 서버에 묻지 않고 needLogin: true 인 빈 값을 돌려준다
 export const fetchMyPage = async () => {
-  const data = await load("/users/my_page", MOCK_MY_PAGE);
+  const needLogin = !isLoggedIn();
+  const data = needLogin ? {} : await load("/users/my_page");
   const achievements = (Array.isArray(data.achievements) ? data.achievements : []).map(toAchievement);
-  const me = getMe();
+  const user = savedUser();
   return {
-    id: pick(data, "ID", "user_id", "id") ?? me.key,
-    name: pick(data, "name", "user_name") ?? me.displayName,
+    needLogin,
+    id: pick(data, "ID", "user_id", "id") ?? pick(user, "ID", "id") ?? "",
+    name: pick(data, "name", "user_name") ?? pick(user, "name") ?? "",
     title: pick(data, "title", "title_name") ?? achievements.find((a) => a.used)?.title ?? "",
     profileImage: pick(data, "profile_image", "profileimage") ?? "",
     backgroundImage: pick(data, "background_image", "backgroundimage") ?? "",
@@ -89,9 +62,11 @@ export const fetchMyPage = async () => {
 };
 
 export const fetchEditPage = async () => {
-  const data = await load("/users/edit_page", MOCK_EDIT_PAGE);
+  const needLogin = !isLoggedIn();
+  const data = needLogin ? {} : await load("/users/edit_page");
   return {
-    id: pick(data, "ID", "user_id", "id") ?? getMe().key,
+    needLogin,
+    id: pick(data, "ID", "user_id", "id") ?? pick(savedUser(), "ID", "id") ?? "",
     name: pick(data, "name", "user_name") ?? "",
     birthdate: pick(data, "birthdate", "birthday") ?? "",
     goalTime: (pick(data, "goal_time") ?? "00:00").split(":").slice(0, 2).join(":"), // 시:분만 쓴다

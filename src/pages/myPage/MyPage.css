@@ -61,6 +61,7 @@
 /* ───────── 통계 ───────── */
 .mp-section { padding-top: 42px; }
 .mp-section + .mp-section { margin-top: 40px; padding-top: 22px; border-top: 1px solid #eadcd9; }
+.mp-ach-empty { font-size: 15px; color: #999; }
 .mp-section h2 { margin-bottom: 16px; font-size: 21px; font-weight: 500; color: #333; }
 .mp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .mp-stat {
