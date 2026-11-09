@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
+import { isLoggedIn } from "../../api/client";
 import { getMyLibrary } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { QuoteAddModal, QuoteDetailModal, QuoteEditModal } from "./QuoteModals";
-import { DEMO_QUOTES, addQuote, formatShort, getQuotes, removeQuote, toggleFavorite, updateQuote } from "./quoteStore";
+import { addQuote, formatShort, getQuotes, removeQuote, toggleFavorite, updateQuote } from "./quoteStore";
 import "../bookSearch/BookSearch.css"; // 알림창(.bs-toast)과 오른쪽 위 XP(.bs-xp) 모양을 같이 쓴다
 import "./Quote.css";
 
@@ -68,8 +68,6 @@ const QuoteRow = ({ quote, menuOpen, onOpen, onToggleMenu, onFavorite, onEdit, o
 // 나의 인용구 노트: 인용구 목록 + 보기 / 수정 / 추가 팝업
 const Quote = () => {
   const scale = useFitScale({ fitHeight: false }); // 위아래로 스크롤되는 페이지라 가로 폭만 맞춘다
-  const [params] = useSearchParams();
-  const demo = params.get("demo") === "1"; // 디자인 확인용 예시 데이터
 
   const [version, setVersion] = useState(0); // 저장·삭제 뒤 목록을 다시 읽기 위한 값
   const [sort, setSort] = useState("latest");
@@ -81,9 +79,9 @@ const Quote = () => {
   const [toast, showToast] = useToast();
 
   const quotes = useMemo(
-    () => sortQuotes(demo ? DEMO_QUOTES : getQuotes(), sort),
+    () => sortQuotes(getQuotes(), sort),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [demo, sort, version]
+    [sort, version]
   );
   const books = useMemo(
     () => getMyLibrary(),
@@ -106,15 +104,17 @@ const Quote = () => {
     };
   }, []);
 
-  const guardDemo = () => {
-    if (!demo) return false;
-    showToast("예시 화면에서는 바꿀 수 없어요.");
-    return true;
+  // 인용구 추가는 로그인해야 할 수 있다
+  const openAdd = () => {
+    if (!isLoggedIn()) {
+      showToast("로그인이 필요해요.");
+      return;
+    }
+    setAdding(true);
   };
 
   const handleFavorite = (quote) => {
     setMenuId(null);
-    if (guardDemo()) return;
     const next = toggleFavorite(quote.id);
     setVersion((v) => v + 1);
     showToast(next ? "즐겨찾기에 추가했어요." : "즐겨찾기를 해제했어요.");
@@ -122,7 +122,6 @@ const Quote = () => {
 
   const handleDelete = async (quote) => {
     setMenuId(null);
-    if (guardDemo()) return;
     if (!window.confirm("이 인용구를 삭제할까요?")) return;
     const result = await removeQuote(quote.id); // 서버가 삭제를 받아줘야 지워진다
     if (result === "removed") {
@@ -135,7 +134,6 @@ const Quote = () => {
 
   const handleEdit = (quote) => {
     setMenuId(null);
-    if (guardDemo()) return;
     setEditId(quote.id);
   };
 
@@ -200,7 +198,7 @@ const Quote = () => {
               />
             ))}
 
-            <button type="button" className="quote-add" aria-label="인용구 추가" onClick={() => (guardDemo() ? null : setAdding(true))}>
+            <button type="button" className="quote-add" aria-label="인용구 추가" onClick={openAdd}>
               <span aria-hidden="true" />
             </button>
           </div>

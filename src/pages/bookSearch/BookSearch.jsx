@@ -96,6 +96,10 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
 
   // 타이머로 간다. 서재에 담아 둔 책이면 서버 번호(serverBookId)를 같이 넘겨서 읽은 기록이 서버에 저장되게 한다.
   const readNow = (b) => {
+    if (!isLoggedIn()) {
+      showToast("로그인이 필요해요.");
+      return;
+    }
     const shelf = getMyLibrary().find((item) => item.id === b.id);
     navigate(PATHS.timer, { state: { book: { ...b, totalPage: b.pages, ...shelf } } });
   };

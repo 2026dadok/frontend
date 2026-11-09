@@ -4,6 +4,7 @@
 import { fetchBestsellers } from "../bookSearch/bookSearchApi";
 import { ensureAttendance } from "../../api/attendance";
 import { getMyLibrary, getSharedLibrary } from "../bookSearch/bookStore";
+import { getQuotes } from "../quote/quoteStore";
 import { authHeaders } from "../../api/client";
 
 const getJson = async (url, options) => {
@@ -55,14 +56,9 @@ export const loadDailyQuests = async () => {
 export const fetchTotalXp = async () => 0;
 
 // ───────── 오늘의 문장 (인용구 노트) ─────────
-// 인용구 노트(pages/quote/quoteStore.js)가 저장한 localStorage "quotes" 에서 하나를 고른다.
+// 인용구 노트(pages/quote/quoteStore.js)에 저장된 인용구 중 하나를 고른다. 로그인하지 않았으면 없다(null).
 // 형태: { text, author, book, ... }  TODO: 인용구 조회 API가 정해지면 교체
 export const fetchRandomQuote = () => {
-  try {
-    const list = JSON.parse(localStorage.getItem("quotes") ?? "[]");
-    if (!Array.isArray(list) || list.length === 0) return null;
-    return list[Math.floor(Math.random() * list.length)];
-  } catch {
-    return null;
-  }
+  const list = getQuotes();
+  return list.length ? list[Math.floor(Math.random() * list.length)] : null;
 };

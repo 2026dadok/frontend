@@ -7,7 +7,7 @@
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id). 인용구는 200자 이하(DB varchar 200).
 // 즐겨찾기는 명세서·DB 어디에도 없어서 브라우저에서만 처리한다. TODO: 백엔드와 확인
 
-import { requestServer } from "../../api/client";
+import { isLoggedIn, requestServer } from "../../api/client";
 
 const KEY = "quotes";
 export const MAX_QUOTE_LENGTH = 200;
@@ -30,13 +30,15 @@ const write = (list) => {
   }
 };
 
-export const getQuotes = () => read();
+// 인용구는 로그인한 사용자 것이다. 로그인하지 않았으면 브라우저에 남은 인용구는 보여주지 않는다.
+export const getQuotes = () => (isLoggedIn() ? read() : []);
 
 const toDateOnly = (iso) => new Date(iso).toLocaleDateString("sv-SE"); // yyyy-MM-dd (사용자 기기 날짜)
 
 // 인용구를 쓴다. 서버(POST /bookstore/notes)에 먼저 보내고, 서버가 없거나 실패해도 화면에 보이도록 브라우저에도 저장한다.
-// 서버의 책 번호(serverBookId)를 모르는 책은 서버에 보내지 않는다. "saved" | "error"
+// 서버의 책 번호(serverBookId)를 모르는 책은 서버에 보내지 않는다. "saved" | "login" | "error"
 export const addQuote = async ({ book, page, text }) => {
+  if (!isLoggedIn()) return "login";
   const now = new Date().toISOString();
   let serverNoteId = null;
   if (Number.isInteger(book.serverBookId)) {
@@ -112,16 +114,3 @@ export const formatFull = (iso) => {
   const d = new Date(iso);
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
 };
-
-// 디자인 확인용 예시 (주소에 ?demo=1 을 붙였을 때만 사용). TODO: 백엔드 연결 후 삭제
-export const DEMO_QUOTES = [
-  ["생명은 여전히 고귀한가.\n살인은 아직도 죄악인가.", "해가 지는 곳으로", 181, "2026-09-20"],
-  ["빛이 스쳐가기만 하는, 어둠 속에 감춰진 행성에...", "그들이 보지 못할 밤은 아름다워", 29, "2026-09-19"],
-  ["네가 죽은 뒤 장례식을 치르지 못해, 내 삶이 장례식이 되었다.", "소년이 온다", 213, "2026-09-16"],
-  ["새는 알에서 나오기 위해 투쟁한다. 알은 세계이다. 탄생하려..", "데미안", 143, "2026-09-12"],
-  ["오늘 엄마가 죽었다. 아니, 어쩌면 어제. 잘 모르겠다.", "이방인", 181, "2026-09-03"],
-  ["그는 가족을 회상할 때 고뇌와 사랑으로 가득 차 있었다..", "변신", 98, "2026-08-31"],
-  ["자유는 하늘이 인간에게 준 가장 귀중한 선물 가운데 하나라네..", "돈키호테 2", 312, "2026-08-27"],
-].map(([text, book, page, date], i) => ({
-  id: `demo-${i}`, text, book, author: "", page, date, createdAt: date, favorite: false, serverNoteId: null, bookId: `demo-${i}`,
-}));

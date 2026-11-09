@@ -108,21 +108,40 @@
 .ld-shot.small { margin-top: 20px; }
 
 /* ───────── 푸터 (첫 화면 · 이용약관 · 개인정보 처리방침) ───────── */
+/* 연한 민트 배경으로 분홍 본문과 구분하고, 로고·버튼 색을 사이드바(민트)와 맞춘다 */
 .ld-footer {
-  padding: 36px max(20px, calc((100% - 1290px) / 2)) 28px;
-  background: #fff; border-top: 1px solid #f0e3e1; color: #888; font-size: 14px;
+  padding: 56px max(20px, calc((100% - 1290px) / 2)) 28px;
+  background: #f1faf5; border-top: 1px solid #dff2e7; color: #6f7a74; font-size: 14px;
 }
-.ld-footer-top, .ld-footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
-.ld-footer-bottom { margin-top: 22px; padding-top: 18px; border-top: 1px solid #f5ebe9; }
-.ld-footer-brand { display: flex; align-items: baseline; gap: 12px; }
-.ld-footer strong { font-size: 18px; color: #3fbf82; }
-.ld-footer nav { display: flex; gap: 22px; }
-.ld-footer nav button { padding: 0; border: 0; background: none; font-size: 14px; color: #777; }
-.ld-footer nav button:hover { color: #333; }
-.ld-footer-legal a { font-size: 13px; color: #888; text-decoration: none; }
-.ld-footer-legal a.strong { font-weight: 700; color: #555; } /* 개인정보 처리방침은 눈에 띄게 (관례) */
+.ld-footer-main { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 40px 64px; }
+.ld-footer-logo { display: flex; align-items: center; gap: 10px; }
+.ld-footer-logo img { width: 36px; height: 36px; object-fit: contain; }
+.ld-footer-logo strong { font-size: 22px; font-weight: 700; color: #2f9e69; }
+.ld-footer-brand p { margin-top: 14px; font-size: 15px; line-height: 1.7; color: #5f6b65; }
+.ld-footer-cta {
+  margin-top: 20px; padding: 10px 20px; border: 0; border-radius: 999px;
+  background: #3fbf82; color: #fff; font-size: 15px; font-weight: 600;
+  box-shadow: 0 4px 12px rgba(63, 191, 130, 0.25); transition: background .15s, transform .15s;
+}
+.ld-footer-cta:hover { background: #34a972; transform: translateY(-1px); }
+.ld-footer-cta span { display: inline-block; margin-left: 4px; transition: transform .15s; }
+.ld-footer-cta:hover span { transform: translateX(3px); }
+.ld-footer-menus { display: flex; gap: 72px; }
+.ld-footer-menus nav { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.ld-footer-menus h2 { margin-bottom: 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: #2f9e69; }
+.ld-footer-menus button, .ld-footer-menus a {
+  padding: 0; border: 0; background: none; font-size: 15px; color: #5f6b65; text-decoration: none;
+}
+.ld-footer-menus button:hover, .ld-footer-menus a:hover { color: #222; }
+.ld-footer-bottom {
+  margin-top: 44px; padding-top: 20px; border-top: 1px solid #dff2e7;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+}
+.ld-footer-legal { display: flex; gap: 20px; }
+.ld-footer-legal a { font-size: 13px; color: #7d8882; text-decoration: none; }
+.ld-footer-legal a.strong { font-weight: 700; color: #4a544f; } /* 개인정보 처리방침은 눈에 띄게 (관례) */
 .ld-footer-legal a:hover { color: #222; text-decoration: underline; }
-.ld-footer small { font-size: 12px; color: #aaa; }
+.ld-footer small { font-size: 12px; color: #9aa59f; }
 
 /* 좁은 화면: 한 줄로 쌓는다 */
 @media (max-width: 900px) {
@@ -136,4 +155,6 @@
   .ld-feature.reverse .ld-feature-text { order: 0; }
   .ld-feature-text { padding-left: 0; }
   .ld-guide-cards { grid-template-columns: 1fr; gap: 60px; }
+  .ld-footer { padding-top: 40px; }
+  .ld-footer-menus { gap: 48px; }
 }
