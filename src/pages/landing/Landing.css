@@ -134,6 +134,10 @@
 .ld-footer-legal a.strong { font-weight: 700; color: #555; } /* 개인정보 처리방침은 눈에 띄게 (관례) */
 .ld-footer-legal a:hover { color: #222; text-decoration: underline; }
 .ld-footer small { font-size: 12px; color: #aaa; }
+.ld-footer-credit { display: flex; align-items: center; gap: 14px; }
+.ld-footer-github { display: flex; opacity: 0.4; transition: opacity .15s; } /* 평소엔 흐리게, 올리면 원래 색 */
+.ld-footer-github:hover, .ld-footer-github:focus-visible { opacity: 1; }
+.ld-footer-github img { display: block; width: 20px; height: 20px; }
 
 /* 좁은 화면: 한 줄로 쌓는다 */
 @media (max-width: 900px) {

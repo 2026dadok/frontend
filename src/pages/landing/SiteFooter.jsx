@@ -3,6 +3,9 @@ import { PATHS } from "../../routes";
 import glyphImg from "../../images/dadok-glyph.png";
 import daImg from "../../images/da.png";
 import dokImg from "../../images/dok.png";
+import githubImg from "../../images/github.png";
+
+const GITHUB_URL = "https://github.com/2026dadok"; // 팀 organization
 
 const SECTIONS = [
   { id: "intro", label: "서비스 소개" },
@@ -58,8 +61,12 @@ const SiteFooter = ({ onSection }) => {
           <Link to={PATHS.terms}>이용약관</Link>
           <Link to={PATHS.privacy} className="strong">개인정보 처리방침</Link>
         </nav>
-        <small>© 2026 다독다독 · 만든 사람: 동심공제팀 · 책 정보 제공 YES24</small>
-        {/* TODO: 깃허브 주소가 정해지면 여기에 링크 추가 */}
+        <div className="ld-footer-credit">
+          <small>© 2026 다독다독 · 제작자 : 동심공제 · 책 정보 제공 YES24</small>
+          <a className="ld-footer-github" href={GITHUB_URL} target="_blank" rel="noopener noreferrer" aria-label="동심공제팀 깃허브 (새 탭)">
+            <img src={githubImg} alt="" />
+          </a>
+        </div>
       </div>
     </footer>
   );
