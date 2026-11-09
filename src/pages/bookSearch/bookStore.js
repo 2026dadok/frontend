@@ -4,7 +4,7 @@
 //   - 목록 조회: GET /library/my_page, /library/joints_page, /bookstore/feeling_page 로 교체
 //   - 리뷰 등록: POST /books/reviews 로 교체
 
-import { requestServer } from "../../api/client";
+import { isLoggedIn, requestServer } from "../../api/client";
 
 const KEYS = {
   user: "user", // 로그인 시 저장 (App.jsx)
@@ -58,7 +58,8 @@ const toShelfBook = (book) => ({
   completed: false,
 });
 
-export const getMyLibrary = () => read(KEYS.myLibrary, []);
+// 서재는 로그인한 사용자 것이다. 로그인하지 않았으면 브라우저에 남아 있는 책(예시로 넣어 본 책 등)은 보여주지 않는다.
+export const getMyLibrary = () => (isLoggedIn() ? read(KEYS.myLibrary, []) : []);
 
 // ───────── 서재에 추가한 사람 수 (상세 화면 별점 옆 숫자) ─────────
 // 나의 서재/공동 서재 어느 쪽이든 추가한 사람을 한 번만 센다. (지금은 이 브라우저의 사용자들만)
@@ -79,10 +80,12 @@ export const getAddedCount = (bookId) => {
   return people.size;
 };
 
-// "added" | "exists" | "error"
+// "added" | "exists" | "login" | "error"
+// 로그인하지 않았으면 담지 않고 "login" 을 돌려준다.
 // 백엔드(POST /library/books)에 먼저 등록해 보고, 안 되면 localStorage 에만 저장한다.
 // 표지·출판사는 백엔드 명세에 없어서 서버 성공 여부와 상관없이 화면용으로 localStorage 에도 둔다.
 export const addToMyLibrary = async (book) => {
+  if (!isLoggedIn()) return "login";
   const list = getMyLibrary();
   if (list.some((b) => b.id === book.id)) return "exists";
   const { data } = await requestServer("POST", "/library/books", {
@@ -132,7 +135,7 @@ export const removeFromMyLibrary = async (bookId) => {
 };
 
 // ───────── 공동 서재 ─────────
-export const getSharedLibrary = () => read(KEYS.sharedLibrary, []);
+export const getSharedLibrary = () => (isLoggedIn() ? read(KEYS.sharedLibrary, []) : []); // 나의 서재와 같이 로그인해야 보인다
 
 // 함께 읽기 요청. 명세서: POST /library/joints (joinID, name). 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
 export const requestCoReading = async (friendId, friendName) =>
@@ -140,6 +143,7 @@ export const requestCoReading = async (friendId, friendName) =>
 
 // 같은 책을 같은 친구와 다시 시작하면 기존 기록(시작일)을 그대로 쓴다. 저장 실패 시 null.
 export const addToSharedLibrary = (book, friend) => {
+  if (!isLoggedIn()) return null;
   const list = getSharedLibrary();
   const existing = list.find((b) => b.id === book.id && b.friendId === friend.id);
   if (existing) return existing;

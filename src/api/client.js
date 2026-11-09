@@ -1,5 +1,8 @@
 // 백엔드를 부를 때 공통으로 쓰는 것들.
 
+// 로그인했는지: 로그인할 때 저장한 토큰이 있으면 로그인한 것으로 본다.
+export const isLoggedIn = () => Boolean(localStorage.getItem("token"));
+
 // 로그인할 때 저장한 토큰을 헤더에 넣는다. 백엔드는 이 값으로 누가 보낸 요청인지 안다.
 export const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,

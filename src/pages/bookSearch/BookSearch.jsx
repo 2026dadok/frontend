@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes";
+import { isLoggedIn } from "../../api/client";
 import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
 import { addToMyLibrary, getMe, getMyLibrary, requestCoReading } from "./bookStore";
 import useInfiniteBooks from "./useInfiniteBooks";
@@ -60,10 +61,16 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
     const result = await addToMyLibrary(b);
     if (result === "added") showToast("나의 서재에 추가되었어요.");
     else if (result === "exists") showToast("이미 나의 서재에 있는 책이에요.");
+    else if (result === "login") showToast("로그인이 필요해요.");
     else showToast("저장하지 못했어요.");
   };
 
   const openInvite = (b) => {
+    // 함께 읽기는 친구 아이디를 입력하기 전에 막는다 (입력하고 나서야 안 된다고 하면 헛수고라서)
+    if (!isLoggedIn()) {
+      showToast("로그인이 필요해요.");
+      return;
+    }
     setBook(b);
     setView("invite");
   };
