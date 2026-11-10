@@ -33,7 +33,7 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
     const payload = {
       name: signupData.nickname,
       ID: signupData.loginId,
-      passward: signupData.password,
+      password: signupData.password,
       email: signupData.email,
       birthdate: signupData.birthday,
       goal_time,

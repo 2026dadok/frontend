@@ -18,14 +18,14 @@ const post = async (url, body) => {
   }
 };
 
-// 로그인: 요청 ID, passward → 응답 accessToken, refreshToken, ID
-export const login = (ID, passward) => post("/auth/login", { ID, passward });
+// 로그인: 요청 ID, password → 응답 accessToken, refreshToken, ID
+export const login = (ID, password) => post("/auth/login", { ID, password });
 
 // 이메일 인증번호 보내기: 요청 email, purpose → 응답 message, expiresIn
 export const sendEmailCode = (email, purpose) => post("/auth/email_send", { email, purpose });
 
 // 이메일 인증번호 확인: 요청 email, code → 응답 verified
-export const verifyEmailCode = (email, code) => post("/auth/email_verify", { email, code });
+export const verifyEmailCode = (email, code, purpose) => post("/auth/email_verify", { email, code, purpose });
 
 // 아이디 찾기: 요청 email → 응답 ID
 export const findId = (email) => post("/auth/find_id", { email });
@@ -49,7 +49,7 @@ export const checkId = async (ID) => {
 export const requestPasswordReset = (email) => post("/auth/rest-passwrod", { email });
 
 // 비밀번호 재설정: 요청 token, newpassward → 응답 message
-export const resetPassword = (token, newpassward) => post("/auth/pw_reset", { token, newpassward });
+export const resetPassword = (token, newpassword) => post("/auth/pw_reset", { token, newpassword });
 
 // 인증번호 만료 시간(초). 서버가 expiresIn 을 주면 그 값을, 아니면 기본값을 쓴다.
 export const toExpireSeconds = (expiresIn, fallback) =>

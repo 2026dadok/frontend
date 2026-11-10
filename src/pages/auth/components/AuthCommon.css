@@ -12,6 +12,11 @@
 
 .find-account { color: #999; }
 
+/* 넘어가기: 마우스를 올리면 다독다독 초록 (로그인의 '아직 계정이 없으신가요?'와 같은 색) */
+.skip-link { transition: color .15s; }
+.skip-link:hover,
+.skip-link:focus-visible { color: #3fbf82; }
+
 /* 가입 화면은 기존처럼 12px 유지 (specificity가 높아 import 순서와 무관) */
 .signup-footer .skip-link,
 .signup-footer .find-account { font-size: 12px; }

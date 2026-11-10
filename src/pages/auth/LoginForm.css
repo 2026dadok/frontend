@@ -1,31 +1,61 @@
+/* 로그인 칸. 위치·크기는 피그마 시안을 카드 크기(1289×689)에 맞춰 잰 값이다.
+   이 칸(.auth-content)은 카드 위에서 220px, 오른쪽에서 8% 떨어져 있고 폭은 420px 이다. */
 .login-form {
   position: relative;
+  display: flow-root; /* 제목의 음수 여백이 칸 전체를 끌어올리지 않게 막는다 */
   width: 100%;
   height: 100%;
-  padding: 0 60px 60px 60px;
 }
 
 .login-form h1 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 24px;
+  margin: -8px 0 0 41px;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 20px;
 }
 
+/* 입력칸: 글자는 작게, 밑줄에 붙여서. 두 칸 사이를 넓게 띄운다 */
+.login-form .line-input {
+  display: block;
+  width: 362px;
+  margin: 43px 0 0 41px;
+  padding: 0 2px 3px;
+  font-size: 12px;
+  line-height: 15px;
+  border-bottom-color: #8a8a8a;
+}
+.login-form .line-input + .line-input { margin-top: 60px; }
+.login-form .line-input::placeholder { color: #8a8a8a; }
+.login-form .line-input:focus { border-bottom-color: #333; }
+
+/* 아래 링크 두 개: 양 끝으로 벌리고, 입력칸 밑줄의 왼쪽·오른쪽 끝에 맞춘다 */
 .login-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
+  width: 362px;
+  margin: 53px 0 0 41px;
 }
+.login-footer .signup-link,
+.login-footer .find-account {
+  font-size: 13px;
+  font-weight: 500;
+  color: #000;
+}
+.login-footer .signup-link { transition: color .15s; }
+.login-footer .signup-link:hover,
+.login-footer .signup-link:focus-visible { color: #3fbf82; } /* 다독다독 초록 (소개 페이지 메뉴와 같은 색) */
 
 .login-submit {
   position: absolute;
-  right: 40px;
-  bottom: 40px;
-  background-color: #d7f5e0;
+  top: 342px;
+  right: -10px;
+  width: 82px;
+  height: 36px;
+  padding: 0;
+  background-color: #c8f5df;
   border: none;
-  border-radius: 12px;
-  padding: 12px 28px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: 15px;
   cursor: pointer;
 }
