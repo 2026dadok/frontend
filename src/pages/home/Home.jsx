@@ -170,7 +170,7 @@ const Home = () => {
   const scale = useFitScale();
   const navigate = useNavigate();
   // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다
-  const openRecommended = (book) => navigate(PATHS.search, { state: { book } });
+  const openRecommended = (book) => navigate(`${PATHS.search}?view=detail`, { state: { book } });
 
   return (
     <div className="home">

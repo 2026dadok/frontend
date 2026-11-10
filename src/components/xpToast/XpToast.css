@@ -1,4 +1,3 @@
-/* 사이드바(103px)를 뺀 본문 가운데, 화면 맨 위에 뜬다 */
 .xp-toast {
   position: fixed; top: 10px; left: calc(103px + (100vw - 103px) / 2); transform: translateX(-50%);
   z-index: 100; padding: 9px 26px 9px 18px;

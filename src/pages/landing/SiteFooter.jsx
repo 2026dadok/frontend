@@ -13,9 +13,6 @@ const SECTIONS = [
   { id: "guide", label: "이용 가이드" },
 ];
 
-// 로그인 전 화면들(첫 화면, 이용약관, 개인정보 처리방침)의 푸터.
-// 왼쪽: 로고·소개 / 오른쪽: 메뉴 두 묶음(서비스, 계정) / 맨 아래: 약관 링크·저작권
-// onSection 이 있으면(첫 화면) 그 부분으로 스크롤하고, 없으면 첫 화면으로 이동한다.
 const SiteFooter = ({ onSection }) => {
   const navigate = useNavigate();
   const goSection = (id) => (onSection ? onSection(id) : navigate(PATHS.guest));
@@ -24,7 +21,6 @@ const SiteFooter = ({ onSection }) => {
     <footer className="ld-footer">
       <div className="ld-footer-main">
         <div className="ld-footer-brand">
-          {/* 첫 화면 맨 위 로고와 같은 모양(앞 글자 + '다독'), 움직임 없이 작게 */}
           <p className="ld-footer-logo" role="img" aria-label="다독다독">
             <img className="glyph" src={glyphImg} alt="" />
             <span className="ld-logo-rest">

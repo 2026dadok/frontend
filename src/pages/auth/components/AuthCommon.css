@@ -16,7 +16,7 @@
 .signup-footer .skip-link,
 .signup-footer .find-account { font-size: 12px; }
 
-/* EmailVerify, FindId, FindPassword 공통 */
+/* EmailVerify, FindId, ResetPassword 공통 */
 .ev-code-row {
   position: relative;
   margin-top: 24px;

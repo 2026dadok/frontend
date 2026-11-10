@@ -140,7 +140,7 @@ const Library = () => {
       showToast("검색어를 입력해주세요.");
       return;
     }
-    navigate(PATHS.search, { state: { query: word } });
+    navigate(`${PATHS.search}?q=${encodeURIComponent(word)}`);
   };
 
   // 나의 서재: 책 메뉴(바로 읽기 / 감상문 쓰기 / 삭제), 공동 서재: 그 책의 공동서재 페이지로 이동

@@ -5,7 +5,6 @@ import "./XpToast.css";
 
 const SHOW_MS = 3000;
 
-// 화면 맨 위 가운데에 "○○ 보상 + N XP 획득"을 잠깐 보여준다. (공통 레이아웃에 한 번만 붙인다)
 const XpToast = () => {
   const [toast, setToast] = useState(null);
   const timer = useRef(null);

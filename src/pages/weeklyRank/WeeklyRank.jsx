@@ -97,7 +97,7 @@ const WeeklyRank = () => {
     };
   }, []);
 
-  const openBook = (book) => navigate(PATHS.search, { state: { book } });
+  const openBook = (book) => navigate(`${PATHS.search}?view=detail`, { state: { book } });
   const readNow = () => navigate(PATHS.timer, { state: { book: data.readingBook } });
   const goLibrary = () => navigate(`${PATHS.library}?tab=my`);
 

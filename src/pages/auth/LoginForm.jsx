@@ -60,7 +60,7 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
             아직 계정이 없으신가요?
           </button>
           <button type="button" className="find-account" onClick={onFindAccount}>
-            🔒 아이디 / 비밀번호 찾기
+            🔒 아이디 찾기 / 비밀번호 재설정
           </button>
         </div>
 

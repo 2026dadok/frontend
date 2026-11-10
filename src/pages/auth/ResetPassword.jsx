@@ -3,9 +3,10 @@ import { LineInput } from "./components/LineInput";
 import useEmailTimer from "./useEmailTimer";
 import { requestPasswordReset, resetPassword, verifyEmailCode } from "../../api/auth";
 
-// 비밀번호 찾기: 이메일로 인증번호 받기 → 인증번호 확인 → 새 비밀번호 저장
+// 비밀번호 재설정: 이메일로 인증번호 받기 → 인증번호 확인 → 새 비밀번호 저장
+// 원래 비밀번호는 서버도 모르고(암호화 저장) 화면에 보여주지도 않는다. 본인 확인 후 새 비밀번호로 바꾸기만 한다.
 // 명세서: POST /auth/rest-passwrod (email), POST /auth/email_verify (email, code), POST /auth/pw_reset (token, newpassward)
-const FindPassword = ({ onBackToLogin }) => {
+const ResetPassword = ({ onBackToLogin }) => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [token, setToken] = useState(null); // 인증에 성공하면 채워진다. 값이 있으면 새 비밀번호 화면을 보여준다
@@ -77,7 +78,7 @@ const FindPassword = ({ onBackToLogin }) => {
         <LineInput placeholder="비밀번호" type="password" value={newPassword} onChange={setNewPassword} />
         <LineInput placeholder="비밀번호 확인" type="password" value={newPasswordConfirm} onChange={setNewPasswordConfirm} />
         <button type="button" className="fa-submit" onClick={handleResetPassword}>
-          로그인
+          비밀번호 변경
         </button>
       </div>
     );
@@ -105,4 +106,4 @@ const FindPassword = ({ onBackToLogin }) => {
   );
 };
 
-export default FindPassword;
+export default ResetPassword;

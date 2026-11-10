@@ -86,7 +86,7 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
 
         <div className="ev-find">
           <button type="button" className="find-account" onClick={onFindAccount}>
-            🔒 아이디 / 비밀번호 찾기
+            🔒 아이디 찾기 / 비밀번호 재설정
           </button>
         </div>
 

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import { isLoggedIn } from "../../api/client";
 import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
@@ -19,20 +19,46 @@ const START_TOAST_MS = 2500;
 
 const EMPTY_PAGE = { books: [], total: 0, hasMore: false };
 
-// 화면 흐름(페이지 라우팅 없이 state 로 전환):
-//   list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
-const BookSearchFlow = ({ initialBook, initialQuery }) => {
+// 화면 흐름: list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
+// 지금 화면은 useState 가 아니라 주소에 둔다. 그래서 새로고침해도 보던 화면이 그대로고, 뒤로 가기를 누르면 이전 화면으로 돌아간다.
+//   /search                  → 1번 (장르 목록, ?genre= 로 고른 장르)
+//   /search?q=검색어          → 2번 (검색 결과)
+//   /search?view=detail      → 3·4번 (책 상세)    ※ 고른 책은 주소가 아니라 방문 기록(location.state.book)에 담는다
+//   /search?view=invite      → 5·6번 (함께 읽기 초대)
+// 다른 화면에서 책 상세로 바로 오려면: navigate(`${PATHS.search}?view=detail`, { state: { book } })
+const BOOK_VIEWS = ["detail", "invite", "shared"]; // 고른 책이 있어야 열리는 화면
+
+const BookSearch = () => {
   const scale = useFitScale();
   const navigate = useNavigate();
-  const [view, setView] = useState(initialBook ? "detail" : initialQuery ? "results" : "list"); // 홈 추천 도서에서 오면 상세부터, 서고 검색창에서 오면 결과부터
-  const [query, setQuery] = useState(initialQuery); // 검색창에 적힌 글자
-  const [term, setTerm] = useState(initialQuery); // 마지막으로 검색한 단어
-  const [book, setBook] = useState(initialBook); // 선택한 책
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
+
+  const term = params.get("q") ?? ""; // 마지막으로 검색한 단어
+  const genre = params.get("genre") ?? "bestseller"; // 1번 화면에서 고른 장르
+  const book = location.state?.book ?? null; // 선택한 책
+  const asked = params.get("view");
+  // 책 없이 상세 주소만 열렸으면(주소를 직접 친 경우 등) 책이 필요 없는 화면을 보여준다
+  const view = BOOK_VIEWS.includes(asked) && book ? asked : term ? "results" : "list";
+
+  const [query, setQuery] = useState(term); // 검색창에 적힌 글자
+  // 뒤로 가기 등으로 주소의 검색어가 바뀌면 검색창 글자도 맞춘다
+  const [shownTerm, setShownTerm] = useState(term);
+  if (shownTerm !== term) {
+    setShownTerm(term);
+    setQuery(term);
+  }
   const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
   const [toast, showToast] = useToast();
 
-  const [genre, setGenre] = useState("bestseller"); // 1번 화면에서 고른 장르
+  // 주소의 값 일부만 바꿔서 이동한다. replace 면 방문 기록을 쌓지 않는다.
+  const go = (changes, { book: nextBook = book, replace = false } = {}) => {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)));
+    setParams(next, { replace, state: nextBook ? { book: nextBook } : null });
+  };
+  const setGenre = (g) => go({ genre: g === "bestseller" ? null : g, view: null }, { book: null, replace: true }); // 장르는 기록 없이 바꾼다
   const genreLoader = useCallback((page) => fetchGenreBooks(genre, page), [genre]);
   const bestsellers = useInfiniteBooks(genreLoader);
   const searchLoader = useCallback(
@@ -48,13 +74,11 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
       showToast("검색어를 입력해주세요.");
       return;
     }
-    setTerm(next);
-    setView("results");
+    go({ q: next, view: null }, { book: null, replace: view === "results" && next === term });
   };
 
   const openBook = (b) => {
-    setBook(b);
-    setView("detail");
+    go({ view: "detail" }, { book: b });
   };
 
   const addMine = async (b) => {
@@ -71,8 +95,7 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
       showToast("로그인이 필요해요.");
       return;
     }
-    setBook(b);
-    setView("invite");
+    go({ view: "invite" }, { book: b });
   };
 
   // 친구는 실제 사용자여야 하고, 상대가 수락해야 함께 읽기가 시작된다.
@@ -91,7 +114,7 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
       return;
     }
     showToast("함께 읽기를 요청했어요. 친구가 수락하면 시작돼요.", START_TOAST_MS);
-    setView("detail");
+    go({ view: "detail" }, { replace: true }); // 초대 화면을 상세로 바꾼다 (뒤로 가기로 초대 화면에 다시 오지 않게)
   };
 
   // 타이머로 간다. 서재에 담아 둔 책이면 서버 번호(serverBookId)를 같이 넘겨서 읽은 기록이 서버에 저장되게 한다.
@@ -143,18 +166,6 @@ const BookSearchFlow = ({ initialBook, initialQuery }) => {
         </div>
       </div>
     </div>
-  );
-};
-
-// 사이드바의 '책 검색'을 다시 누르면(location.key 변경) 처음 화면(1번)으로 돌아간다.
-const BookSearch = () => {
-  const location = useLocation();
-  return (
-    <BookSearchFlow
-      key={location.key}
-      initialBook={location.state?.book ?? null}
-      initialQuery={location.state?.query ?? ""}
-    />
   );
 };
 
