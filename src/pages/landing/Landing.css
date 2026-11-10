@@ -26,10 +26,12 @@
 /* 앞 글자: '다'(왼쪽에서) + '독'(오른쪽에서, 위에 겹침). 세 이미지 모두 글자 상자와 같은 크기라 제자리에 딱 겹친다 */
 .ld-logo-glyph { position: relative; flex: none; width: calc(var(--h) * 1.044); height: var(--h); }
 .ld-logo-glyph img { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; max-width: none; }
-.ld-logo-glyph .da { animation: ld-from-left 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.ld-logo-glyph .dok { z-index: 1; animation: ld-from-right 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
-/* 다 겹칠 무렵 합친 글자가 위에서 서서히 나타나 안쪽 선만 지운다 */
-.ld-logo-glyph .merged { z-index: 2; animation: ld-fade-in 0.35s ease-out 0.95s both; }
+/* 움직임: 처음엔 천천히 오다가 끝에서 확 빨라진다(--ld-rush). 나타나기(투명도)는 따로 빨리 끝내서 느린 동안에도 글자가 보인다 */
+.ld-logo-glyph { --ld-move: 0.75s; --ld-rush: cubic-bezier(0.3, 0.1, 0.8, 0.4); }
+.ld-logo-glyph .da { animation: ld-from-left var(--ld-move) var(--ld-rush) both, ld-fade-in 0.3s ease-out both; }
+.ld-logo-glyph .dok { z-index: 1; animation: ld-from-right var(--ld-move) var(--ld-rush) both, ld-fade-in 0.3s ease-out both; }
+/* 두 글자가 부딪히는 순간 합친 글자가 위에서 빠르게 나타나 안쪽 선만 지운다 */
+.ld-logo-glyph .merged { z-index: 2; animation: ld-fade-in 0.2s ease-out calc(var(--ld-move) - 0.05s) both; }
 /* 뒤의 '다독': 움직이지 않는다 */
 .ld-logo-rest { display: flex; align-items: center; margin-left: calc(var(--h) * 0.114); }
 .ld-logo-rest img { display: block; max-width: none; }
@@ -40,12 +42,12 @@
   margin: calc(var(--h) * -0.026) 0 calc(var(--h) * -0.008) calc(var(--h) * 0.062);
 }
 @keyframes ld-from-left {
-  from { opacity: 0; transform: translateX(-50vw); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateX(-50vw); }
+  to { transform: none; }
 }
 @keyframes ld-from-right {
-  from { opacity: 0; transform: translateX(50vw); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateX(50vw); }
+  to { transform: none; }
 }
 @keyframes ld-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
