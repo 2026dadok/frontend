@@ -20,9 +20,10 @@ const AuthBirth = ({ name, onNext }) => {
     { label: "DD", options: range(1, 31).map((d) => d.padStart(2, "0")) },
   ];
 
+  // 이름과 '님' 사이를 띄운다 (시안)
   return (
     <TripleSelectStep
-      title={`${name}님의 생년월일을 알려주세요`}
+      title={`${name} 님의 생년월일을 알려주세요`}
       fields={fields}
       buttonLabel="다음"
       onSubmit={onNext}

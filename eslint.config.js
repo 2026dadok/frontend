@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  // api/ 는 브라우저가 아니라 Vercel 서버(Node)에서 돈다
+  {
+    files: ['api/**/*.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])

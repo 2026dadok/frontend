@@ -1,0 +1,6 @@
+# Vercel CLI 로 올릴 때 빼는 파일. 키가 든 .env 파일은 절대 올리지 않는다 (키는 Vercel 환경 변수로 넣는다).
+.env*
+node_modules
+dist
+.claude
+.vscode

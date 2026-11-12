@@ -33,7 +33,7 @@
   background-color: #FFDDD8;
   border: none;
   border-radius: 12px;
-  padding: 10px 32px 10px 16px; /* 오른쪽 여백을 화살표만큼 확보 */
+  padding: 10px 44px 10px 16px; /* 오른쪽 여백을 화살표만큼 확보 */
   font-size: 30px;
   width: 172px;
   height: 77px;
@@ -43,8 +43,8 @@
   /* 화살표를 배경 이미지로 그려넣기 */
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='black'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 10px 6px;
+  background-position: right 14px center;
+  background-size: 22px 13px; /* 화살표 크기 (시안처럼 크게) */
 }
 
 .date-dropdown {
@@ -81,11 +81,11 @@
 }
 
 .content-area h1 {
-  width: 723px;
   height: 48px;
   margin: 0 auto 56px auto;
-  font-size: 32px;
+  font-size: 36px;
   line-height: 48px;
+  white-space: nowrap; /* 긴 문장(목표 시간)도 한 줄로 */
 }
 
 .date-select option {
@@ -99,10 +99,14 @@
   height: 61px;
   right: 40px;
   bottom: 40px;
-  background-color: #d7f5e0;
+  background-color: #c8f5df; /* 로그인 버튼과 같은 초록 */
   border: none;
   border-radius: 12px;
-  padding: 10px 24px;
+  padding: 0;
+  display: flex; /* 글자를 버튼 정가운데에 */
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   cursor: pointer;
   font-size: 40px;
 }

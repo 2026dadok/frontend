@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><title>생년월일 미리보기</title></head><body><div id="root"></div>
+<script type="module">
+// 임시 확인용 페이지 (커밋하지 않는다). #goal 을 붙이면 목표 시간 화면
+import React from "react"; import { createRoot } from "react-dom/client";
+import "/src/global.css";
+import AuthBirth from "/src/pages/auth/AuthBirth.jsx";
+import AuthGoalTime from "/src/pages/auth/AuthGoalTime.jsx";
+const goal = location.hash === "#goal";
+createRoot(document.getElementById("root")).render(React.createElement(goal ? AuthGoalTime : AuthBirth, { name: "최지수", onNext: (v) => alert(JSON.stringify(v)) }));
+</script></body></html>

@@ -1,0 +1,136 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/yes24/:path*",
+      "destination": "/api/proxy?__to=yes24&__p=:path*"
+    },
+    {
+      "source": "/auth/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api/proxy?__to=backend&__p=auth/:path*"
+    },
+    {
+      "source": "/library/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/library/:path*",
+      "destination": "/api/proxy?__to=backend&__p=library/:path*"
+    },
+    {
+      "source": "/quests/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/quests/:path*",
+      "destination": "/api/proxy?__to=backend&__p=quests/:path*"
+    },
+    {
+      "source": "/users/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/users/:path*",
+      "destination": "/api/proxy?__to=backend&__p=users/:path*"
+    },
+    {
+      "source": "/bookstore/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/bookstore/:path*",
+      "destination": "/api/proxy?__to=backend&__p=bookstore/:path*"
+    },
+    {
+      "source": "/books/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/books/:path*",
+      "destination": "/api/proxy?__to=backend&__p=books/:path*"
+    },
+    {
+      "source": "/times/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/times/:path*",
+      "destination": "/api/proxy?__to=backend&__p=times/:path*"
+    },
+    {
+      "source": "/main/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/main/:path*",
+      "destination": "/api/proxy?__to=backend&__p=main/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

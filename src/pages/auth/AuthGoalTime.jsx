@@ -17,7 +17,7 @@ const AuthGoalTime = ({ name, onNext }) => {
 
   return (
     <TripleSelectStep
-      title={`${name}님의 하루 독서 목표 시간을 알려주세요`}
+      title={`${name} 님의 하루 독서 목표 시간을 알려주세요`}
       fields={fields}
       buttonLabel="시작"
       onSubmit={onNext}
