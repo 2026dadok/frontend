@@ -7,7 +7,7 @@
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id). 인용구는 200자 이하(DB varchar 200).
 // 즐겨찾기는 명세서·DB 어디에도 없어서 브라우저에서만 처리한다. TODO: 백엔드와 확인
 
-import { isLoggedIn, requestServer } from "../../api/client";
+import { isLoggedIn, pick, requestServer } from "../../api/client";
 
 const KEY = "quotes";
 export const MAX_QUOTE_LENGTH = 200;
@@ -31,27 +31,58 @@ const write = (list) => {
 };
 
 // 인용구는 로그인한 사용자 것이다. 로그인하지 않았으면 브라우저에 남은 인용구는 보여주지 않는다.
+// 바로 그릴 때 쓰는 사본. 서버 값으로 맞추려면 syncQuotes() 를 부른다.
 export const getQuotes = () => (isLoggedIn() ? read() : []);
+
+// GET /bookstore/note_page 로 인용구 목록을 받아 사본을 서버 값으로 바꾼다. 실패하면 사본 그대로.
+// 즐겨찾기는 서버에 없어서 사본에 있던 값을 이어 붙인다.
+// TODO: 응답 필드 이름이 명세서에 없다. 백엔드가 정하면 후보 이름을 하나로 줄인다.
+export const syncQuotes = async () => {
+  if (!isLoggedIn()) return [];
+  const { ok, data } = await requestServer("GET", "/bookstore/note_page");
+  if (!ok) return read();
+  const raw = [data, data?.data, data?.notes, data?.data?.notes].find(Array.isArray) ?? [];
+  const cached = read();
+  const list = raw.map((n) => {
+    const serverNoteId = Number(pick(n, "note_id", "note_ID", "noteID", "id"));
+    const old = cached.find((q) => q.serverNoteId === serverNoteId);
+    const date = pick(n, "date", "created_at") ?? old?.date ?? new Date().toISOString();
+    return {
+      id: old?.id ?? `server-${serverNoteId}`,
+      text: pick(n, "note_content", "content", "text") ?? "",
+      bookId: old?.bookId ?? String(pick(n, "book_id", "bookID") ?? ""),
+      serverBookId: Number(pick(n, "book_id", "bookID")) || null,
+      book: pick(n, "title", "book_title") ?? old?.book ?? "",
+      author: pick(n, "author") ?? old?.author ?? "",
+      page: Number(pick(n, "book_page", "page")) || null,
+      date,
+      createdAt: pick(n, "created_at") ?? date,
+      favorite: old?.favorite ?? false,
+      serverNoteId: Number.isInteger(serverNoteId) ? serverNoteId : null,
+    };
+  });
+  write(list);
+  return list;
+};
 
 const toDateOnly = (iso) => new Date(iso).toLocaleDateString("sv-SE"); // yyyy-MM-dd (사용자 기기 날짜)
 
-// 인용구를 쓴다. 서버(POST /bookstore/notes)에 먼저 보내고, 서버가 없거나 실패해도 화면에 보이도록 브라우저에도 저장한다.
-// 서버의 책 번호(serverBookId)를 모르는 책은 서버에 보내지 않는다. "saved" | "login" | "error"
+// 인용구를 쓴다. 서버(POST /bookstore/notes)가 받아줬을 때만 저장한다. "saved" | "login" | "error"
+// 서버의 책 번호(serverBookId)를 모르는 책(서재에 없는 책)은 서버에 보낼 수 없어서 "error".
 export const addQuote = async ({ book, page, text }) => {
   if (!isLoggedIn()) return "login";
+  if (!Number.isInteger(book.serverBookId)) return "error";
   const now = new Date().toISOString();
-  let serverNoteId = null;
-  if (Number.isInteger(book.serverBookId)) {
-    const { data } = await requestServer("POST", "/bookstore/notes", {
-      bookID: book.serverBookId,
-      book_page: page ?? 0,
-      date: toDateOnly(now),
-      note_content: text,
-    });
-    // 응답에서 인용구 번호(note_id)를 찾는다. TODO: 응답 안에서의 위치(최상위 / data 안)는 백엔드와 확인
-    const raw = data?.note_id ?? data?.data?.note_id ?? null;
-    serverNoteId = raw !== null && Number.isInteger(Number(raw)) ? Number(raw) : null;
-  }
+  const { ok, data } = await requestServer("POST", "/bookstore/notes", {
+    bookID: book.serverBookId,
+    book_page: page ?? 0,
+    date: toDateOnly(now),
+    note_content: text,
+  });
+  if (!ok) return "error";
+  // 응답에서 인용구 번호(note_id)를 찾는다. TODO: 응답 안에서의 위치(최상위 / data 안)는 백엔드와 확인
+  const raw = data?.note_id ?? data?.data?.note_id ?? null;
+  const serverNoteId = raw !== null && Number.isInteger(Number(raw)) ? Number(raw) : null;
   const item = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     text,

@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import { isLoggedIn } from "../../api/client";
-import { getMyLibrary } from "../bookSearch/bookStore";
+import { getMyLibrary, syncMyLibrary } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { QuoteAddModal, QuoteDetailModal, QuoteEditModal } from "./QuoteModals";
-import { addQuote, formatShort, getQuotes, removeQuote, toggleFavorite, updateQuote } from "./quoteStore";
+import { addQuote, formatShort, getQuotes, removeQuote, syncQuotes, toggleFavorite, updateQuote } from "./quoteStore";
 import "../bookSearch/BookSearch.css"; // 알림창(.bs-toast)과 오른쪽 위 XP(.bs-xp) 모양을 같이 쓴다
 import "./Quote.css";
 
@@ -89,6 +89,15 @@ const Quote = () => {
     [version]
   );
   const byId = (id) => quotes.find((q) => q.id === id) ?? null;
+
+  // 서버의 인용구 목록(GET /bookstore/note_page)과 서재(인용구를 쓸 책 고르기용)를 받아 온다
+  useEffect(() => {
+    let alive = true;
+    Promise.all([syncQuotes(), syncMyLibrary()]).then(() => alive && setVersion((v) => v + 1));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // ••• 메뉴 밖을 누르거나 Esc 를 누르면 닫는다
   useEffect(() => {

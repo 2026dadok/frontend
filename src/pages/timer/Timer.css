@@ -1,6 +1,7 @@
 /* 타이머. 사이드바 없이 화면 전체에 디자인 크기(1520 x 988)로 그리고, 창이 작으면 zoom(--s)으로 통째로 줄인다. */
 .tm { position: fixed; inset: 0; background: #fff5f3; }
-.tm-stage { position: relative; zoom: var(--s, 1); width: 1520px; height: 988px; margin: 0 auto; }
+/* 창이 세로로 더 길면 남는 만큼 위아래를 똑같이 띄워 가운데에 둔다 (북마크 바가 있든 없든 배치가 같다) */
+.tm-stage { position: relative; zoom: var(--s, 1); width: 1520px; height: 988px; margin: max(0px, (100vh / var(--s, 1) - 988px) / 2) auto 0; }
 .tm .bs-toast { position: fixed; }
 
 /* 왼쪽 위 인용구 노트 버튼 */

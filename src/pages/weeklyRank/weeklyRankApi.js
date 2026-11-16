@@ -2,7 +2,8 @@
 // 명세서(ver02): GET /main/week_competition → tier, competitors_books, my_rank, ranking, reading_book, last_week_result
 // 명세서에 각 항목 안의 필드 이름이 없어서, 아래 normalize 함수들이 여러 이름을 받아 화면용 형태로 맞춘다.
 // TODO: 백엔드가 필드 이름을 정하면 normalize 함수의 후보 이름을 그것 하나로 줄인다.
-// TODO: 읽은 시간 단위(분/초)는 백엔드와 확인. 지금은 분으로 본다. (독서 시간 저장 POST /times 와 같은 단위)
+// 읽은 시간은 초 단위로 본다 (명세서: 독서 시간 저장·타이머·마이페이지가 모두 초). 화면에서는 분으로 바꿔 쓴다.
+// TODO: 주간 경쟁 응답도 초인지 백엔드와 확인
 
 import { authHeaders, isLoggedIn, pick } from "../../api/client";
 import { searchBooks } from "../bookSearch/bookSearchApi";
@@ -17,7 +18,7 @@ const toRanker = (raw, me = false) => ({
   rank: toNumber(pick(raw, "rank", "ranking", "my_rank")) || null, // 0 이나 값 없음은 "-위"
   name: pick(raw, "name", "user_name", "nickname", "ID") ?? "",
   title: pick(raw, "title", "title_name", "user_title", "achievement", "achievement_name") ?? "", // 이름 앞에 붙는 업적 (마이페이지에서 사용 중인 업적, 예: 스테디셀러)
-  minutes: toNumber(pick(raw, "reading_time", "readtime", "week_readtime", "minutes")) ?? 0,
+  minutes: Math.floor((toNumber(pick(raw, "reading_time", "readtime", "week_readtime")) ?? 0) / 60), // 초 → 분
   image: pick(raw, "profile_image", "profileimage", "image", "imageurl") ?? "",
   me,
 });

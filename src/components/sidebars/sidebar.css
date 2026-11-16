@@ -4,7 +4,8 @@
   left: 0;
   z-index: 10;
   width: 103px;
-  height: 100vh;
+  height: calc(100vh / var(--ui, 1)); /* zoom 으로 커진 만큼 나눠서 화면 높이에 딱 맞춘다 */
+  zoom: var(--ui, 1); /* 큰 모니터에서 본문과 같은 비율로 키운다 */
   flex-shrink: 0;
   background: #fff;
   display: flex;

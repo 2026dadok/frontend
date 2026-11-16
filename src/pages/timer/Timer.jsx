@@ -14,6 +14,7 @@ import moleImg from "../../images/dokddage.png";
 import "../bookSearch/BookSearch.css"; // .bs 버튼·알림 스타일을 같이 쓴다
 import "../quote/Quote.css"; // 인용구 쓰기 팝업
 import "./Timer.css";
+import { getUiScale } from "../../hooks/uiScale";
 
 // 디자인 기준 크기. 사이드바 없이 화면 전체를 쓰고, 창이 작으면 통째로 줄인다.
 const DESIGN_W = 1520;
@@ -21,7 +22,7 @@ const DESIGN_H = 988;
 const TICK_MS = 250;
 const XP_TOAST_DELAY_MS = 300;
 
-const calcScale = () => Math.min(1, window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+const calcScale = () => Math.min(getUiScale(), window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H); // 큰 모니터에서는 키운다
 const useScreenScale = () => {
   const [scale, setScale] = useState(calcScale);
   useEffect(() => {
@@ -137,11 +138,11 @@ const Timer = () => {
       return;
     }
     setSaving(true);
-    // TODO: 읽은 시간 단위(분/초)는 백엔드와 확인. 지금은 분으로 보낸다
-    const minutes = Math.round(elapsed / 60);
+    // 서버에는 초 단위로 보낸다 (명세서). 서고 달력용 기록은 분 단위
+    const seconds = Math.round(elapsed);
     const serverId = Number.isInteger(book.serverBookId) ? book.serverBookId : null;
-    const [, pageResult] = await Promise.all([addStudyTime(serverId, minutes), saveReadPages(serverId, readPage)]);
-    addToReadingLog(minutes);
+    const [, pageResult] = await Promise.all([addStudyTime(serverId, seconds), saveReadPages(serverId, readPage)]);
+    addToReadingLog(Math.round(seconds / 60));
     updateShelfBook(book.id, { readPage });
     setSaving(false);
 

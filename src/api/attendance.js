@@ -15,10 +15,14 @@ const checkAttendance = async () => {
   try {
     if (localStorage.getItem(storageKey) === today) return;
     const res = await fetch("/quests/attendance", { method: "POST", headers: authHeaders() });
+    if (res.status === 409) {
+      localStorage.setItem(storageKey, today); // 명세서: 이미 출석했으면 409 → 오늘은 다시 보내지 않는다
+      return;
+    }
     if (!res.ok) return;
     localStorage.setItem(storageKey, today);
     const data = await res.json().catch(() => null);
-    // 명세서: POST /quests/attendance → message, reward_xp
+    // 명세서: POST /quests/attendance → message, reward_xp (전체 완료 보상 포함)
     showXpToast({ title: "일일 출석 보상", xp: data?.reward_xp ?? data?.data?.reward_xp ?? ATTENDANCE_XP });
   } catch {
     // 서버가 아직 준비되지 않았을 때 등

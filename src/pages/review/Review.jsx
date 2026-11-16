@@ -7,7 +7,7 @@ import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
 import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
-import { DEMO_COMMENTARIES, fetchFriendCommentaries, fetchMyCommentaries } from "./reviewApi";
+import { DEMO_COMMENTARIES, fetchFriendCommentaries, fetchMyCommentaries, loadMyCommentaries } from "./reviewApi";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
 import { formatDate } from "./format";
 import mascotImg from "../../images/mascot.png";
@@ -83,6 +83,16 @@ const Review = () => {
     return isFriend ? fetchFriendCommentaries() : fetchMyCommentaries(book.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, demo, isFriend, version]);
+
+  // 서버의 내 감상문(GET /bookstore/feeling_page)을 받아 오면 목록을 다시 그린다
+  useEffect(() => {
+    if (!book || isFriend || demo) return undefined;
+    let alive = true;
+    loadMyCommentaries(book).then(() => alive && setVersion((v) => v + 1));
+    return () => {
+      alive = false;
+    };
+  }, [book, isFriend, demo]);
 
   const { days, completedDay } = useMemo(() => {
     const lastWritten = Math.max(0, ...entries.map((e) => e.day));

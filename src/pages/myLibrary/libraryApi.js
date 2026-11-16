@@ -1,12 +1,37 @@
-// 서고 화면에서 쓰는 데이터. 아직 백엔드가 없는 항목은 TODO.
+// 서고 화면에서 쓰는 데이터. 명세서: GET /bookstore/bookstore_page (서고 페이지)
+import { pick, requestServer } from "../../api/client";
 
-// 날짜별 읽은 시간(분): { "2026-10-26": 45, ... }
-// TODO: 백엔드에서 날짜별 독서 시간을 받아오는 API가 정해지면 교체 (지금은 브라우저에 저장된 값, 없으면 빈 값)
-export const fetchReadingLog = () => {
+// 브라우저에 쌓아 둔 날짜별 읽은 시간(분). 서버가 없을 때만 쓴다.
+const readLocalLog = () => {
   try {
     const log = JSON.parse(localStorage.getItem("readingLog"));
     return log && typeof log === "object" ? log : {};
   } catch {
     return {};
   }
+};
+
+// 서버의 날짜별 기록 → { "2026-10-26": 45, ... } (분). 시간은 초 단위로 본다 (명세서의 다른 시간 값과 같다)
+// TODO: 서고 페이지 응답의 필드 이름이 명세서에 없다. 백엔드가 정하면 후보 이름을 하나로 줄인다.
+const toLog = (d) => {
+  const raw = d?.calendar ?? d?.reading_log ?? d?.reading_calendar ?? d?.daily_readtime ?? d?.records;
+  if (Array.isArray(raw)) {
+    return Object.fromEntries(
+      raw
+        .map((r) => [String(pick(r, "date", "read_date", "day") ?? "").slice(0, 10), Number(pick(r, "readtime", "read_time", "today_readtime", "seconds")) || 0])
+        .filter(([date]) => date)
+        .map(([date, sec]) => [date, Math.round(sec / 60)])
+    );
+  }
+  if (raw && typeof raw === "object") {
+    return Object.fromEntries(Object.entries(raw).map(([date, sec]) => [date, Math.round((Number(sec) || 0) / 60)]));
+  }
+  return null;
+};
+
+// 날짜별 읽은 시간(분). 서버 값이 있으면 그것, 없으면 브라우저 기록
+export const fetchReadingLog = async () => {
+  const { ok, data } = await requestServer("GET", "/bookstore/bookstore_page");
+  const log = ok ? toLog(data?.data ?? data) : null;
+  return log ?? readLocalLog();
 };

@@ -1,9 +1,11 @@
 // 감상문 화면에서 쓰는 데이터. 아직 백엔드가 없는 항목은 TODO.
-import { getCommentaries } from "../bookSearch/bookStore";
+import { getCommentaries, syncCommentaries } from "../bookSearch/bookStore";
 
 // 감상문 목록: [{ day, content, date }]  (day = 몇 일차, date = ISO 날짜)
-// TODO: 백엔드 연결 후 GET /bookstore/feeling_page 로 내 것 / 친구 것을 받아온다
+// 내 감상문: GET /bookstore/feeling_page (syncCommentaries 가 받아서 사본에 넣는다)
 export const fetchMyCommentaries = (bookId) => getCommentaries(bookId);
+export const loadMyCommentaries = (book) => syncCommentaries(book);
+// 친구 감상문: 명세서의 GET /shared-readings/{id}/reflections?target=partner 가 아직 미완료라 빈 목록
 export const fetchFriendCommentaries = () => [];
 
 // 디자인 확인용 예시 (주소에 ?demo=1 을 붙였을 때만 사용). TODO: 백엔드 연결 후 삭제

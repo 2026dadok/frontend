@@ -1,8 +1,8 @@
 /* 마이페이지 / 회원정보 수정. 디자인 기준 너비(1419)로 그리고 창이 좁으면 zoom(--s)으로 줄인다. 위아래로 스크롤된다. */
 .mp { overflow-x: hidden; overflow-y: auto; }
-.mp-stage { zoom: var(--s, 1); width: calc((100vw - 103px) / var(--s, 1)); padding-bottom: 60px; }
+.mp-stage { zoom: var(--s, 1); width: calc((100vw - var(--sb)) / var(--s, 1)); padding-bottom: 60px; }
 .mp-stage:has(.ei-panel) { padding-bottom: 0; } /* 수정 화면은 판이 화면 끝까지 */
-.mp .bs-toast { position: fixed; left: calc(103px + (100vw - 103px) / 2); }
+.mp .bs-toast { position: fixed; left: calc(var(--sb) + (100vw - var(--sb)) / 2); }
 
 /* ───────── 배경 · 프로필 ───────── */
 .mp-top { position: relative; }
@@ -139,6 +139,12 @@ button.mp-ach:hover { border-color: #fbd9ce; }
 .ei-password .ei-label { margin-top: 4px; }
 
 /* 저장하기: 화면 오른쪽 아래에 고정 */
+/* 계정 아래 로그아웃 · 회원탈퇴 (작은 글자 버튼) */
+.ei-account-actions { display: flex; justify-content: flex-end; gap: 18px; width: 657px; margin: 4px 0 0 38px; }
+.ei-account-actions button { padding: 4px 0; border: 0; background: none; font-size: 14px; color: #888; text-decoration: underline; text-underline-offset: 3px; }
+.ei-account-actions button:hover { color: #333; }
+.ei-account-actions .danger:hover { color: #e0644f; }
+
 .ei-save {
   position: fixed; right: 22px; bottom: 16px; z-index: 10; width: 114px; height: 42px;
   border: 1px solid #e2d6d3; border-radius: 21px; background: #fff; font-size: 16px;

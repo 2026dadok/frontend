@@ -7,20 +7,23 @@
 
 import { authHeaders, requestServer } from "../../api/client";
 
-// 이번에 읽은 시간을 백엔드에 보낸다. 명세서: POST /times (bookID, readtime) → message, today_readtime
-// bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id)다. 성공하면 오늘 읽은 시간(today_readtime)을 돌려준다.
-// TODO: readtime 의 단위(분/초)는 백엔드와 확인. 명세서에는 단위가 없다.
-export const addStudyTime = async (bookID, readtime) => {
-  if (!Number.isInteger(bookID) || !Number.isInteger(readtime) || readtime <= 0) return null;
+// 이번에 읽은 시간을 백엔드에 보낸다. 명세서: POST /times (bookID, readTime) → message, today_readtime
+// 명세서 비고: readTime 은 초 단위(1초 ~ 6시간), 하루 합계가 24시간을 넘으면 400. today_readtime 은 오늘 합계(초).
+// bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id)다.
+// TODO: 키 이름이 명세서 표(readtime)와 비고(readTime)에서 다르다. 백엔드 확인 전까지 두 이름 모두 보낸다.
+const MAX_READ_SECONDS = 6 * 3600;
+export const addStudyTime = async (bookID, seconds) => {
+  if (!Number.isInteger(bookID) || !Number.isInteger(seconds) || seconds <= 0) return null;
+  const readTime = Math.min(seconds, MAX_READ_SECONDS);
   try {
     const res = await fetch("/times", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ bookID, readtime }),
+      body: JSON.stringify({ bookID, readTime, readtime: readTime }),
     });
     if (!res.ok) return null;
     const data = await res.json().catch(() => null);
-    return { todayReadtime: data?.today_readtime ?? null };
+    return { todayReadtime: data?.today_readtime ?? null }; // 초
   } catch {
     return null;
   }
@@ -28,13 +31,16 @@ export const addStudyTime = async (bookID, readtime) => {
 
 // 타이머 첫 화면의 목표 시간. 명세서: GET /times/timer_page → goal_readtime, today_readtime
 // 목표 시간은 시·분만 쓴다 ("HH:MM"). 서버가 없거나 실패하면 30분으로 시작한다.
-// TODO: goal_readtime 형식("HH:MM" / 분 숫자)은 백엔드와 확인
+// 명세서 비고: goal_readtime 은 초 단위 숫자. ("HH:MM" 문자열로 와도 받는다)
 const DEFAULT_GOAL = "00:30";
 export const fetchGoalTime = async () => {
   const { ok, data } = await requestServer("GET", "/times/timer_page");
   const raw = ok ? (data?.data ?? data)?.goal_readtime : null;
-  if (typeof raw === "number" && raw > 0) {
-    return `${String(Math.floor(raw / 60)).padStart(2, "0")}:${String(raw % 60).padStart(2, "0")}`;
+  const seconds = typeof raw === "string" && /^\d+$/.test(raw) ? Number(raw) : raw;
+  if (typeof seconds === "number" && seconds > 0) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
   if (typeof raw === "string" && /^\d{1,2}:\d{1,2}/.test(raw)) {
     return raw.split(":").slice(0, 2).map((v) => v.padStart(2, "0")).join(":");

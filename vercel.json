@@ -129,6 +129,29 @@
       "destination": "/api/proxy?__to=backend&__p=main/:path*"
     },
     {
+      "source": "/shared-readings/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/html(.*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/shared-readings",
+      "destination": "/api/proxy?__to=backend&__p=shared-readings"
+    },
+    {
+      "source": "/shared-readings/:path*",
+      "destination": "/api/proxy?__to=backend&__p=shared-readings/:path*"
+    },
+    {
+      "source": "/images/:path*",
+      "destination": "/api/proxy?__to=backend&__p=images/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

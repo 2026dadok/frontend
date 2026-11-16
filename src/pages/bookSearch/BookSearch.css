@@ -8,13 +8,16 @@
 
 .bs-stage {
   zoom: var(--s, 1);
-  width: calc((100vw - 103px) / var(--s, 1));
+  width: calc((100vw - var(--sb)) / var(--s, 1));
   height: calc(100vh / var(--s, 1));
 }
+/* 판 높이는 항상 디자인 높이(967)로 고정한다. 북마크 바를 숨기는 등으로 창이 세로로 더 길어지면
+   판을 늘리지 않고 세로 가운데에 둔다 → 어떤 창에서도 배치가 똑같다 */
 .bs-canvas {
   position: relative;
+  top: max(0px, (100vh / var(--s, 1) - 967px) / 2);
   width: 1419px;
-  height: 100%;
+  height: 967px;
   margin: 0 auto;
 }
 
@@ -105,6 +108,24 @@
   transition: transform 0.15s;
 }
 .bs-grid-book:hover { transform: translateY(-4px); }
+/* 책 목록 왼쪽 빈 곳(책은 196px 부터 시작)의 독따지 (스크롤해도 제자리).
+   v.png 는 960x1280 중 (63,62)~(491,597)에만 그림이 있어서 그 부분만 잘라 보여준다. 퍼센트는 그림 부분 폭(428px) 기준 */
+.bs-list-mascot {
+  /* 빈 곳 = 사이드바 끝 ~ 첫 책(196px). 창이 넓으면 1419px 판이 가운데로 가서 왼쪽에 --gap 만큼 더 빈다.
+     그 빈 곳의 가운데에 놓는다 (판 기준 좌표라 --gap 만큼 왼쪽으로 나간다) */
+  --gap: max(0px, ((100vw - var(--sb)) / var(--s, 1) - 1419px) / 2);
+  position: absolute; left: calc((196px - var(--gap)) / 2 - 85px); bottom: 40px; z-index: 2;
+  width: 170px; aspect-ratio: 428 / 535; overflow: hidden; pointer-events: none;
+}
+.bs-list-mascot img { display: block; max-width: none; width: 224.3%; margin: -14.49% 0 0 -14.72%; }
+/* 책 목록 오른쪽 빈 곳(책 4권은 1114px 에서 끝난다)의 그림. 빈 곳 = 1114px ~ 화면 오른쪽 끝(판 1419px + --gap).
+   da-question.png 는 960x1280 중 (534,83)~(872,541)에만 그림이 있어서 그 부분만 잘라 보여준다. 퍼센트는 그림 부분 폭(339px) 기준 */
+.bs-list-ask {
+  --gap: max(0px, ((100vw - var(--sb)) / var(--s, 1) - 1419px) / 2);
+  position: absolute; left: calc((1114px + 1419px + var(--gap)) / 2 - 100px); bottom: 40px; z-index: 2;
+  width: 200px; aspect-ratio: 339 / 459; overflow: hidden; pointer-events: none;
+}
+.bs-list-ask img { display: block; max-width: none; width: 283.19%; margin: -24.48% 0 0 -157.52%; }
 .bs-grid-book img {
   width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 6px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);

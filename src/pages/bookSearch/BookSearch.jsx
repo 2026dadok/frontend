@@ -107,7 +107,7 @@ const BookSearch = () => {
       return;
     }
     setStarting(true);
-    const sent = await requestCoReading(id, name);
+    const sent = await requestCoReading(id, name, { ...book, ...getMyLibrary().find((item) => item.id === book?.id) });
     setStarting(false);
     if (!sent) {
       showToast("함께 읽기를 요청하지 못했어요. 아이디를 확인해주세요.");

@@ -1,7 +1,7 @@
 /* 나의 인용구 노트. 위아래로 스크롤되는 페이지라 100vh 로 고정하지 않는다. 디자인 기준 가로 1419 를 가로 폭에 맞춰 줄이고, 넓은 창에서는 줄이 늘어난다. */
 .quote-page { position: relative; min-height: 100vh; color: #222; }
 .quote-page button { font-family: inherit; color: inherit; cursor: pointer; }
-.quote-stage { zoom: var(--s, 1); width: calc((100vw - 103px) / var(--s, 1)); }
+.quote-stage { zoom: var(--s, 1); width: calc((100vw - var(--sb)) / var(--s, 1)); }
 .quote-canvas { padding: 100px 207px 140px 154px; }
 
 /* 오른쪽 위 XP 는 스크롤해도 제자리 */

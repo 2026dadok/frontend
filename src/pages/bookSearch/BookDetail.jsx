@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAuthorOtherBooks } from "./bookSearchApi";
-import { getAddedCount, getMe, getReviews, saveMyReview, summarizeReviews, updateMyReview } from "./bookStore";
+import { deleteMyReview, getAddedCount, getMe, getReviews, saveMyReview, summarizeReviews, updateMyReview } from "./bookStore";
 import { Avatar, StarInput, Stars } from "./parts";
 
 const formatDate = (iso) => {
@@ -71,13 +71,28 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
       showToast("리뷰를 수정했어요.");
       return;
     }
-    const next = saveMyReview(book.id, { rating, content: text });
+    const next = await saveMyReview(book, { rating, content: text });
     if (!next) {
       showToast("리뷰를 저장하지 못했어요.");
       return;
     }
     setReviews(next);
     showToast("리뷰가 등록되었어요.");
+  };
+
+  // 내 리뷰 삭제 (DELETE /books/reviews). 서버가 지워줬을 때만 화면에서도 지운다
+  const removeReview = async () => {
+    if (!window.confirm("내 리뷰를 삭제할까요?")) return;
+    const next = await deleteMyReview(book.id);
+    if (!next) {
+      showToast("리뷰를 삭제하지 못했어요.");
+      return;
+    }
+    setReviews(next);
+    setRating(0);
+    setContent("");
+    setEditing(false);
+    showToast("리뷰를 삭제했어요.");
   };
 
   const cancelEdit = () => {
@@ -168,9 +183,14 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
                 }}
               />
               {editing && (
-                <button type="button" className="bs-review-cancel" onClick={cancelEdit}>
-                  취소
-                </button>
+                <>
+                  <button type="button" className="bs-review-cancel" onClick={removeReview}>
+                    삭제
+                  </button>
+                  <button type="button" className="bs-review-cancel" onClick={cancelEdit}>
+                    취소
+                  </button>
+                </>
               )}
               <button type="submit">{!mine ? "등록" : editing ? "저장" : "수정"}</button>
             </form>

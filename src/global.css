@@ -1,12 +1,20 @@
 /* 글꼴: 프리텐다드 (모든 굵기 100~900 이 들어 있는 가변 글꼴, 화면에 쓰인 글자만 나눠 받는다) */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
+/* 큰 모니터 배율(--ui, hooks/uiScale.js 가 넣는다)과 그에 맞춘 사이드바 실제 너비(--sb) */
+:root {
+  --ui: 1;
+  --sb: calc(103px * var(--ui));
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
+
+.page-background > * { zoom: var(--ui, 1); } /* 로그인·회원가입 카드: 큰 모니터에서는 같은 비율로 키운다 */
 
 .page-background {
   width: 100%;

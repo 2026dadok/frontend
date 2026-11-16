@@ -1,5 +1,5 @@
 /* 로그인 전 첫 화면(서비스 소개). 위아래로 스크롤되는 보통 웹 페이지 */
-.ld { min-height: 100vh; background: #fdf7f6; color: #333; overflow-x: clip; } /* hidden 이면 스크롤 영역이 생겨서 머리말이 위에 붙지 않는다 */
+.ld { zoom: var(--ui, 1); min-height: calc(100vh / var(--ui, 1)); /* 큰 모니터에서는 소개·약관 화면 전체를 같은 비율로 키운다 */ background: #fdf7f6; color: #333; overflow-x: clip; } /* hidden 이면 스크롤 영역이 생겨서 머리말이 위에 붙지 않는다 */
 .ld button { font-family: inherit; cursor: pointer; }
 
 /* ───────── 머리말 ───────── */

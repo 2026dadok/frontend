@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import CompleteBadge from "../../components/CompleteBadge";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
+import { getSidebarWidth } from "../../hooks/uiScale";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import { SearchBar, Toast, XpTotal } from "../bookSearch/parts";
-import { getMyLibrary, getSharedLibrary, removeFromMyLibrary } from "../bookSearch/bookStore";
+import { getMyLibrary, getSharedLibrary, removeFromMyLibrary, syncMyLibrary, syncSharedLibrary } from "../bookSearch/bookStore";
 import ReadingCalendar from "./ReadingCalendar";
 import { fetchReadingLog } from "./libraryApi";
 import moleImg from "../../images/dokddage.png";
@@ -14,7 +15,6 @@ import "./Library.css";
 
 // 디자인 기준(가로 1419)에서는 한 화면에 책 4권 + 마지막의 + 칸 = 5칸. 창이 넓으면 카드가 늘어나서 더 많이 들어간다.
 const DESIGN_CANVAS_W = 1419;
-const SIDEBAR_W = 103;
 const SHELF_LEFT = 109;
 const SHELF_RIGHT = 112;
 const SHELF_SIDE_SPACE = 16 + 41 + 36 + 41 + 22; // 서재 카드 안 양쪽의 화살표·여백
@@ -63,7 +63,7 @@ const useWindowWidth = () => {
 const Library = () => {
   const scale = useFitScale();
   // 화면 틀(디자인 px 기준 너비). 창이 넓으면 1419보다 커져서 카드·달력이 가로로 늘어난다.
-  const canvasW = Math.max(DESIGN_CANVAS_W, (useWindowWidth() - SIDEBAR_W) / scale);
+  const canvasW = Math.max(DESIGN_CANVAS_W, (useWindowWidth() - getSidebarWidth()) / scale);
   const booksAreaW = canvasW - SHELF_LEFT - SHELF_RIGHT - SHELF_SIDE_SPACE;
   const slotsPerPage = Math.max(1, Math.floor((booksAreaW + BOOK_GAP) / (BOOK_W + BOOK_GAP)));
   const moleRatio = Math.min(MAX_MOLE_RATIO, canvasW / DESIGN_CANVAS_W);
@@ -84,7 +84,17 @@ const Library = () => {
   const [query, setQuery] = useState("");
   const [toast, showToast] = useToast();
   const rootRef = useRef(null);
-  const log = useMemo(() => fetchReadingLog(), []);
+  const [log, setLog] = useState({});
+
+  // 서버의 서재·공동서재 목록과 달력 기록을 받아 온다 (받기 전에는 브라우저 사본으로 그린다)
+  useEffect(() => {
+    let alive = true;
+    Promise.all([syncMyLibrary(), syncSharedLibrary()]).then(() => alive && setVersion((v) => v + 1));
+    fetchReadingLog().then((value) => alive && setLog(value));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const categories = useMemo(
     () => [ALL, ...new Set(books.map((b) => b.category || "기타"))],

@@ -6,6 +6,7 @@ import { Toast } from "../bookSearch/parts";
 import GoalTimeInput from "../../components/goalTime/GoalTimeInput";
 import { normalizeGoalTime } from "../../components/goalTime/goalTime";
 import { fetchEditPage, saveEditInfo } from "./myPageApi";
+import { logout, withdraw } from "../../api/auth";
 import { Banner, Icon, ImagePencil, ProfileImage } from "./parts";
 import useProfileImages from "./useProfileImages";
 import "../bookSearch/BookSearch.css"; // .bs 버튼·알림 스타일을 같이 쓴다
@@ -127,6 +128,20 @@ const EditInfo = () => {
     setTimeout(() => navigate(PATHS.mypage), GO_BACK_MS);
   };
 
+  const signOut = async () => {
+    await logout();
+    navigate(PATHS.guest, { replace: true });
+  };
+
+  const leave = async () => {
+    if (!window.confirm("정말 탈퇴할까요?\n탈퇴하면 이 계정으로 다시 로그인할 수 없어요.")) return;
+    if (!(await withdraw())) {
+      showToast("탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+    navigate(PATHS.guest, { replace: true });
+  };
+
   return (
     <div className="bs mp">
       <Toast message={toast} />
@@ -184,6 +199,13 @@ const EditInfo = () => {
                   </button>
                 )}
               </section>
+
+              {!form.needLogin && (
+                <div className="ei-account-actions">
+                  <button type="button" onClick={signOut}>로그아웃</button>
+                  <button type="button" className="danger" onClick={leave}>회원탈퇴</button>
+                </div>
+              )}
             </div>
           )}
         </div>

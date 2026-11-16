@@ -1,3 +1,5 @@
+import { requestServer } from "./client";
+
 // 인증 API 호출 모음. 주소와 요청 키 이름은 API 명세서(ver02)를 그대로 따른다.
 // 모두 { ok, status, data } 를 돌려주고, 서버가 없거나 응답이 JSON 이 아니어도 예외를 던지지 않는다.
 
@@ -20,6 +22,25 @@ const post = async (url, body) => {
 
 // 로그인: 요청 ID, password → 응답 accessToken, refreshToken, ID
 export const login = (ID, password) => post("/auth/login", { ID, password });
+
+// 이 브라우저에 남은 로그인 정보(토큰·내 정보)를 지운다
+const clearSession = () => {
+  ["token", "refreshToken", "user"].forEach((key) => localStorage.removeItem(key));
+};
+
+// 로그아웃: POST /auth/logout (로그인 필요). 서버가 실패해도 이 브라우저에서는 로그아웃한다.
+export const logout = async () => {
+  await requestServer("POST", "/auth/logout");
+  clearSession();
+};
+
+// 회원탈퇴: DELETE /users/me (로그인 필요). 명세서 비고: 이메일·비밀번호만 삭제, 나머지 기록은 유지.
+// 서버가 성공했을 때만 로그인 정보를 지운다. 성공하면 true
+export const withdraw = async () => {
+  const { ok } = await requestServer("DELETE", "/users/me");
+  if (ok) clearSession();
+  return ok;
+};
 
 // 이메일 인증번호 보내기: 요청 email, purpose → 응답 message, expiresIn
 export const sendEmailCode = (email, purpose) => post("/auth/email_send", { email, purpose });

@@ -6,7 +6,7 @@
 
 .app-layout-main {
   flex: 1;
-  margin-left: 103px;
+  margin-left: var(--sb);
   min-width: 0;
   position: relative;
 }

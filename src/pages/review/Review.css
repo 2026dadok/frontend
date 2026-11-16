@@ -1,7 +1,7 @@
 /* 감상문. 위아래로 스크롤되는 페이지라 100vh 로 고정하지 않는다. 디자인 기준 가로 1419 를 가로 폭에 맞춰 줄인다. */
 .review-page { position: relative; min-height: 100vh; color: #222; }
 .review-page button { font-family: inherit; color: inherit; cursor: pointer; }
-.review-stage { zoom: var(--s, 1); width: calc((100vw - 103px) / var(--s, 1)); }
+.review-stage { zoom: var(--s, 1); width: calc((100vw - var(--sb)) / var(--s, 1)); }
 .review-canvas { position: relative; width: 1419px; margin: 0 auto; padding: 66px 0 150px 186px; }
 
 /* 오른쪽 위 XP 는 스크롤해도 제자리 */

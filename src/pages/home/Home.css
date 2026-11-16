@@ -6,8 +6,10 @@
 /* 디자인 크기 그대로 그리고, 창이 작으면 zoom(--s)으로 통째로 축소 */
 .home-stage {
   zoom: var(--s, 1);
-  width: calc((100vw - 103px) / var(--s, 1));
+  width: calc((100vw - var(--sb)) / var(--s, 1));
   padding: 72px 60px 28px 80px; /* 사이드바와 카드 사이 여백 */
+  /* 내용 높이는 967 고정. 창이 세로로 더 길면 남는 만큼 위아래를 똑같이 띄워 가운데에 둔다 */
+  margin-top: max(0px, (100vh / var(--s, 1) - 967px) / 2);
 }
 
 .home-xp-total {
@@ -175,3 +177,6 @@ a.home-shelf-book { display: block; cursor: pointer; }
 @media (max-width: 1280px) {
   .home-grid { grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }
 }
+
+/* 퀘스트를 불러오는 중이거나 실패했을 때의 안내 문구 */
+.home-daily-note { color: #999; font-size: 14px; }

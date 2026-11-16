@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { PATHS } from "../../routes";
 import SiteFooter from "../landing/SiteFooter";
 import { EFFECTIVE_DATE } from "./legalDocs";
+import glyphImg from "../../images/dadok-glyph.png";
 import "../landing/Landing.css"; // 첫 화면과 같은 배경·푸터
 import "./Legal.css";
 
@@ -20,7 +21,10 @@ const LegalPage = ({ doc }) => {
   return (
     <div className="ld lg">
       <header className="lg-header">
-        <Link to={PATHS.guest} className="lg-home">다독다독</Link>
+        {/* 로고: 누르면 항상 소개 화면(맨 위)으로 */}
+        <Link to={PATHS.guest} className="lg-home" aria-label="다독다독 소개 화면으로" onClick={() => window.scrollTo(0, 0)}>
+          <img src={glyphImg} alt="" />
+        </Link>
         <nav aria-label="약관 및 정책">
           <Link to={PATHS.terms} aria-current={doc.title === "이용약관" ? "page" : undefined}>이용약관</Link>
           <Link to={PATHS.privacy} aria-current={doc.title === "개인정보 처리방침" ? "page" : undefined}>개인정보 처리방침</Link>
@@ -45,6 +49,9 @@ const LegalPage = ({ doc }) => {
                 ))}
               </ul>
             )}
+            {section.after?.map((text) => (
+              <p key={text}>{text}</p>
+            ))}
           </section>
         ))}
       </main>

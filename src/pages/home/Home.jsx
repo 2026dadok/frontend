@@ -7,9 +7,7 @@ import {
   fetchRecommendedBooks,
   fetchMyLibraryBooks,
   fetchSharedLibraryBooks,
-  fetchWeeklyQuest,
-  loadDailyQuests,
-  fetchTotalXp,
+  loadMainPage,
   fetchRandomQuote,
 } from "./homeApi";
 import "./Home.css";
@@ -22,17 +20,11 @@ import mascotImg from "../../images/mascot.png";
 
 const SHELF_MAX_BOOKS = 5; // 책 최대 5권 + 항상 마지막에 + 칸
 
-// 백엔드 연결 전/실패 시 화면 확인용 (완료 여부·진행도는 백엔드 값만 사용, 프론트에서 체크하지 않음)
-const FALLBACK_WEEKLY = { title: "이번주에 300페이지 읽기", current: 0, goal: 300, xp: 20 };
-const FALLBACK_DAILY = {
-  quests: [
-    { id: 1, title: "일일 출석하기", xp: 10, done: false },
-    { id: 2, title: "30분 독서하기", xp: 5, done: false },
-    { id: 3, title: "퀘스트 (준비 중)", xp: 5, done: false }, // 세 번째 퀘스트는 아직 미정. 백엔드 값이 오면 대체된다
-    { id: 4, title: "새로운 도서 등록하기", xp: 10, done: false },
-  ],
-  allClearXp: 30,
-};
+// 퀘스트 내용·진행도·완료 여부는 모두 백엔드(GET /auth/main_page) 값만 쓴다. 프런트가 정하지 않는다.
+// 서버 응답을 받기 전이나 실패했을 때는 안내 문구만 보여준다.
+const LOADING = undefined; // useLoad 가 아직 응답을 받지 못함
+const EMPTY_WEEKLY = { title: "", current: 0, goal: 0, xp: 0 };
+const EMPTY_DAILY = { quests: [], allClearXp: 0 };
 
 const useLoad = (loader, initial) => {
   const [data, setData] = useState(initial);
@@ -40,7 +32,7 @@ const useLoad = (loader, initial) => {
     let alive = true;
     Promise.resolve()
       .then(loader)
-      .then((v) => alive && v != null && setData(v))
+      .then((v) => alive && v !== undefined && setData(v))
       .catch((e) => console.error(e));
     return () => {
       alive = false;
@@ -88,7 +80,7 @@ const Xp = ({ value, className }) => (
   <span className={`home-xp ${className ?? ""}`}>XP {value}</span>
 );
 
-const WeeklyQuest = ({ quest }) => {
+const WeeklyQuest = ({ quest, note }) => {
   const percent = Math.min(100, (quest.current / quest.goal) * 100) || 0;
   return (
     <section className="home-card home-weekly">
@@ -98,7 +90,7 @@ const WeeklyQuest = ({ quest }) => {
         </span>
         <h2>주간 퀘스트</h2>
       </div>
-      <p className="home-weekly-title">{quest.title}</p>
+      <p className="home-weekly-title">{quest.title || note}</p>
       <div className="home-weekly-bar">
         <div className="home-progress">
           <div style={{ width: `${percent}%` }} />
@@ -113,13 +105,14 @@ const WeeklyQuest = ({ quest }) => {
   );
 };
 
-const DailyQuest = ({ daily }) => (
+const DailyQuest = ({ daily, note }) => (
   <section className="home-card home-daily">
     <div className="home-quest-head">
       <span className="home-quest-icon"><img src={calendarIcon} alt="" /></span>
       <h2>일일 퀘스트</h2>
     </div>
     <ul>
+      {daily.quests.length === 0 && <li className="home-daily-note">{note}</li>}
       {daily.quests.map((q) => (
         <li key={q.id}>
           <span className={`home-check ${q.done ? "done" : ""}`} />
@@ -163,10 +156,13 @@ const Home = () => {
   const myBooks = useLoad(fetchMyLibraryBooks, []);
   const sharedBooks = useLoad(fetchSharedLibraryBooks, []);
   const recommended = useLoad(fetchRecommendedBooks, []);
-  const weekly = useLoad(fetchWeeklyQuest, FALLBACK_WEEKLY);
-  const daily = useLoad(loadDailyQuests, FALLBACK_DAILY);
-  const totalXp = useLoad(fetchTotalXp, 0);
-  const [quote] = useState(fetchRandomQuote);
+  const main = useLoad(loadMainPage, LOADING); // null = 서버 없음·실패
+  const questNote = main === LOADING ? "퀘스트를 불러오는 중이에요." : "퀘스트를 불러오지 못했어요.";
+  const weekly = main?.weekly ?? EMPTY_WEEKLY;
+  const daily = main?.daily ?? EMPTY_DAILY;
+  const totalXp = main?.totalXp ?? 0;
+  const [localQuote] = useState(fetchRandomQuote);
+  const quote = main?.quote ?? localQuote;
   const scale = useFitScale();
   const navigate = useNavigate();
   // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다
@@ -187,8 +183,8 @@ const Home = () => {
             <Recommend books={recommended} onOpen={openRecommended} />
           </div>
           <div className="home-right">
-            <WeeklyQuest quest={weekly} />
-            <DailyQuest daily={daily} />
+            <WeeklyQuest quest={weekly} note={questNote} />
+            <DailyQuest daily={daily} note={main?.daily ? "오늘의 퀘스트가 없어요." : questNote} />
             <QuoteBubble quote={quote} />
           </div>
         </div>
