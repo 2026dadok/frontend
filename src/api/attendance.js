@@ -1,4 +1,4 @@
-import { getMe } from "../pages/bookSearch/bookStore";
+import { memRead, memWrite } from "./session";
 import { authHeaders } from "./client";
 import { showXpToast } from "../components/xpToast/xpToastBus";
 
@@ -11,16 +11,16 @@ const ATTENDANCE_XP = 10; // 서버 응답에 reward_xp 가 없을 때만 쓰는
 // 오늘 이미 성공했으면 다시 보내지 않는다. 실패(이미 출석했거나 서버 문제)는 조용히 넘기고 다음에 다시 시도한다.
 const checkAttendance = async () => {
   const today = new Date().toLocaleDateString("sv-SE"); // yyyy-MM-dd (사용자 기기 날짜)
-  const storageKey = `attendanceDate:${getMe().key}`;
+  const storageKey = "attendanceDate"; // 메모리 (로그아웃하면 지워진다). 새로 열면 다시 보내고, 이미 했으면 서버가 409 를 준다
   try {
-    if (localStorage.getItem(storageKey) === today) return;
+    if (memRead(storageKey) === today) return;
     const res = await fetch("/quests/attendance", { method: "POST", headers: authHeaders() });
     if (res.status === 409) {
-      localStorage.setItem(storageKey, today); // 명세서: 이미 출석했으면 409 → 오늘은 다시 보내지 않는다
+      memWrite(storageKey, today); // 명세서: 이미 출석했으면 409 → 오늘은 다시 보내지 않는다
       return;
     }
     if (!res.ok) return;
-    localStorage.setItem(storageKey, today);
+    memWrite(storageKey, today);
     const data = await res.json().catch(() => null);
     // 명세서: POST /quests/attendance → message, reward_xp (전체 완료 보상 포함)
     showXpToast({ title: "일일 출석 보상", xp: data?.reward_xp ?? data?.data?.reward_xp ?? ATTENDANCE_XP });

@@ -1,4 +1,4 @@
-// 서재·공동서재·감상문·리뷰 데이터. 목록의 기준은 백엔드이고, 브라우저(localStorage)는 화면용 사본(캐시)이다.
+// 서재·공동서재·감상문·리뷰 데이터. 목록의 기준은 백엔드이고, 메모리에 화면용 사본을 둔다 (브라우저 저장소에는 남기지 않는다).
 //   - 나의 서재 목록: GET /library/my_page      → syncMyLibrary() 가 받아서 사본을 바꾼다
 //   - 공동서재 목록:  GET /shared-readings      → syncSharedLibrary()
 //   - 공동서재 상세:  GET /library/joints/{id}  → fetchJointDetail()
@@ -9,10 +9,10 @@
 // TODO: 명세서에 안쪽 필드 이름이 없어서 여러 후보 이름을 받는다. 백엔드가 이름을 정하면 하나로 줄인다.
 
 import { isLoggedIn, pick, requestServer } from "../../api/client";
+import { getSessionUser, memRead, memWrite } from "../../api/session";
 import { searchBooks } from "./bookSearchApi";
 
 const KEYS = {
-  user: "user", // 로그인 시 저장 (App.jsx)
   myLibrary: "myLibraryBooks",
   sharedLibrary: "sharedLibraryBooks",
   reviews: "bookReviews",
@@ -20,31 +20,17 @@ const KEYS = {
   commentaries: "bookCommentaries", // { [bookId]: [{ day, content, date }, ...] }
 };
 
-const read = (key, fallback) => {
-  try {
-    const value = JSON.parse(localStorage.getItem(key));
-    return value ?? fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-const write = (key, value) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch {
-    return false;
-  }
-};
+// 메모리 사본 (api/session.js). 로그아웃하면 지워지고, 새로 열면 서버에서 다시 받는다.
+const read = memRead;
+const write = memWrite;
 
 // ───────── 내 정보 ─────────
 // 로그인할 때 저장한 내 정보 그대로. 로그인하지 않았으면 빈 객체
-export const getSavedUser = () => (isLoggedIn() ? read(KEYS.user, {}) ?? {} : {});
+export const getSavedUser = () => (isLoggedIn() ? getSessionUser() : {});
 
 // 로그인 응답(token 제외)을 App.jsx 가 "user" 에 저장해 둔다. 필드명은 nickname / name 을 기대한다.
 export const getMe = () => {
-  const user = read(KEYS.user, {}) ?? {};
+  const user = getSessionUser();
   return {
     key: String(user.ID ?? user.name ?? user.id ?? "me"), // 리뷰 작성자 구분용 (로그인 아이디)
     displayName: user.name || user.ID || "나", // TODO: 표시 이름은 user_name. 로그인 응답에는 없어서 내 정보 API에서 받아와야 한다
@@ -145,8 +131,7 @@ export const getAddedCount = (bookId) => {
 
 // "added" | "exists" | "login" | "error"
 // 로그인하지 않았으면 담지 않고 "login" 을 돌려준다.
-// 백엔드(POST /library/books)에 먼저 등록해 보고, 안 되면 localStorage 에만 저장한다.
-// 표지·출판사는 백엔드 명세에 없어서 서버 성공 여부와 상관없이 화면용으로 localStorage 에도 둔다.
+// 백엔드(POST /library/books)가 받아줬을 때만 담는다. 표지·출판사는 백엔드 명세에 없어서 메모리 사본에 같이 둔다.
 // TODO: 책 추가의 요청 값 이름이 명세서에 없다. 지금은 title, author, total_page 에 isbn·표지 주소를 같이 보낸다
 export const addToMyLibrary = async (book) => {
   if (!isLoggedIn()) return "login";

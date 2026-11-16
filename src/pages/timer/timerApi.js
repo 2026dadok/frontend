@@ -56,17 +56,3 @@ export const saveReadPages = async (bookID, readPages) => {
   const { ok, data } = await requestServer("PUT", "/library/pages", { bookID, read_pages: readPages });
   return ok ? (data?.data ?? data ?? {}) : null;
 };
-
-// 서고의 독서 달력(libraryApi.fetchReadingLog)이 읽는 날짜별 읽은 시간(분)에 오늘 읽은 시간을 더한다.
-// TODO: 날짜별 독서 시간 API가 생기면 지운다 (지금은 백엔드 없이도 달력에 보이게 브라우저에 쌓는다)
-export const addToReadingLog = (minutes) => {
-  if (minutes <= 0) return;
-  try {
-    const log = JSON.parse(localStorage.getItem("readingLog")) ?? {};
-    const today = new Date().toLocaleDateString("sv-SE");
-    log[today] = (log[today] ?? 0) + minutes;
-    localStorage.setItem("readingLog", JSON.stringify(log));
-  } catch {
-    // 저장 공간 문제 등은 넘어간다
-  }
-};

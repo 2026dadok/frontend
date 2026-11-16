@@ -1,34 +1,24 @@
-// 인용구 노트 저장소 (localStorage "quotes"). 홈의 "오늘의 문장"(fetchRandomQuote)도 같은 곳을 읽는다.
+// 인용구 노트. 기준은 백엔드이고 메모리에 화면용 사본을 둔다 (브라우저 저장소에는 남기지 않는다). 홈의 "오늘의 문장"도 같은 사본을 읽는다.
 //   항목: { id, text, bookId, book(책 제목), author, page, date(ISO), createdAt, favorite, serverNoteId }
 // 백엔드(명세서 ver02, 모두 /bookstore/notes):
 //   작성 POST   (bookID, book_page, date, note_content) → note_id, new_achievements
 //   수정 PUT    (note_ID, book_page, date, note_content) → message
 //   삭제 DELETE (note_ID)                               → message
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id). 인용구는 200자 이하(DB varchar 200).
-// 즐겨찾기는 명세서·DB 어디에도 없어서 브라우저에서만 처리한다. TODO: 백엔드와 확인
+// 즐겨찾기는 명세서·DB 어디에도 없어서 메모리에서만 처리한다 (새로 열면 사라진다). TODO: 백엔드에 즐겨찾기 저장 API 요청
 
 import { isLoggedIn, pick, requestServer } from "../../api/client";
+import { memRead, memWrite } from "../../api/session";
 
 const KEY = "quotes";
 export const MAX_QUOTE_LENGTH = 200;
 
 const read = () => {
-  try {
-    const list = JSON.parse(localStorage.getItem(KEY));
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
-  }
+  const list = memRead(KEY, []);
+  return Array.isArray(list) ? list : [];
 };
 
-const write = (list) => {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(list));
-    return true;
-  } catch {
-    return false;
-  }
-};
+const write = (list) => memWrite(KEY, list);
 
 // 인용구는 로그인한 사용자 것이다. 로그인하지 않았으면 브라우저에 남은 인용구는 보여주지 않는다.
 // 바로 그릴 때 쓰는 사본. 서버 값으로 맞추려면 syncQuotes() 를 부른다.

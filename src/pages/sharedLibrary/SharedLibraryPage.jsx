@@ -4,7 +4,7 @@ import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
 import { showXpToast } from "../../components/xpToast/xpToastBus";
 import SharedLibrary from "../bookSearch/SharedLibrary";
-import { fetchJointDetail, getSharedLibrary } from "../bookSearch/bookStore";
+import { fetchJointDetail, getSharedLibrary, syncSharedLibrary } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas)과 공동서재 모양(.bs-co-*, .bs-shared-*)을 같이 쓴다
 import "./SharedLibraryPage.css";
@@ -22,7 +22,7 @@ const SharedLibraryView = () => {
   const scale = useFitScale();
   const location = useLocation();
   // 서고에서 누른 공동 서재 기록. 주소로 바로 들어오면 첫 번째 기록을 보여준다. (TODO: 공동서재 번호를 주소에 담기)
-  const record = location.state?.record ?? getSharedLibrary()[0] ?? null;
+  const [record, setRecord] = useState(() => location.state?.record ?? getSharedLibrary()[0] ?? null);
   const [detail, setDetail] = useState(null); // 서버 상세 (오기 전에는 목록에 있던 값으로 그린다)
   const [toast, setToast] = useState("");
   const [winTitleVisible, setWinTitleVisible] = useState(false);
@@ -34,7 +34,13 @@ const SharedLibraryView = () => {
 
   useEffect(() => {
     let alive = true;
-    fetchJointDetail(record).then((result) => {
+    // 새로 열어서 메모리에 공동서재가 없으면 서버 목록에서 첫 번째를 고른다
+    const target = record ? Promise.resolve(record) : syncSharedLibrary().then((list) => list[0] ?? null);
+    target.then((found) => {
+      if (!alive || !found) return null;
+      if (!record) setRecord(found);
+      return fetchJointDetail(found);
+    }).then((result) => {
       if (!alive || !result) return;
       setDetail(result);
       const won = result.myPercent === 100 && result.friendPercent < 100;

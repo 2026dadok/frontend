@@ -1,11 +1,12 @@
 // 백엔드를 부를 때 공통으로 쓰는 것들.
+import { getToken } from "./session";
 
-// 로그인했는지: 로그인할 때 저장한 토큰이 있으면 로그인한 것으로 본다.
-export const isLoggedIn = () => Boolean(localStorage.getItem("token"));
+// 로그인했는지: 로그인할 때 받은 토큰이 있으면 로그인한 것으로 본다. (토큰은 api/session.js 가 관리)
+export const isLoggedIn = () => Boolean(getToken());
 
-// 로그인할 때 저장한 토큰을 헤더에 넣는다. 백엔드는 이 값으로 누가 보낸 요청인지 안다.
+// 로그인할 때 받은 토큰을 헤더에 넣는다. 백엔드는 이 값으로 누가 보낸 요청인지 안다.
 export const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+  Authorization: `Bearer ${getToken()}`,
 });
 
 // 서버에 요청하고 { ok, data } 를 돌려준다. 서버가 없거나 응답이 JSON 이 아니어도 예외를 던지지 않는다.

@@ -34,8 +34,9 @@ const showLastWeekResult = (lastWeek) => {
   if (!lastWeek) return;
   const week = currentWeekKey();
   try {
-    if (localStorage.getItem(shownWeekKey()) === week) return;
-    localStorage.setItem(shownWeekKey(), week);
+    // 화면 상태만 기억한다 (탭을 닫으면 지워진다). 데이터가 아니라 "알림을 이미 띄웠는지" 표시라서 sessionStorage 에 둔다
+    if (sessionStorage.getItem(shownWeekKey()) === week) return;
+    sessionStorage.setItem(shownWeekKey(), week);
   } catch {
     // 저장이 안 되는 브라우저에서는 들어올 때마다 보여준다
   }

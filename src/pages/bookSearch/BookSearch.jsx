@@ -1,9 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import { isLoggedIn } from "../../api/client";
 import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
-import { addToMyLibrary, getMe, getMyLibrary, requestCoReading } from "./bookStore";
+import { addToMyLibrary, getMe, getMyLibrary, requestCoReading, syncMyLibrary } from "./bookStore";
 import useInfiniteBooks from "./useInfiniteBooks";
 import { SearchBar, Toast, XpTotal } from "./parts";
 import BookList from "./BookList";
@@ -48,6 +48,11 @@ const BookSearch = () => {
     setShownTerm(term);
     setQuery(term);
   }
+  // 나의 서재를 서버에서 받아 둔다 (이미 담은 책인지, 바로 읽기에 넘길 서버 책 번호를 알기 위해)
+  useEffect(() => {
+    syncMyLibrary();
+  }, []);
+
   const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
   const [toast, showToast] = useToast();

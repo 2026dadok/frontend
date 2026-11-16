@@ -1,16 +1,6 @@
 // 서고 화면에서 쓰는 데이터. 명세서: GET /bookstore/bookstore_page (서고 페이지)
 import { pick, requestServer } from "../../api/client";
 
-// 브라우저에 쌓아 둔 날짜별 읽은 시간(분). 서버가 없을 때만 쓴다.
-const readLocalLog = () => {
-  try {
-    const log = JSON.parse(localStorage.getItem("readingLog"));
-    return log && typeof log === "object" ? log : {};
-  } catch {
-    return {};
-  }
-};
-
 // 서버의 날짜별 기록 → { "2026-10-26": 45, ... } (분). 시간은 초 단위로 본다 (명세서의 다른 시간 값과 같다)
 // TODO: 서고 페이지 응답의 필드 이름이 명세서에 없다. 백엔드가 정하면 후보 이름을 하나로 줄인다.
 const toLog = (d) => {
@@ -29,9 +19,8 @@ const toLog = (d) => {
   return null;
 };
 
-// 날짜별 읽은 시간(분). 서버 값이 있으면 그것, 없으면 브라우저 기록
+// 날짜별 읽은 시간(분). 서버가 없거나 실패하면 빈 달력
 export const fetchReadingLog = async () => {
   const { ok, data } = await requestServer("GET", "/bookstore/bookstore_page");
-  const log = ok ? toLog(data?.data ?? data) : null;
-  return log ?? readLocalLog();
+  return (ok ? toLog(data?.data ?? data) : null) ?? {};
 };

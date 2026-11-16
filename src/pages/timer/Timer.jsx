@@ -9,7 +9,7 @@ import { Toast } from "../bookSearch/parts";
 import { updateShelfBook } from "../bookSearch/bookStore";
 import { QuoteAddModal } from "../quote/QuoteModals";
 import { addQuote } from "../quote/quoteStore";
-import { addStudyTime, addToReadingLog, fetchGoalTime, saveReadPages } from "./timerApi";
+import { addStudyTime, fetchGoalTime, saveReadPages } from "./timerApi";
 import moleImg from "../../images/dokddage.png";
 import "../bookSearch/BookSearch.css"; // .bs 버튼·알림 스타일을 같이 쓴다
 import "../quote/Quote.css"; // 인용구 쓰기 팝업
@@ -138,11 +138,10 @@ const Timer = () => {
       return;
     }
     setSaving(true);
-    // 서버에는 초 단위로 보낸다 (명세서). 서고 달력용 기록은 분 단위
+    // 서버에는 초 단위로 보낸다 (명세서). 서고 달력도 서버 기록(GET /bookstore/bookstore_page)을 쓴다
     const seconds = Math.round(elapsed);
     const serverId = Number.isInteger(book.serverBookId) ? book.serverBookId : null;
     const [, pageResult] = await Promise.all([addStudyTime(serverId, seconds), saveReadPages(serverId, readPage)]);
-    addToReadingLog(Math.round(seconds / 60));
     updateShelfBook(book.id, { readPage });
     setSaving(false);
 

@@ -10,6 +10,25 @@
 const DROP_REQUEST = ["host", "connection", "content-length", "accept-encoding"];
 const DROP_RESPONSE = ["content-encoding", "content-length", "transfer-encoding", "connection"];
 
+// YES24 는 키가 서버(이 함수)에만 있어서 브라우저에서는 보이지 않는다.
+// 대신 이 주소를 다른 사람이 불러서 우리 키를 쓰지 못하게 막는다:
+//   - 우리 앱이 쓰는 두 주소(월별 베스트셀러, 책 검색)만, GET 으로만 허용
+//   - 우리 사이트 화면에서 보낸 요청만 허용 (Origin/Referer 의 주소가 이 사이트와 같아야 한다)
+//   - 같은 요청은 Vercel 이 10분 동안 저장해 두었다가 돌려줘서 YES24 호출 횟수를 줄인다
+const YES24_ALLOWED = ["v1/category/bestsellerMonthly", "v1/goods/itemList"];
+const YES24_CACHE = "public, s-maxage=600, stale-while-revalidate=3600";
+
+const fromOurSite = (request) => {
+  const host = new URL(request.url).host;
+  const source = request.headers.get("origin") || request.headers.get("referer");
+  if (!source) return false;
+  try {
+    return new URL(source).host === host;
+  } catch {
+    return false;
+  }
+};
+
 const json = (status, body) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8" } });
 
@@ -28,6 +47,8 @@ async function handle(request) {
 
   let target;
   if (to === "yes24") {
+    if (request.method !== "GET" || !YES24_ALLOWED.includes(path)) return json(404, { message: "알 수 없는 경로예요." });
+    if (!fromOurSite(request)) return json(403, { message: "허용되지 않은 요청이에요." });
     target = `https://apis.yes24.com/${path}`;
     headers.set("X-Api-Key", process.env.YES24_API_KEY ?? "");
   } else if (to === "backend") {
@@ -49,6 +70,8 @@ async function handle(request) {
     });
     const out = new Headers(res.headers);
     DROP_RESPONSE.forEach((name) => out.delete(name));
+    if (to === "yes24" && res.ok) out.set("cache-control", YES24_CACHE);
+    if (to === "yes24") out.delete("set-cookie");
     return new Response(res.body, { status: res.status, headers: out });
   } catch {
     return json(502, { message: "서버에 연결하지 못했어요." });

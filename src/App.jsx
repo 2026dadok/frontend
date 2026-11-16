@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { PATHS } from "./routes";
+import { startSession } from "./api/session";
+import { isLoggedIn } from "./api/client";
 import SignupFlow from "./pages/auth/SignupFlow";
 import LoginForm from "./pages/auth/LoginForm";
 import FindAccount from "./pages/auth/FindAccount";
@@ -41,10 +43,9 @@ const LoginPage = () => {
           return;
         }
         const { accessToken, refreshToken, ...profile } = data;
-        localStorage.setItem("token", accessToken); // 다른 API 호출이 이 값을 Authorization 헤더에 쓴다
-        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-        // 화면에 쓸 내 정보 (예: 책 검색 > 공동서재). 로그인 응답에는 ID 만 있다.
-        localStorage.setItem("user", JSON.stringify(profile));
+        // 토큰은 다른 API 호출이 Authorization 헤더에 쓴다. 내 정보는 화면용 (로그인 응답에는 ID 만 있다)
+        // localStorage 가 아니라 이 탭에만 둔다 (api/session.js)
+        startSession({ token: accessToken, refreshToken, user: profile });
         navigate(PATHS.main, { replace: true });
       }}
     />
@@ -64,7 +65,7 @@ const FindPage = () => {
 // TODO: 개발 중에는 미사용. 인증을 다시 켤 때 Layout 라우트를 감싸는 데 사용
 // eslint-disable-next-line no-unused-vars
 const RequireAuth = ({ children }) => {
-  const loggedIn = Boolean(localStorage.getItem("token"));
+  const loggedIn = isLoggedIn();
   return loggedIn ? children : <Navigate to={PATHS.login} replace />;
 };
 

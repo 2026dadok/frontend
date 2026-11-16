@@ -5,7 +5,7 @@ import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
-import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
+import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { DEMO_COMMENTARIES, fetchFriendCommentaries, fetchMyCommentaries, loadMyCommentaries } from "./reviewApi";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
@@ -69,7 +69,17 @@ const Review = () => {
 
   // 누른 책. 주소로 바로 들어오면 서재의 첫 책을 보여준다. (TODO: 책을 가리키는 값으로 교체)
   // (첫 책은 처음 한 번만 읽는다. 그릴 때마다 읽으면 매번 새 객체가 되어 아래 계산이 계속 다시 돈다)
-  const [firstBook] = useState(() => getMyLibrary()[0] ?? getSharedLibrary()[0] ?? null);
+  const [firstBook, setFirstBook] = useState(() => getMyLibrary()[0] ?? getSharedLibrary()[0] ?? null);
+  // 새로 열어서 메모리에 서재가 없으면 서버에서 받아 첫 책을 고른다
+  useEffect(() => {
+    if (location.state?.book || firstBook) return undefined;
+    let alive = true;
+    Promise.all([syncMyLibrary(), syncSharedLibrary()]).then(([mine, shared]) => alive && setFirstBook(mine[0] ?? shared[0] ?? null));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const book = location.state?.book ?? firstBook;
 
   const [version, setVersion] = useState(0); // 감상문을 저장한 뒤 목록을 다시 읽기 위한 값
