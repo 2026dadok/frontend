@@ -1,11 +1,11 @@
 // 인용구 노트. 기준은 백엔드이고 메모리에 화면용 사본을 둔다 (브라우저 저장소에는 남기지 않는다). 홈의 "오늘의 문장"도 같은 사본을 읽는다.
 //   항목: { id, text, bookId, book(책 제목), author, page, date(ISO), createdAt, favorite, serverNoteId }
-// 백엔드(명세서 ver02, 모두 /bookstore/notes):
+// 백엔드 명세서(모두 /bookstore/notes). 코드가 아직 GitHub 에 올라오지 않아 응답 필드 이름은 명세서 기준이다:
 //   작성 POST   (bookID, book_page, date, note_content) → note_id, new_achievements
 //   수정 PUT    (note_ID, book_page, date, note_content) → message
 //   삭제 DELETE (note_ID)                               → message
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id). 인용구는 200자 이하(DB varchar 200).
-// 즐겨찾기는 명세서·DB 어디에도 없어서 메모리에서만 처리한다 (새로 열면 사라진다). TODO: 백엔드에 즐겨찾기 저장 API 요청
+// 즐겨찾기는 백엔드에 없어서 메모리에서만 처리한다 (새로 열면 사라진다). TODO: 백엔드에 즐겨찾기 저장 API 요청
 
 import { isLoggedIn, pick, requestServer } from "../../api/client";
 import { memRead, memWrite } from "../../api/session";

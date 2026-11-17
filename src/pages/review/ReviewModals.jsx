@@ -2,7 +2,7 @@ import { useState } from "react";
 import useEscape from "../../hooks/useEscape";
 import { formatDate } from "./format";
 
-const MAX_LENGTH = 300; // 명세서: 감상문 300자 이하
+const MAX_LENGTH = 300; // 백엔드: 감상문 300자 이하
 
 // 팝업 안쪽 오른쪽 위의 회색 동그란 닫기 버튼 (마우스를 올리면 빨간색)
 const CloseButton = ({ onClick }) => (

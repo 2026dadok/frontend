@@ -11,11 +11,11 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
   const expired = new URLSearchParams(window.location.search).get("expired") === "1";
 
   const validate = () => {
-    if (!name || !passwd) {
+    if (!name.trim() || !passwd) {
       alert("아이디와 비밀번호를 입력하세요.");
       return false;
     }
-    if (name.replace(/\s/g, "").length > 21) {
+    if (name.trim().length > 21) {
       alert("아이디는 공백 제외 21자 이내로 입력하세요.");
       return false;
     }
@@ -30,14 +30,15 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
     if (!validate()) return;
 
     try {
-      const { ok, status, data } = await login(name, passwd); // 명세서: 요청 ID, passward
+      const id = name.trim(); // 앞뒤 공백은 빼고 보낸다 (저장하는 아이디와 같게)
+      const { ok, status, data } = await login(id, passwd);
       if (status === 0 || status >= 500) {
         alert("서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요.");
         return;
       }
       if (!ok) throw new Error("로그인 실패");
       // 백엔드 로그인 응답에는 토큰만 있고 아이디가 없다. 입력한 아이디를 같이 넘겨서 "나"를 구분하는 데 쓴다.
-      onLoginSuccess({ ID: name.trim(), ...data });
+      onLoginSuccess({ ID: id, ...data });
     } catch (err) {
       console.error(err);
       alert("아이디 또는 비밀번호가 올바르지 않습니다.");

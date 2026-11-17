@@ -55,7 +55,7 @@ const RankRow = ({ ranker }) => (
   </li>
 );
 
-const ReadingBook = ({ book, onRead, onLibrary }) => (
+const ReadingBook = ({ book, failed, onRead, onLibrary }) => (
   <section className="rk-card rk-reading">
     {book ? (
       <>
@@ -69,7 +69,7 @@ const ReadingBook = ({ book, onRead, onLibrary }) => (
         </div>
       </>
     ) : (
-      <p className="rk-reading-empty">읽고 있는 책이 없어요.</p>
+      <p className="rk-reading-empty">{failed ? "불러오지 못했어요." : "읽고 있는 책이 없어요."}</p>
     )}
     <div className="rk-reading-actions">
       <button type="button" disabled={!book} onClick={onRead}>바로 읽기</button>
@@ -124,7 +124,9 @@ const WeeklyRank = () => {
                 </button>
               ))}
               {data && data.competitorBooks.length === 0 && (
-                <p className="rk-empty">{data.needLogin ? "로그인하면 경쟁자들이 읽는 책을 볼 수 있어요." : "아직 경쟁자들이 읽는 책이 없어요."}</p>
+                <p className="rk-empty">
+                  {data.needLogin ? "로그인하면 경쟁자들이 읽는 책을 볼 수 있어요." : data.failed ? "책 목록을 불러오지 못했어요." : "아직 경쟁자들이 읽는 책이 없어요."}
+                </p>
               )}
             </div>
           </section>
@@ -132,7 +134,8 @@ const WeeklyRank = () => {
           <section className="rk-card rk-ranking">
             <h2>순위</h2>
             {data?.needLogin && <p className="rk-ranking-empty">로그인이 필요해요.</p>}
-            {data && !data.needLogin && (
+            {data?.failed && <p className="rk-ranking-empty">순위를 불러오지 못했어요.</p>}
+            {data && !data.needLogin && !data.failed && (
               <>
                 <ul className="rk-mine">
                   <RankRow ranker={{ ...data.me, image: myImage || data.me.image }} />
@@ -147,7 +150,7 @@ const WeeklyRank = () => {
             )}
           </section>
 
-          {data && <ReadingBook book={data.readingBook} onRead={readNow} onLibrary={goLibrary} />}
+          {data && <ReadingBook book={data.readingBook} failed={data.failed} onRead={readNow} onLibrary={goLibrary} />}
         </div>
       </div>
     </div>

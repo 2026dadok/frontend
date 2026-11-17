@@ -18,14 +18,13 @@ const FindId = ({ onBackToLogin }) => {
     }
     if (resendCooldown > 0) return;
 
-    // 명세서: POST /auth/email_send (email, purpose) → message, expiresIn
-    const { ok, data } = await sendEmailCode(email, EMAIL_PURPOSE.findId);
+    const { ok } = await sendEmailCode(email, EMAIL_PURPOSE.findId);
     if (!ok) {
       alert("인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
       return;
     }
 
-    startTimer(data?.expiresIn);
+    startTimer();
   };
 
   const handleFindId = async () => {

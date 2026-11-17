@@ -84,7 +84,7 @@ const toBook = (item) => {
     publisher: item.publisher ?? "",
     rawCategory,
     genre: classifyGenre({ rawCategory, title: item.title ?? "", intro }), // 큰 장르(서재 분류용)
-    cover: item.cover ?? "",
+    cover: item.cover || undefined, // 표지가 없으면 src 를 빈 글자로 두지 않는다 (빈 src 는 페이지를 다시 요청한다)
     intro,
     pages: item.pages ?? null, // detail=Y 일 때만 내려온다. 없으면 null
     link: item.link ?? "",

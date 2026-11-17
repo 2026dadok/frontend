@@ -83,8 +83,8 @@ export const fetchEditPage = async () => {
 
 // 회원정보 저장. 비밀번호는 바꿀 때만 보낸다. 성공하면 true
 // 백엔드: 비밀번호를 바꿀 때는 current_password 가 맞아야 한다 (없거나 틀리면 거절)
-export const saveEditInfo = async ({ name, birthdate, goalTime, email, password, currentPassword }) => {
-  const body = { name, birthdate, goal_time: goalTime, email };
+export const saveEditInfo = async ({ name, birthdate, goalTime, password, currentPassword }) => {
+  const body = { name, birthdate, goal_time: goalTime }; // 이메일은 바꿀 수 없어서 보내지 않는다
   if (password) {
     if (passwordRuleError(password)) return false; // 8~50자가 아니면 백엔드로 보내지 않는다
     body.current_password = currentPassword;

@@ -3,7 +3,7 @@
 import { fetchBestsellers } from "../bookSearch/bookSearchApi";
 import { ensureAttendance } from "../../api/attendance";
 import { syncMyLibrary, syncSharedLibrary } from "../bookSearch/bookStore";
-import { getQuotes } from "../quote/quoteStore";
+import { syncQuotes } from "../quote/quoteStore";
 import { requestServer } from "../../api/client";
 
 // ───────── 이달의 추천 도서 (YES24 Open API: 월별 베스트셀러) ─────────
@@ -61,8 +61,8 @@ export const fetchTotalXp = async () => {
 
 // ───────── 오늘의 문장 (인용구 노트) ─────────
 // 백엔드 메인 페이지의 오늘의 문장은 아직 비어 있어서 인용구 노트에서 하나를 고른다.
-// 로그인하지 않았으면 없다(null). 형태: { text, author, book, ... }
-export const fetchRandomQuote = () => {
-  const list = getQuotes();
+// 서버의 인용구 목록(GET /bookstore/note_page)을 받아서 고른다. 로그인하지 않았거나 없으면 null. 형태: { text, author, book, ... }
+export const fetchRandomQuote = async () => {
+  const list = await syncQuotes();
   return list.length ? list[Math.floor(Math.random() * list.length)] : null;
 };

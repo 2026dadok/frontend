@@ -17,14 +17,13 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     }
     if (resendCooldown > 0) return;
 
-    // 명세서: POST /auth/email_send (email, purpose) → message, expiresIn
-    const { ok, data } = await sendEmailCode(email, EMAIL_PURPOSE.signup);
+    const { ok } = await sendEmailCode(email, EMAIL_PURPOSE.signup);
     if (!ok) {
       alert("인증번호를 보내지 못했습니다. 이메일을 확인해주세요.");
       return;
     }
 
-    startTimer(data?.expiresIn);
+    startTimer();
   };
 
   const handleCreateAccount = async () => {
@@ -42,7 +41,7 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
     }
 
     try {
-      const { ok } = await verifyEmailCode(email, code, EMAIL_PURPOSE.signup); // 명세서: POST /auth/email_verify (email, code)
+      const { ok } = await verifyEmailCode(email, code, EMAIL_PURPOSE.signup);
       if (!ok) throw new Error("인증 실패");
 
       onNext({ email });

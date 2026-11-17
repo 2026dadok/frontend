@@ -44,7 +44,7 @@ export const logout = async () => {
   clearSession();
 };
 
-// 회원탈퇴: DELETE /users/me (로그인 필요). 명세서 비고: 이메일·비밀번호만 삭제, 나머지 기록은 유지.
+// 회원탈퇴: DELETE /users/me (로그인 필요). 백엔드: 이메일·비밀번호만 삭제, 나머지 기록은 유지.
 // 서버가 성공했을 때만 로그인 정보를 지운다. 성공하면 true
 export const withdraw = async () => {
   const { ok } = await requestServer("DELETE", "/users/me");
@@ -52,7 +52,7 @@ export const withdraw = async () => {
   return ok;
 };
 
-// 이메일 인증번호 보내기: 요청 email, purpose → 응답 message, expiresIn
+// 이메일 인증번호 보내기: 요청 email, purpose → 응답 문장 ("인증 코드가 이메일로 발송되었습니다."). 유효 시간은 5분
 export const sendEmailCode = (email, purpose) => post("/auth/email_send", { email, purpose });
 
 // 이메일 인증번호 확인: 요청 email, code, purpose (purpose 필수)
@@ -108,6 +108,3 @@ const BLOCKED = { ok: false, status: 400, data: null };
 export const resetPassword = (email, code, newPassword) =>
   passwordRuleError(newPassword ?? "") ? Promise.resolve(BLOCKED) : post("/auth/pw_reset", { email, code, newPassword });
 
-// 인증번호 만료 시간(초). 서버가 expiresIn 을 주면 그 값을, 아니면 기본값을 쓴다.
-export const toExpireSeconds = (expiresIn, fallback) =>
-  Number.isFinite(Number(expiresIn)) && Number(expiresIn) > 0 && Number(expiresIn) <= 3600 ? Number(expiresIn) : fallback;

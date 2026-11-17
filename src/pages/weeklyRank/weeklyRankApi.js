@@ -72,14 +72,14 @@ const toLastWeek = (raw) => {
   return rank ? { rank, xp: toNumber(raw.gained_xp) ?? 0 } : null;
 };
 
-// 서버가 없거나 실패하면 빈 값({})을 돌려준다. 아래에서 티어·책·순위가 모두 빈 화면이 된다.
+// 서버가 없거나 실패하면 null (화면은 "불러오지 못했어요"를 보여준다)
 const requestCompetition = async () => {
   try {
     const res = await apiFetch("/main/week_competition", { headers: authHeaders() });
-    if (!res.ok) return {};
-    return (await res.json()) ?? {};
+    if (!res.ok) return null;
+    return (await res.json()) ?? null;
   } catch {
-    return {}; // 서버가 없거나 응답이 JSON 이 아닐 때
+    return null; // 서버가 없거나 응답이 JSON 이 아닐 때
   }
 };
 
@@ -87,6 +87,7 @@ const requestCompetition = async () => {
 export const fetchWeekCompetition = async () => {
   if (!isLoggedIn()) return { needLogin: true, tier: "", competitorBooks: [], ranking: [], readingBook: null, lastWeek: null };
   const data = await requestCompetition();
+  if (!data) return { failed: true, tier: "", competitorBooks: [], ranking: [], readingBook: null, lastWeek: null };
   const [competitorBooks, readingBook] = await Promise.all([
     loadCompetitorBooks(data.competitors_books),
     loadReadingBook(data.reading_book),

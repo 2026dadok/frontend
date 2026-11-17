@@ -47,7 +47,6 @@ const toShelfBook = (book) => ({
   totalPage: book.pages,
   category: book.genre ?? "", // 큰 장르 (서재의 분류 필터)
   intro: book.intro ?? "", // 감상문 화면의 책 소개
-  addedAt: new Date().toISOString(), // 감상문 화면의 'N일차' 계산 기준
   completed: false,
 });
 
@@ -86,11 +85,10 @@ const mergeServerBook = (raw, cached) => {
     serverBookId,
     title: raw.book_title ?? cached?.title ?? "",
     author: raw.author ?? cached?.author ?? "",
-    cover: raw.cover_url || cached?.cover || "",
+    cover: raw.cover_url || cached?.cover || undefined, // 빈 글자 대신 undefined (img src="" 방지)
     totalPage,
     readPage,
     completed: Boolean(raw.finished) || (totalPage ? readPage >= totalPage : false),
-    addedAt: cached?.addedAt ?? new Date().toISOString(), // 서재 응답에 담은 날짜가 없다
   };
 };
 

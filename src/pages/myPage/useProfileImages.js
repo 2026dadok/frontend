@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { setMyImage, shrinkImage } from "../../api/myImages";
+import { getMyImage, setMyImage, shrinkImage } from "../../api/myImages";
 import useMyImage from "../../hooks/useMyImage";
 import useToast from "../../hooks/useToast";
 import { resetImage, uploadImage } from "./myPageApi";
@@ -8,7 +8,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 // 프로필/배경 이미지와 바꾸기. 고르면 바로 화면에 보여주고 서버에 올린다.
 // 이미지는 공용 저장소(api/myImages)에 넣어서 주간 경쟁·공동서재의 내 사진도 같이 바뀐다.
-// 서버가 실패해도 고른 이미지는 브라우저에 남겨 두고 알림만 띄운다.
+// 서버가 실패하면 원래 사진으로 되돌린다 (저장되지 않은 사진이 저장된 것처럼 보이지 않게).
 const useProfileImages = () => {
   const profile = useMyImage("profile");
   const background = useMyImage("background");
@@ -20,7 +20,7 @@ const useProfileImages = () => {
   }, []);
 
   const changeImage = async (kind, file) => {
-    // 명세서: 5MB 이하, jpg·png·gif·webp 만 받는다
+    // 백엔드: 5MB 이하, jpg·png·gif·webp 만 받는다
     if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
       showToast("jpg, png, gif, webp 사진만 올릴 수 있어요.");
       return;
@@ -29,23 +29,25 @@ const useProfileImages = () => {
       showToast("5MB 이하 사진만 올릴 수 있어요.");
       return;
     }
+    const previous = getMyImage(kind);
     try {
-      setMyImage(kind, await shrinkImage(kind, file));
+      setMyImage(kind, await shrinkImage(kind, file)); // 올리는 동안 미리 보여준다
     } catch {
       showToast("이미지를 열 수 없어요.");
       return;
     }
     const url = await uploadImage(kind, file);
-    if (url) setMyImage(kind, url);
+    setMyImage(kind, url || previous);
     showToast(url ? "이미지를 바꿨어요." : "이미지를 서버에 저장하지 못했어요.");
   };
 
   // 사진 삭제: 기본 이미지(프로필: 회색 사람, 배경: 밤하늘)로 돌아간다
   const resetToDefault = async (kind) => {
+    const previous = getMyImage(kind);
     setMyImage(kind, "");
     const { ok, url } = await resetImage(kind);
-    if (url) setMyImage(kind, url); // 서버의 기본 이미지 주소
-    showToast(ok ? "사진을 삭제했어요." : "사진 삭제를 서버에 저장하지 못했어요.");
+    setMyImage(kind, ok ? url : previous); // 성공: 서버의 기본 이미지 주소, 실패: 원래 사진
+    showToast(ok ? "사진을 삭제했어요." : "사진을 삭제하지 못했어요.");
   };
 
   return { images: { profile, background }, setImages, changeImage, resetToDefault, toast, showToast };

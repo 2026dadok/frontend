@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { toExpireSeconds } from "../../api/auth";
 
-const VERIFY_TIME = 5 * 60; // 서버가 만료 시간을 안 주면 쓰는 값(초)
+const VERIFY_TIME = 5 * 60; // 인증번호 유효 시간(초). 백엔드와 같은 5분 (응답에는 만료 시간이 없다)
 const RESEND_COOLDOWN = 60; // 인증번호를 다시 받으려면 기다리는 시간(초)
 
 // 이메일 인증번호 화면의 시계. 회원가입·아이디 찾기·비밀번호 재설정이 같이 쓴다.
@@ -20,10 +19,10 @@ const useEmailTimer = () => {
     return () => clearInterval(id);
   }, [codeSent]);
 
-  // 인증번호를 보낸 직후에 부른다. expiresIn 은 서버가 알려준 만료 시간
-  const startTimer = (expiresIn) => {
+  // 인증번호를 보낸 직후에 부른다
+  const startTimer = () => {
     setCodeSent(true);
-    setSecondsLeft(toExpireSeconds(expiresIn, VERIFY_TIME));
+    setSecondsLeft(VERIFY_TIME);
     setResendCooldown(RESEND_COOLDOWN);
   };
 

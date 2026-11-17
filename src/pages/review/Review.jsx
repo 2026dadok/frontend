@@ -27,6 +27,20 @@ const updateIntroFade = (el) => {
   wrap.style.setProperty("--bottom", clamp01(hiddenBelow / FADE_RANGE).toFixed(3));
 };
 
+// 일차 계산. 일차는 백엔드가 정한다.
+//   공동서재 책: 함께 읽기 시작한 날부터 센 날짜 (서버가 시작일 started_at 을 준다)
+//   나의 서재 책: 감상문을 쓴 순서 (1번째, 2번째 …). 서재 응답에 담은 날짜가 없어서 날짜로는 셀 수 없다.
+//     그래서 오늘 이미 썼으면 마지막 일차가, 아니면 그다음 일차가 오늘이다.
+const isToday = (iso) => Boolean(iso) && new Date(iso).toDateString() === new Date().toDateString();
+const countDays = (book, entries) => {
+  const lastWritten = Math.max(0, ...entries.map((e) => e.day));
+  if (!Number.isInteger(book?.jointId)) {
+    const today = entries.some((e) => isToday(e.date)) ? lastWritten : lastWritten + 1;
+    return Math.max(1, today);
+  }
+  return Math.max(1, lastWritten, book.startedAt ? daysSince(book.startedAt) + 1 : 1);
+};
+
 const DayCard = ({ day, entry, completed, canWrite, onOpen, onWrite }) => (
   <article
     className={`review-day ${entry ? "clickable" : ""}`}
@@ -91,21 +105,29 @@ const Review = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, isFriend, version]);
 
+  // 서고·타이머의 '감상문 쓰기'로 오면(?write=1) 오늘 일차의 감상문이 아직 없을 때 쓰기 팝업을 연다.
+  // 서버 목록을 받은 뒤에 판단한다 (받기 전 메모리 값으로 판단하면 일차가 틀릴 수 있다)
+  const [writeDay, setWriteDay] = useState(null);
+  const wantsWrite = params.get("write") === "1" && !isFriend;
+
   // 서버의 감상문(나 / 공동서재 친구)을 받아 오면 목록을 다시 그린다
   useEffect(() => {
     if (!book) return undefined;
     let alive = true;
-    syncCommentaries(book, isFriend ? "partner" : "me").then(() => alive && setVersion((v) => v + 1));
+    syncCommentaries(book, isFriend ? "partner" : "me").then((list) => {
+      if (!alive) return;
+      setVersion((v) => v + 1);
+      if (!wantsWrite) return;
+      const today = countDays(book, list);
+      if (!list.some((e) => e.day === today)) setWriteDay(today);
+    });
     return () => {
       alive = false;
     };
-  }, [book, isFriend]);
+  }, [book, isFriend, wantsWrite]);
 
   const { days, completedDay } = useMemo(() => {
-    const lastWritten = Math.max(0, ...entries.map((e) => e.day));
-    const startIso = book?.startedAt ?? book?.addedAt;
-    const sinceStart = startIso ? daysSince(startIso) + 1 : 1;
-    const total = Math.max(1, lastWritten, sinceStart);
+    const total = countDays(book, entries);
     return {
       days: Array.from({ length: total }, (_, i) => total - i),
       completedDay: book?.completed ? total : null,
@@ -128,11 +150,6 @@ const Review = () => {
       alive = false;
     };
   }, [book, introFetched]);
-
-  // 서고의 '감상문 쓰기'로 오면(?write=1) 오늘 일차의 감상문이 아직 없을 때 쓰기 팝업을 바로 연다
-  const [writeDay, setWriteDay] = useState(() =>
-    params.get("write") === "1" && !isFriend && book && !entries.some((e) => e.day === days[0]) ? days[0] : null
-  );
 
   if (!book) {
     return (
@@ -245,4 +262,7 @@ const Review = () => {
   );
 };
 
-export default Review;
+// 다른 책의 감상문으로 넘어오면 처음부터 다시 그린다 (쓰기 팝업·일차 등 이전 책의 상태가 남지 않게)
+const ReviewPage = () => <Review key={useLocation().key} />;
+
+export default ReviewPage;

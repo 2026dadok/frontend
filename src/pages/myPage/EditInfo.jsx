@@ -78,7 +78,7 @@ const EditInfo = () => {
   };
 
   // 비밀번호 검사. 입력할 때마다 다시 계산한다.
-  // TODO: 현재 비밀번호가 맞는지는 확인 API가 명세서에 없어서 저장할 때 서버가 판단한다 (여기서는 입력 여부만 본다)
+  // 현재 비밀번호가 맞는지는 확인 API 가 없어서 저장할 때 서버가 판단한다 (여기서는 입력 여부만 본다)
   const passwordStatus = {
     current: passwords.current ? { ok: true } : { ok: false, text: "현재 비밀번호를 입력해주세요." },
     next: !passwords.next

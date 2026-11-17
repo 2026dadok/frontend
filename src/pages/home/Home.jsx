@@ -162,7 +162,7 @@ const Home = () => {
   const weekly = main?.weekly ?? EMPTY_WEEKLY;
   const daily = main?.daily ?? EMPTY_DAILY;
   const totalXp = main?.totalXp ?? "-"; // 불러오기 전·실패하면 "-"
-  const [quote] = useState(fetchRandomQuote);
+  const quote = useLoad(fetchRandomQuote, null);
   const scale = useFitScale();
   const navigate = useNavigate();
   // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다
