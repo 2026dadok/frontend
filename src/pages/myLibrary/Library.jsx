@@ -10,6 +10,7 @@ import { getMyLibrary, getSharedLibrary, removeFromMyLibrary, syncMyLibrary, syn
 import ReadingCalendar from "./ReadingCalendar";
 import { fetchReadingLog } from "./libraryApi";
 import moleImg from "../../images/dokddage.png";
+import statusIcon from "../../images/icon-rank.png";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas, .bs-search, .bs-xp)을 책 검색과 같이 쓴다
 import "./Library.css";
 
@@ -153,12 +154,14 @@ const Library = () => {
     navigate(`${PATHS.search}?q=${encodeURIComponent(word)}`);
   };
 
-  // 책을 누르면 옆에 메뉴가 열린다. 나의 서재: 바로 읽기 / 감상문 쓰기 / 삭제, 공동 서재: 바로 읽기 / 감상문 쓰기 (삭제 없음)
+  // 책을 누르면 옆에 메뉴가 열린다. 나의 서재: 바로 읽기 / 감상문 쓰기 / 삭제, 공동 서재: 바로 읽기 / 현황 보기 / 감상문 쓰기 (삭제 없음)
   // 공동 서재는 같은 책을 친구별로 따로 담을 수 있어서 책 id 와 친구 id 를 합쳐 메뉴를 구분한다.
   const menuKey = (book) => `${book.id}-${book.friendId ?? ""}`;
   const openBook = (book) => setMenuId(menuId === menuKey(book) ? null : menuKey(book));
   const readNow = (book) => navigate(PATHS.timer, { state: { book } });
   const writeReview = (book) => navigate(`${PATHS.review}?write=1`, { state: { book } });
+  // 공동서재 현황(두 사람의 진행률·승리) 페이지
+  const openStatus = (book) => navigate(PATHS.sharedLibrary, { state: { record: book } });
 
   const deleteBook = async (book) => {
     setMenuId(null);
@@ -219,11 +222,11 @@ const Library = () => {
             </div>
 
             <div className="lib-row">
-              <Arrow direction="prev" hidden={currentPage === 0} onClick={() => { setPage((p) => p - 1); setMenuId(null); }} />
+              <Arrow direction="prev" hidden={currentPage === 0} onClick={() => { setPage(currentPage - 1); setMenuId(null); }} />
               <div className="lib-books">
                 {pageItems.map((book, i) =>
                   book ? (
-                    <div key={`${book.id}-${book.friendId ?? ""}`} className={`lib-book-wrap ${i >= 3 ? "flip" : ""}`}>
+                    <div key={menuKey(book)} className={`lib-book-wrap ${i >= 3 ? "flip" : ""}`}>
                       <button
                         type="button"
                         className={`lib-book ${menuId === menuKey(book) ? "selected" : ""}`}
@@ -239,6 +242,11 @@ const Library = () => {
                           <button type="button" role="menuitem" onClick={() => readNow(book)}>
                             <MenuIcon name="read" /> 바로 읽기
                           </button>
+                          {tab === "shared" && (
+                            <button type="button" role="menuitem" onClick={() => openStatus(book)}>
+                              <img src={statusIcon} alt="" /> 현황 보기
+                            </button>
+                          )}
                           <button type="button" role="menuitem" onClick={() => writeReview(book)}>
                             <MenuIcon name="write" /> 감상문 쓰기
                           </button>
@@ -257,7 +265,7 @@ const Library = () => {
                   )
                 )}
               </div>
-              <Arrow direction="next" hidden={currentPage >= lastPage} onClick={() => { setPage((p) => p + 1); setMenuId(null); }} />
+              <Arrow direction="next" hidden={currentPage >= lastPage} onClick={() => { setPage(currentPage + 1); setMenuId(null); }} />
             </div>
           </section>
 

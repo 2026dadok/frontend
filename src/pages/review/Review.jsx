@@ -5,9 +5,8 @@ import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
-import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
+import { addCommentary, daysSince, getCommentaries, getMyLibrary, getSharedLibrary, syncCommentaries, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
-import { fetchCommentaries, loadCommentaries } from "./reviewApi";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
 import { formatDate } from "./format";
 import mascotImg from "../../images/mascot.png";
@@ -88,7 +87,7 @@ const Review = () => {
 
   const entries = useMemo(() => {
     if (!book) return [];
-    return fetchCommentaries(book, isFriend ? "partner" : "me");
+    return getCommentaries(book, isFriend ? "partner" : "me");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, isFriend, version]);
 
@@ -96,7 +95,7 @@ const Review = () => {
   useEffect(() => {
     if (!book) return undefined;
     let alive = true;
-    loadCommentaries(book, isFriend ? "partner" : "me").then(() => alive && setVersion((v) => v + 1));
+    syncCommentaries(book, isFriend ? "partner" : "me").then(() => alive && setVersion((v) => v + 1));
     return () => {
       alive = false;
     };
@@ -164,6 +163,8 @@ const Review = () => {
     setWriteDay(null);
     setVersion((v) => v + 1);
     showToast("감상문을 저장했어요.");
+    // 일차는 백엔드가 정한다 (나의 서재: 쓴 순서, 공동서재: 함께 읽은 날). 서버 값으로 다시 맞춘다
+    syncCommentaries(book, "me").then(() => setVersion((v) => v + 1));
   };
 
   return (

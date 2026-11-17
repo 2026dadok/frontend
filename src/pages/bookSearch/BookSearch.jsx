@@ -10,7 +10,6 @@ import BookList from "./BookList";
 import SearchResults from "./SearchResults";
 import BookDetail from "./BookDetail";
 import CoInvite from "./CoInvite";
-import SharedLibrary from "./SharedLibrary";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import "./BookSearch.css";
@@ -19,14 +18,14 @@ const START_TOAST_MS = 2500;
 
 const EMPTY_PAGE = { books: [], total: 0 };
 
-// 화면 흐름: list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
+// 화면 흐름: list(1) → results(2) / detail(3·4) → invite(5·6). 공동서재(7)는 서고의 공동 서재 탭에서 본다
 // 지금 화면은 useState 가 아니라 주소에 둔다. 그래서 새로고침해도 보던 화면이 그대로고, 뒤로 가기를 누르면 이전 화면으로 돌아간다.
 //   /search                  → 1번 (장르 목록, ?genre= 로 고른 장르)
 //   /search?q=검색어          → 2번 (검색 결과)
 //   /search?view=detail      → 3·4번 (책 상세)    ※ 고른 책은 주소가 아니라 방문 기록(location.state.book)에 담는다
 //   /search?view=invite      → 5·6번 (함께 읽기 초대)
 // 다른 화면에서 책 상세로 바로 오려면: navigate(`${PATHS.search}?view=detail`, { state: { book } })
-const BOOK_VIEWS = ["detail", "invite", "shared"]; // 고른 책이 있어야 열리는 화면
+const BOOK_VIEWS = ["detail", "invite"]; // 고른 책이 있어야 열리는 화면
 
 const BookSearch = () => {
   const scale = useFitScale();
@@ -53,7 +52,6 @@ const BookSearch = () => {
     syncMyLibrary();
   }, []);
 
-  const [friend] = useState(null); // 수락된 함께 읽기 기록 (수락 확인 API 연결 후 setFriend 로 채운다)
   const [starting, setStarting] = useState(false);
   const [toast, showToast] = useToast();
 
@@ -165,7 +163,6 @@ const BookSearch = () => {
           {view === "invite" && book && (
             <CoInvite book={book} busy={starting} onSubmit={startTogether} showToast={showToast} />
           )}
-          {view === "shared" && book && friend && <SharedLibrary book={book} friend={friend} />}
 
           <Toast message={toast} />
         </div>

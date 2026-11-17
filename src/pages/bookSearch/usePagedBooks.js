@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 // 한 쪽에 20권(4줄 × 5칸)씩 넘겨 보는 목록. loadPage(page) → { books, total } (YES24 는 한 번에 20권을 준다)
 // loadPage 가 바뀌면(예: 검색어·장르 변경) 1쪽부터 다시 불러온다.
-export const BOOKS_PER_PAGE = 20;
+const BOOKS_PER_PAGE = 20;
 
 const usePagedBooks = (loadPage) => {
   const [state, setState] = useState({ page: 1, books: [], total: 0, loading: false, error: false });

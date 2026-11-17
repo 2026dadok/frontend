@@ -5,7 +5,7 @@ import useToast from "../../hooks/useToast";
 import GoalTimeInput from "../../components/goalTime/GoalTimeInput";
 import { normalizeGoalTime } from "../../components/goalTime/goalTime";
 import { Toast } from "../bookSearch/parts";
-import { updateShelfBook } from "../bookSearch/bookStore";
+import { addToMyLibrary, findInMyLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { QuoteAddModal } from "../quote/QuoteModals";
 import { addQuote } from "../quote/quoteStore";
 import { addStudyTime, fetchGoalTime, saveReadPages } from "./timerApi";
@@ -136,14 +136,22 @@ const Timer = () => {
       return;
     }
     setSaving(true);
-    // 서버에는 초 단위로 보낸다 (명세서). 서고 달력도 서버 기록(GET /bookstore/bookstore_page)을 쓴다
-    const seconds = Math.round(elapsed);
-    const serverId = Number.isInteger(book.serverBookId) ? book.serverBookId : null;
-    await Promise.all([addStudyTime(serverId, seconds), saveReadPages(book, readPage)]);
-    updateShelfBook(book.id, { readPage });
+    // 읽은 시간·쪽수는 서버의 책 번호로 저장한다. 서재에 없는 책(책 검색의 '바로 읽기')이면 먼저 나의 서재에 담는다
+    let target = book;
+    if (!Number.isInteger(book.jointId) && !Number.isInteger(book.serverBookId)) {
+      const added = await addToMyLibrary(book);
+      const shelf = added === "added" || added === "exists" ? findInMyLibrary(book) : null;
+      target = shelf ? { ...book, ...shelf } : book;
+    }
+    const seconds = Math.round(elapsed); // 서버에는 초 단위로 보낸다
+    const [timeSaved, pagesSaved] = await Promise.all([addStudyTime(target.serverBookId, seconds), saveReadPages(target, readPage)]);
     setSaving(false);
-
-    navigate(`${PATHS.review}?write=1`, { state: { book } });
+    if (!timeSaved && !pagesSaved) {
+      showToast("독서 기록을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+    updateShelfBook(target.id, { readPage });
+    navigate(`${PATHS.review}?write=1`, { state: { book: target } });
   };
 
   const saveQuote = async ({ book: quoteBook, page: quotePage, text }) => {

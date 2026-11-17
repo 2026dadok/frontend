@@ -9,13 +9,12 @@ import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas)
 import "./SharedLibraryPage.css";
 
 const TOAST_MS = 2500;
-const XP_TOAST_MS = 3000; // XpToast 가 떠 있는 시간. 사라진 뒤에 "승리" 제목을 보여준다 (같은 자리라 겹치지 않게)
 const ENDED_MESSAGE = "함께 읽기가 종료되었습니다";
 
 // 서고 > 공동 서재에서 책을 누르면 오는 공동서재 페이지.
-// 두 사람의 진행률과 승리 보상은 백엔드(GET /library/joints/{joint_id})가 준 값만 쓴다.
+// 두 사람의 진행률은 백엔드(GET /library/joints/{joint_id})가 준 값만 쓴다.
 //   진행 중:       두 사람의 진행률
-//   내가 먼저 완독: 맨 위에 "승리" + XP 보상 알림 (보상 XP 는 서버 값)
+//   내가 먼저 완독: 맨 위에 "승리"
 //   둘 다 완독:     "함께 읽기가 종료되었습니다" 알림
 const SharedLibraryView = () => {
   const scale = useFitScale();
@@ -24,7 +23,6 @@ const SharedLibraryView = () => {
   const [record, setRecord] = useState(() => location.state?.record ?? getSharedLibrary()[0] ?? null);
   const [detail, setDetail] = useState(null); // 서버 상세 (오기 전에는 목록에 있던 값으로 그린다)
   const [toast, setToast] = useState("");
-  const [winTitleVisible, setWinTitleVisible] = useState(false);
 
   const shown = detail ?? record;
   const myPercent = shown?.myPercent ?? 0;
@@ -56,19 +54,13 @@ const SharedLibraryView = () => {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  useEffect(() => {
-    if (!iWon) return undefined;
-    const timer = setTimeout(() => setWinTitleVisible(true), XP_TOAST_MS + 200);
-    return () => clearTimeout(timer);
-  }, [iWon]);
-
   return (
     <div className="bs">
       <XpTotal />
 
       <div className="bs-stage" style={{ "--s": scale }}>
         <div className="bs-canvas">
-          {iWon && winTitleVisible && <h1 className="shared-win">승 리</h1>}
+          {iWon && <h1 className="shared-win">승 리</h1>}
 
           {shown ? (
             <SharedLibrary book={shown} friend={shown} myPercent={myPercent} friendPercent={friendPercent} />
