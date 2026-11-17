@@ -4,7 +4,7 @@ import { PATHS } from "../../routes";
 import { isLoggedIn } from "../../api/client";
 import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
 import { addToMyLibrary, findInMyLibrary, getMe, requestCoReading, syncMyLibrary, syncSharedLibrary } from "./bookStore";
-import useInfiniteBooks from "./useInfiniteBooks";
+import usePagedBooks from "./usePagedBooks";
 import { SearchBar, Toast, XpTotal } from "./parts";
 import BookList from "./BookList";
 import SearchResults from "./SearchResults";
@@ -17,7 +17,7 @@ import "./BookSearch.css";
 
 const START_TOAST_MS = 2500;
 
-const EMPTY_PAGE = { books: [], total: 0, hasMore: false };
+const EMPTY_PAGE = { books: [], total: 0 };
 
 // 화면 흐름: list(1) → results(2) / detail(3·4) → invite(5·6) → shared(7)
 // 지금 화면은 useState 가 아니라 주소에 둔다. 그래서 새로고침해도 보던 화면이 그대로고, 뒤로 가기를 누르면 이전 화면으로 돌아간다.
@@ -65,12 +65,12 @@ const BookSearch = () => {
   };
   const setGenre = (g) => go({ genre: g === "bestseller" ? null : g, view: null }, { book: null, replace: true }); // 장르는 기록 없이 바꾼다
   const genreLoader = useCallback((page) => fetchGenreBooks(genre, page), [genre]);
-  const bestsellers = useInfiniteBooks(genreLoader);
+  const bestsellers = usePagedBooks(genreLoader);
   const searchLoader = useCallback(
     (page) => (term ? searchBooks(term, page) : Promise.resolve(EMPTY_PAGE)),
     [term]
   );
-  const results = useInfiniteBooks(searchLoader);
+  const results = usePagedBooks(searchLoader);
 
   // 같은 검색어면 다시 불러오지 않고 결과 화면으로 돌아간다. 다른 검색어면 새로 검색한다.
   const handleSearch = () => {

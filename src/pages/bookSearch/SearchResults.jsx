@@ -1,25 +1,20 @@
-import { ScrollArea, ListStatus } from "./parts";
+import { ListStatus, PageArea, Pagination } from "./parts";
 
-// 2번 화면: 검색 결과
+// 2번 화면: 검색 결과. 한 쪽에 20권씩, 아래 쪽 번호로 넘긴다
 const SearchResults = ({ results, onOpen, onAddMine, onAddShared }) => {
-  const { books, total, loading, error, hasMore, loadMore } = results;
+  const { books, total, page, totalPages, loading, error, goTo, retry } = results;
   const stop = (handler) => (e) => {
     e.stopPropagation(); // 카드 전체 클릭(상세 이동)과 겹치지 않게
     handler();
   };
 
   return (
-    <ScrollArea
-      className="bs-results-scroll"
-      count={books.length}
-      canLoad={hasMore && !loading && !error}
-      onLoadMore={loadMore}
-    >
+    <PageArea className="bs-results-scroll" page={page}>
       <h2 className="bs-results-title">
-        {loading && !books.length ? "검색 중…" : `검색 결과 ( ${total} )`}
+        {loading && !total ? "검색 중…" : `검색 결과 ( ${total} )`}
       </h2>
 
-      {books.map((b) => (
+      {!loading && books.map((b) => (
         <article
           key={b.id}
           className="bs-result"
@@ -53,13 +48,14 @@ const SearchResults = ({ results, onOpen, onAddMine, onAddShared }) => {
       ))}
 
       <ListStatus
-        loading={loading && books.length > 0}
+        loading={loading && total > 0}
         error={error}
         empty={!loading && !books.length}
         emptyText="검색 결과가 없어요."
-        onRetry={loadMore}
+        onRetry={retry}
       />
-    </ScrollArea>
+      {!loading && <Pagination page={page} totalPages={totalPages} onChange={goTo} />}
+    </PageArea>
   );
 };
 

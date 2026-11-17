@@ -99,15 +99,12 @@ const getJson = async (url) => {
   return res.json();
 };
 
-const toPage = (json, page) => {
+const toPage = (json) => {
   const data = json?.data;
   const items = data?.items ?? [];
-  const pageSize = data?.pageSize ?? PAGE_SIZE;
-  const total = data?.totalCount ?? items.length;
   return {
     books: items.filter((item) => item.adultYn !== "Y").map(toBook),
-    total,
-    hasMore: items.length > 0 && page * pageSize < total,
+    total: data?.totalCount ?? items.length,
   };
 };
 
@@ -119,7 +116,7 @@ export const fetchBestsellers = async (page = 1, categoryId = YES24_BOOK_CATEGOR
     pageSize: String(PAGE_SIZE),
     detail: "Y",
   });
-  return toPage(await getJson(`${YES24}/category/bestsellerMonthly?${params}`), page);
+  return toPage(await getJson(`${YES24}/category/bestsellerMonthly?${params}`));
 };
 
 // 2번 화면: 책 제목/작가 검색 (상품 검색 API)
@@ -131,7 +128,7 @@ export const searchBooks = async (query, page = 1) => {
     pageSize: String(PAGE_SIZE),
     detail: "Y",
   });
-  return toPage(await getJson(`${YES24}/goods/itemList?${params}`), page);
+  return toPage(await getJson(`${YES24}/goods/itemList?${params}`));
 };
 
 // 1번 화면: 장르별 인기 책.

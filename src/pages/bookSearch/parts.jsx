@@ -33,29 +33,47 @@ export const SearchBar = ({ value, onChange, onSubmit }) => (
   </form>
 );
 
-// 끝까지 스크롤하면 onLoadMore 를 부르는 스크롤 영역.
-// count 가 바뀔 때마다 다시 관찰해서, 책이 적어 한 화면에 다 보여도 계속 불러온다.
-export const ScrollArea = ({ className, count, canLoad, onLoadMore, children }) => {
+// 한 쪽 분량의 목록을 담는 스크롤 영역. 쪽(page)이 바뀌면 맨 위로 올린다.
+export const PageArea = ({ className, page, children }) => {
   const rootRef = useRef(null);
-  const endRef = useRef(null);
-
   useEffect(() => {
-    if (!canLoad) return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) onLoadMore();
-      },
-      { root: rootRef.current, rootMargin: "0px 0px 300px 0px" }
-    );
-    observer.observe(endRef.current);
-    return () => observer.disconnect();
-  }, [canLoad, count, onLoadMore]);
-
+    rootRef.current?.scrollTo({ top: 0 });
+  }, [page]);
   return (
     <div ref={rootRef} className={className}>
       {children}
-      <div ref={endRef} className="bs-end" />
     </div>
+  );
+};
+
+// 쪽 번호 (목록 맨 아래): ‹ 1 2 3 4 5 ›. 5쪽씩 묶어서 보여준다 (1~5, 6~10, ...).
+// ‹ › 는 앞·뒤 묶음의 첫 쪽으로 간다.
+const BLOCK = 5;
+export const Pagination = ({ page, totalPages, onChange }) => {
+  if (totalPages <= 1) return null;
+  const first = Math.floor((page - 1) / BLOCK) * BLOCK + 1;
+  const last = Math.min(first + BLOCK - 1, totalPages);
+  const pages = Array.from({ length: last - first + 1 }, (_, i) => first + i);
+  return (
+    <nav className="bs-pages" aria-label="쪽 넘기기">
+      <button type="button" className="arrow" aria-label="이전 5쪽" disabled={first === 1} onClick={() => onChange(first - BLOCK)}>
+        ‹
+      </button>
+      {pages.map((n) => (
+        <button
+          key={n}
+          type="button"
+          className={n === page ? "on" : ""}
+          aria-current={n === page ? "page" : undefined}
+          onClick={() => n !== page && onChange(n)}
+        >
+          {n}
+        </button>
+      ))}
+      <button type="button" className="arrow" aria-label="다음 5쪽" disabled={last === totalPages} onClick={() => onChange(last + 1)}>
+        ›
+      </button>
+    </nav>
   );
 };
 

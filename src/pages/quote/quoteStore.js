@@ -111,7 +111,8 @@ export const removeQuote = async (id) => {
   const target = list.find((q) => q.id === id);
   if (!target) return "removed";
   if (!Number.isInteger(target.serverNoteId)) return "error";
-  const { ok } = await requestServer("DELETE", "/bookstore/notes", { note_ID: target.serverNoteId });
+  // 백엔드 코드가 아직 안 올라와서 번호를 어디서 읽는지 모른다. 다른 DELETE(리뷰 등)처럼 주소 뒤에도, 본문에도 같이 보낸다
+  const { ok } = await requestServer("DELETE", `/bookstore/notes?note_ID=${target.serverNoteId}`, { note_ID: target.serverNoteId });
   if (!ok) return "error";
   return write(list.filter((q) => q.id !== id)) ? "removed" : "error";
 };

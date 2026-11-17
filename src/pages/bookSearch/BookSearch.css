@@ -67,7 +67,6 @@
 .bs-status { padding: 22px 0; text-align: center; font-size: 14px; color: #999; }
 .bs-status.left { padding: 8px 0; text-align: left; }
 .bs-link-btn { border: 0; background: none; color: #6fbf8c; font-size: inherit; text-decoration: underline; }
-.bs-end { height: 1px; }
 
 .bs-stars { display: inline-flex; gap: 2px; color: #dcdcdc; line-height: 1; }
 .bs-stars .on, .bs-stars button.on { color: #f7c744; }
@@ -99,13 +98,34 @@
 }
 
 .bs-list-scroll { position: absolute; left: 0; right: 0; top: 176px; bottom: 0; overflow-y: auto; }
+
+/* 쪽 번호: 목록 맨 아래 가운데. 지금 쪽은 초록 동그라미 */
+.bs-pages { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 36px 0 50px; }
+.bs-pages button {
+  min-width: 34px; height: 34px; padding: 0 6px; border: 0; border-radius: 17px; background: none;
+  font-size: 16px; color: #777; cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.bs-pages button:hover:not(:disabled):not(.on) { background: #fbe7e2; color: #5fd496; } /* 올리면 글자만 초록 */
+.bs-pages button.on { background: #5fd496; color: #fff; font-weight: 600; cursor: default; }
+.bs-pages .arrow { font-size: 22px; line-height: 1; color: #555; }
+.bs-pages .arrow:disabled { color: #ddd; cursor: default; }
+.bs-pages button:focus-visible { outline: 2px solid #5fd496; outline-offset: 2px; }
+/* 책 줄(196px ~ 1114px) / 검색 결과 카드(1195px) 가운데에 맞춘다 */
+.bs-list-scroll .bs-pages { width: 918px; margin-left: 196px; }
+.bs-results-scroll .bs-pages { width: 1195px; }
 .bs-grid {
-  display: grid; grid-template-columns: repeat(4, 186px); column-gap: 58px; row-gap: 77px;
-  padding: 6px 0 60px 196px;
+  display: grid; grid-template-columns: repeat(4, 186px); column-gap: 58px; row-gap: 40px;
+  padding: 6px 0 0 196px;
 }
 .bs-grid-book {
-  width: 186px; height: 272px; padding: 0; border: 0; background: none; border-radius: 6px;
+  width: 186px; padding: 0; border: 0; background: none; border-radius: 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
   transition: transform 0.15s;
+}
+/* 표지 아래 책 제목: 두 줄까지, 넘치면 … */
+.bs-grid-title {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  width: 100%; font-size: 15px; line-height: 1.4; color: #333; text-align: center; word-break: keep-all;
 }
 .bs-grid-book:hover { transform: translateY(-4px); }
 /* 책 목록 왼쪽 빈 곳(책은 196px 부터 시작)의 독따지 (스크롤해도 제자리).
@@ -127,12 +147,12 @@
 }
 .bs-list-ask img { display: block; max-width: none; width: 283.19%; margin: -24.48% 0 0 -157.52%; }
 .bs-grid-book img {
-  width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 6px;
+  width: 100%; height: 272px; flex: none; display: block; object-fit: cover; border-radius: 6px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
 /* ───────── 2. 검색 결과 ───────── */
-.bs-results-scroll { position: absolute; left: 0; right: 0; top: 130px; bottom: 0; overflow-y: auto; padding: 0 0 60px 75px; }
+.bs-results-scroll { position: absolute; left: 0; right: 0; top: 130px; bottom: 0; overflow-y: auto; padding: 0 0 0 75px; }
 .bs-results-title { margin: 0 0 18px 17px; font-size: 22px; font-weight: 500; }
 .bs-result {
   position: relative; width: 1195px; min-height: 315px; margin-bottom: 20px; padding: 21px 21px 21px 21px;
