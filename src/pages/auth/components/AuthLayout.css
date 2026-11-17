@@ -82,6 +82,6 @@
   border: 0; border-radius: 50%; background: transparent; cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;
 }
-/* 평소에는 화살표만, 마우스를 올리면 동그라미가 생긴다 */
-.auth-back:hover, .auth-back:focus-visible { background: #fff; box-shadow: 0 2px 8px rgba(240, 190, 180, 0.35); }
+/* 평소에는 화살표만, 마우스를 올리면 핑크 동그라미가 생긴다 */
+.auth-back:hover, .auth-back:focus-visible { background: #f6c9c0; }
 .auth-back img { display: block; width: 100%; height: 100%; opacity: 0.75; }
