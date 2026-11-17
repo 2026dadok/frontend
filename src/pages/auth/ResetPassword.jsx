@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { LineInput } from "./components/LineInput";
 import useEmailTimer from "./useEmailTimer";
-import { requestPasswordReset, resetPassword, verifyEmailCode } from "../../api/auth";
+import { EMAIL_PURPOSE, PASSWORD_MAX, passwordRuleError, resetPassword, sendEmailCode, verifyEmailCode } from "../../api/auth";
 
 // 비밀번호 재설정: 이메일로 인증번호 받기 → 인증번호 확인 → 새 비밀번호 저장
 // 원래 비밀번호는 서버도 모르고(암호화 저장) 화면에 보여주지도 않는다. 본인 확인 후 새 비밀번호로 바꾸기만 한다.
-// 명세서: POST /auth/rest-passwrod (email), POST /auth/email_verify (email, code), POST /auth/pw_reset (token, newpassward)
+// 백엔드: POST /auth/email_send (email, purpose=find_pw) → POST /auth/email_verify (email, code, purpose=find_pw)
+//        → POST /auth/pw_reset (email, code, newPassword). 이메일·인증번호는 화면에 들고 있다가 마지막에 같이 보낸다.
 const ResetPassword = ({ onBackToLogin }) => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [token, setToken] = useState(null); // 인증에 성공하면 채워진다. 값이 있으면 새 비밀번호 화면을 보여준다
+  const [verified, setVerified] = useState(false); // 인증에 성공하면 true. 새 비밀번호 화면을 보여준다
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
@@ -21,7 +22,7 @@ const ResetPassword = ({ onBackToLogin }) => {
     }
     if (resendCooldown > 0) return;
 
-    const { ok, data } = await requestPasswordReset(email);
+    const { ok, data } = await sendEmailCode(email, EMAIL_PURPOSE.findPw);
     if (!ok) {
       alert("인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
       return;
@@ -39,13 +40,12 @@ const ResetPassword = ({ onBackToLogin }) => {
       return;
     }
 
-    const { ok, data } = await verifyEmailCode(email, code);
+    const { ok } = await verifyEmailCode(email, code, EMAIL_PURPOSE.findPw);
     if (!ok) {
       alert("인증번호가 올바르지 않습니다.");
       return;
     }
-    // TODO: pw_reset 의 token 을 어디서 받는지 명세서에 없다. 응답에 token 이 없으면 인증번호를 그대로 쓴다. 백엔드와 확인
-    setToken(data?.token ?? code);
+    setVerified(true);
   };
 
   const handleResetPassword = async () => {
@@ -53,8 +53,9 @@ const ResetPassword = ({ onBackToLogin }) => {
       alert("새 비밀번호를 입력하세요.");
       return;
     }
-    if (newPassword.length > 50) {
-      alert("비밀번호는 50자 이내로 입력하세요.");
+    const pwError = passwordRuleError(newPassword);
+    if (pwError) {
+      alert(pwError);
       return;
     }
     if (newPassword !== newPasswordConfirm) {
@@ -62,7 +63,7 @@ const ResetPassword = ({ onBackToLogin }) => {
       return;
     }
 
-    const { ok } = await resetPassword(token, newPassword);
+    const { ok } = await resetPassword(email, code, newPassword);
     if (!ok) {
       alert("비밀번호 재설정 중 오류가 발생했습니다.");
       return;
@@ -71,12 +72,12 @@ const ResetPassword = ({ onBackToLogin }) => {
     onBackToLogin();
   };
 
-  if (token) {
+  if (verified) {
     return (
       <div className="fa-step">
         <p className="fa-subtitle">비밀번호 재설정</p>
-        <LineInput placeholder="비밀번호" type="password" value={newPassword} onChange={setNewPassword} />
-        <LineInput placeholder="비밀번호 확인" type="password" value={newPasswordConfirm} onChange={setNewPasswordConfirm} />
+        <LineInput placeholder="비밀번호 (8~50자)" type="password" maxLength={PASSWORD_MAX} value={newPassword} onChange={setNewPassword} />
+        <LineInput placeholder="비밀번호 확인" type="password" maxLength={PASSWORD_MAX} value={newPasswordConfirm} onChange={setNewPasswordConfirm} />
         <button type="button" className="fa-submit" onClick={handleResetPassword}>
           비밀번호 변경
         </button>

@@ -23,8 +23,9 @@ const SHELF_MAX_BOOKS = 5; // 책 최대 5권 + 항상 마지막에 + 칸
 // 퀘스트 내용·진행도·완료 여부는 모두 백엔드(GET /auth/main_page) 값만 쓴다. 프런트가 정하지 않는다.
 // 서버 응답을 받기 전이나 실패했을 때는 안내 문구만 보여준다.
 const LOADING = undefined; // useLoad 가 아직 응답을 받지 못함
-const EMPTY_WEEKLY = { title: "", current: 0, goal: 0, xp: 0 };
-const EMPTY_DAILY = { quests: [], allClearXp: 0 };
+// 불러오지 못했을 때는 0 대신 "-" 로 보여준다 (진짜 0 과 헷갈리지 않게)
+const EMPTY_WEEKLY = { title: "", current: null, goal: null, xp: null };
+const EMPTY_DAILY = { quests: [], allClearXp: null };
 
 const useLoad = (loader, initial) => {
   const [data, setData] = useState(initial);
@@ -77,7 +78,7 @@ const Recommend = ({ books, onOpen }) => (
 );
 
 const Xp = ({ value, className }) => (
-  <span className={`home-xp ${className ?? ""}`}>XP {value}</span>
+  <span className={`home-xp ${className ?? ""}`}>XP {value ?? "-"}</span>
 );
 
 const WeeklyQuest = ({ quest, note }) => {
@@ -95,7 +96,7 @@ const WeeklyQuest = ({ quest, note }) => {
         <div className="home-progress">
           <div style={{ width: `${percent}%` }} />
         </div>
-        <span>{quest.current} / {quest.goal}</span>
+        <span>{quest.current ?? "-"} / {quest.goal ?? "-"}</span>
       </div>
       <div className="home-weekly-reward">
         <img src={giftBigIcon} alt="" />
@@ -160,9 +161,8 @@ const Home = () => {
   const questNote = main === LOADING ? "퀘스트를 불러오는 중이에요." : "퀘스트를 불러오지 못했어요.";
   const weekly = main?.weekly ?? EMPTY_WEEKLY;
   const daily = main?.daily ?? EMPTY_DAILY;
-  const totalXp = main?.totalXp ?? 0;
-  const [localQuote] = useState(fetchRandomQuote);
-  const quote = main?.quote ?? localQuote;
+  const totalXp = main?.totalXp ?? "-"; // 불러오기 전·실패하면 "-"
+  const [quote] = useState(fetchRandomQuote);
   const scale = useFitScale();
   const navigate = useNavigate();
   // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다

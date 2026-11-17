@@ -1,11 +1,10 @@
 // 주간 경쟁 화면에서 쓰는 데이터.
-// 명세서(ver02): GET /main/week_competition → tier, competitors_books, my_rank, ranking, reading_book, last_week_result
-// 명세서에 각 항목 안의 필드 이름이 없어서, 아래 normalize 함수들이 여러 이름을 받아 화면용 형태로 맞춘다.
-// TODO: 백엔드가 필드 이름을 정하면 normalize 함수의 후보 이름을 그것 하나로 줄인다.
-// 읽은 시간은 초 단위로 본다 (명세서: 독서 시간 저장·타이머·마이페이지가 모두 초). 화면에서는 분으로 바꿔 쓴다.
-// TODO: 주간 경쟁 응답도 초인지 백엔드와 확인
+// GET /main/week_competition → { tier, competitors_books, my_rank, ranking, reading_book, last_week_result }
+//   순위 한 줄: { rank(0분이면 null), nickname, title, profile_image, total_seconds, minutes, is_me }
+//   지난주 결과: { rank, gained_xp }
+// competitors_books·reading_book 은 백엔드가 아직 빈 값으로 준다 (책 정보 연결 전). 채워지면 아래 책 함수들이 YES24 표지를 붙인다.
 
-import { authHeaders, isLoggedIn, pick } from "../../api/client";
+import { apiFetch, authHeaders, isLoggedIn, pick } from "../../api/client";
 import { searchBooks } from "../bookSearch/bookSearchApi";
 import { getMe } from "../bookSearch/bookStore";
 
@@ -15,11 +14,11 @@ const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 
 // 순위 한 줄: { rank, name, title, minutes, image, me }
 const toRanker = (raw, me = false) => ({
-  rank: toNumber(pick(raw, "rank", "ranking", "my_rank")) || null, // 0 이나 값 없음은 "-위"
-  name: pick(raw, "name", "user_name", "nickname", "ID") ?? "",
-  title: pick(raw, "title", "title_name", "user_title", "achievement", "achievement_name") ?? "", // 이름 앞에 붙는 업적 (마이페이지에서 사용 중인 업적, 예: 스테디셀러)
-  minutes: Math.floor((toNumber(pick(raw, "reading_time", "readtime", "week_readtime")) ?? 0) / 60), // 초 → 분
-  image: pick(raw, "profile_image", "profileimage", "image", "imageurl") ?? "",
+  rank: toNumber(raw?.rank) || null, // 0 이나 값 없음은 "-위"
+  name: raw?.nickname ?? "",
+  title: raw?.title ?? "", // 이름 앞에 붙는 업적 (마이페이지에서 사용 중인 업적, 예: 스테디셀러)
+  minutes: toNumber(raw?.minutes) ?? 0,
+  image: raw?.profile_image ?? "",
   me,
 });
 
@@ -69,18 +68,16 @@ const loadReadingBook = async (raw) => {
 
 // 지난주 결과: { rank, xp } 또는 null
 const toLastWeek = (raw) => {
-  const rank = toNumber(pick(raw, "rank", "my_rank", "ranking"));
-  if (!rank) return null;
-  return { rank, xp: toNumber(pick(raw, "reward_xp", "xp", "gained_xp")) ?? 0 };
+  const rank = toNumber(raw?.rank);
+  return rank ? { rank, xp: toNumber(raw.gained_xp) ?? 0 } : null;
 };
 
 // 서버가 없거나 실패하면 빈 값({})을 돌려준다. 아래에서 티어·책·순위가 모두 빈 화면이 된다.
 const requestCompetition = async () => {
   try {
-    const res = await fetch("/main/week_competition", { headers: authHeaders() });
+    const res = await apiFetch("/main/week_competition", { headers: authHeaders() });
     if (!res.ok) return {};
-    const json = await res.json();
-    return json?.data ?? json ?? {};
+    return (await res.json()) ?? {};
   } catch {
     return {}; // 서버가 없거나 응답이 JSON 이 아닐 때
   }
@@ -94,12 +91,11 @@ export const fetchWeekCompetition = async () => {
     loadCompetitorBooks(data.competitors_books),
     loadReadingBook(data.reading_book),
   ]);
-  const tier = data.tier;
-  const myRank = typeof data.my_rank === "object" ? data.my_rank : { rank: data.my_rank }; // 숫자만 올 수도 있다
   return {
-    tier: (typeof tier === "object" ? pick(tier, "name", "tier") : tier) ?? "",
+    tier: data.tier ?? "",
     competitorBooks,
-    me: toRanker({ name: getMe().displayName, ...myRank }, true),
+    // 서버가 준 닉네임을 먼저 쓰고, 없으면 로그인한 아이디
+    me: toRanker({ ...data.my_rank, nickname: data.my_rank?.nickname ?? getMe().displayName }, true),
     ranking: (Array.isArray(data.ranking) ? data.ranking : []).map((r) => toRanker(r)),
     readingBook,
     lastWeek: toLastWeek(data.last_week_result),

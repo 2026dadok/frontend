@@ -20,7 +20,7 @@ const Progress = ({ label, percent, image }) => (
 );
 
 // 7번 화면: 함께 읽기가 시작된 공동서재
-// 진행률(myPercent, friendPercent)은 부모가 내려준다. TODO: 백엔드 연결 후 (읽은 쪽수 / 전체 쪽수)로 계산.
+// 진행률(myPercent, friendPercent)은 부모가 내려준다 (백엔드 my_percent, partner_percent).
 const SharedLibrary = ({ book, friend, myPercent = 0, friendPercent = 0 }) => {
   const me = getMe();
   const myImage = useMyImage("profile"); // 마이페이지에서 바꾼 내 프로필 사진

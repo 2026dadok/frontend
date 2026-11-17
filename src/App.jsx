@@ -18,6 +18,7 @@ import EditInfo from "./pages/myPage/EditInfo";
 import Timer from "./pages/timer/Timer";
 import Landing from "./pages/landing/Landing";
 import LegalPage from "./pages/legal/LegalPage";
+import Settings from "./pages/settings/Settings";
 import { PRIVACY, TERMS } from "./pages/legal/legalDocs";
 
 const SignupPage = () => {
@@ -37,7 +38,7 @@ const LoginPage = () => {
       onGoToSignup={() => navigate(PATHS.signup)}
       onFindAccount={() => navigate(PATHS.find)}
       onLoginSuccess={(data) => {
-        // 명세서: 로그인 응답은 accessToken, refreshToken, ID
+        // 백엔드 로그인 응답은 accessToken, refreshToken. ID 는 LoginForm 이 입력값으로 채워 넘긴다
         if (!data?.accessToken) {
           alert("로그인 응답에 토큰이 없습니다.");
           return;
@@ -93,7 +94,7 @@ const App = () => (
         <Route path={PATHS.review} element={<Review />} />
         <Route path={PATHS.sharedLibrary} element={<SharedLibraryPage />} />
         <Route path={PATHS.quote} element={<Quote />} />
-        <Route path={PATHS.settings} element={<div>설정</div>} />
+        <Route path={PATHS.settings} element={<Settings />} />
       </Route>
       {/* 없는 주소는 첫 화면으로 */}
       <Route path="*" element={<Navigate to={PATHS.guest} replace />} />

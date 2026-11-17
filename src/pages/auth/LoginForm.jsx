@@ -7,6 +7,8 @@ import "./LoginForm.css";
 const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
   const [name, setName] = useState(""); //id
   const [passwd, setPasswd] = useState("");
+  // 로그인이 만료돼서 넘어왔으면(api/client.js 가 ?expired=1 을 붙인다) 안내를 띄운다
+  const expired = new URLSearchParams(window.location.search).get("expired") === "1";
 
   const validate = () => {
     if (!name || !passwd) {
@@ -28,9 +30,14 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
     if (!validate()) return;
 
     try {
-      const { ok, data } = await login(name, passwd); // 명세서: 요청 ID, passward
+      const { ok, status, data } = await login(name, passwd); // 명세서: 요청 ID, passward
+      if (status === 0 || status >= 500) {
+        alert("서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요.");
+        return;
+      }
       if (!ok) throw new Error("로그인 실패");
-      onLoginSuccess(data);
+      // 백엔드 로그인 응답에는 토큰만 있고 아이디가 없다. 입력한 아이디를 같이 넘겨서 "나"를 구분하는 데 쓴다.
+      onLoginSuccess({ ID: name.trim(), ...data });
     } catch (err) {
       console.error(err);
       alert("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -45,6 +52,7 @@ const LoginForm = ({ onGoToSignup, onFindAccount, onLoginSuccess }) => {
     <AuthLayout>
       <div className="login-form">
         <h1>로그인하기</h1>
+        {expired && <p className="login-expired">로그인이 만료됐어요. 다시 로그인해주세요.</p>}
 
         <LineInput placeholder="아이디" value={name} onChange={setName} />
         <LineInput

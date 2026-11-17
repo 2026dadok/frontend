@@ -122,7 +122,7 @@ export const Toast = ({ message }) =>
 
 // 오른쪽 위의 내 전체 XP (아이콘은 숫자와 같은 색으로 칠한다)
 export const XpTotal = () => {
-  const [totalXp, setTotalXp] = useState(0);
+  const [totalXp, setTotalXp] = useState("-"); // 불러오기 전·실패하면 "-"
   useEffect(() => {
     let alive = true;
     Promise.resolve()

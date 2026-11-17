@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AuthLayout from "./components/AuthLayout";
 import { LineInput } from "./components/LineInput";
-import { checkId } from "../../api/auth";
+import { checkId, PASSWORD_MAX, passwordRuleError } from "../../api/auth";
 import "./SignupForm.css";
 
 const SignupForm = ({ onNext, onFindAccount }) => {
@@ -23,8 +23,9 @@ const SignupForm = ({ onNext, onFindAccount }) => {
       alert("아이디는 공백 제외 21자 이내로 입력하세요.");
       return false;
     }
-    if (password.length > 50) {
-      alert("비밀번호는 50자 이내로 입력하세요.");
+    const pwError = passwordRuleError(password);
+    if (pwError) {
+      alert(pwError);
       return false;
     }
     if (password !== passwordConfirm) {
@@ -57,14 +58,16 @@ const SignupForm = ({ onNext, onFindAccount }) => {
         <LineInput placeholder="나의 이름" value={nickname} onChange={setNickname} />
         <LineInput placeholder="아이디" value={loginId} onChange={setLoginId} />
         <LineInput
-          placeholder="비밀번호"
+          placeholder="비밀번호 (8~50자)"
           type="password"
+          maxLength={PASSWORD_MAX}
           value={password}
           onChange={setPassword}
         />
         <LineInput
           placeholder="비밀번호 확인"
           type="password"
+          maxLength={PASSWORD_MAX}
           value={passwordConfirm}
           onChange={setPasswordConfirm}
           onKeyDown={handleEnter}

@@ -32,7 +32,6 @@ const Achievement = ({ item, onUse }) => {
         </strong>
         <span>{item.description}</span>
       </span>
-      <span className="mp-ach-xp">{item.xp}XP</span>
     </>
   );
   // 달성한 업적은 눌러서 사용할 수 있다. 사용 중인 업적은 주간 경쟁 등에서 이름 앞에 붙는다
@@ -92,7 +91,7 @@ const MyPage = () => {
               <ProfileImage image={images.profile} size={139} />
               <ImagePencil label="프로필 사진 바꾸기" className="avatar" onPick={(file) => changeImage("profile", file)} canReset={Boolean(images.profile)} onReset={() => resetToDefault("profile")} />
             </div>
-            <h1 className="mp-id">{data.needLogin ? "로그인이 필요해요." : data.id}</h1>
+            <h1 className="mp-id">{data.needLogin ? "로그인이 필요해요." : data.failed ? "정보를 불러오지 못했어요." : data.id}</h1>
             <p className="mp-title">
               {data.title && <strong>{data.title} </strong>}
               {data.name}
@@ -105,10 +104,11 @@ const MyPage = () => {
             <section className="mp-section">
               <h2>통계</h2>
               <div className="mp-stats">
-                <StatCard icon="clock" label="총 독서 시간" value={formatHours(data.stats.minutes)} />
-                <StatCard icon="calendar" label="최대 연속 독서일" value={`${data.stats.streakDays}일`} />
-                <StatCard icon="book" label="총 독서 페이지" value={`${data.stats.pages}p`} />
-                <StatCard icon="podium" label="경쟁 5위권 진입 횟수" value={`${data.stats.top5Count}회`} />
+                {/* 통계를 불러오지 못했으면(stats 가 null) 0 대신 "-" */}
+                <StatCard icon="clock" label="총 독서 시간" value={data.stats ? formatHours(data.stats.minutes) : "-"} />
+                <StatCard icon="calendar" label="최대 연속 독서일" value={data.stats ? `${data.stats.streakDays}일` : "-"} />
+                <StatCard icon="book" label="총 독서 페이지" value={data.stats ? `${data.stats.pages}p` : "-"} />
+                <StatCard icon="podium" label="경쟁 5위권 진입 횟수" value={data.stats ? `${data.stats.top5Count}회` : "-"} />
               </div>
             </section>
 
@@ -121,7 +121,7 @@ const MyPage = () => {
               </div>
               {data.achieved.length > 0 && data.locked.length > 0 && <hr className="mp-ach-divider" />}
               {data.achieved.length === 0 && data.locked.length === 0 && (
-                <p className="mp-ach-empty">{data.needLogin ? "로그인하면 업적을 볼 수 있어요." : "아직 업적이 없어요."}</p>
+                <p className="mp-ach-empty">{data.needLogin ? "로그인하면 업적을 볼 수 있어요." : data.failed ? "업적을 불러오지 못했어요." : "아직 업적이 없어요."}</p>
               )}
               <div className="mp-achs">
                 {data.locked.map((item) => (

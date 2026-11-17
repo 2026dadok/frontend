@@ -1,5 +1,5 @@
 import "./LineInput.css";
-export const LineInput = ({ placeholder, type = "text", value, onChange, onKeyDown }) => (
+export const LineInput = ({ placeholder, type = "text", value, onChange, onKeyDown, maxLength }) => (
   <input
     className="line-input"
     type={type}
@@ -7,5 +7,6 @@ export const LineInput = ({ placeholder, type = "text", value, onChange, onKeyDo
     value={value}
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={onKeyDown}
+    maxLength={maxLength}
   />
 );

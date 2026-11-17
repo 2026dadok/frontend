@@ -4,7 +4,6 @@ import { PATHS } from "../../routes";
 import useToast from "../../hooks/useToast";
 import GoalTimeInput from "../../components/goalTime/GoalTimeInput";
 import { normalizeGoalTime } from "../../components/goalTime/goalTime";
-import { showXpToast } from "../../components/xpToast/xpToastBus";
 import { Toast } from "../bookSearch/parts";
 import { updateShelfBook } from "../bookSearch/bookStore";
 import { QuoteAddModal } from "../quote/QuoteModals";
@@ -20,7 +19,6 @@ import { getUiScale } from "../../hooks/uiScale";
 const DESIGN_W = 1520;
 const DESIGN_H = 988;
 const TICK_MS = 250;
-const XP_TOAST_DELAY_MS = 300;
 
 const calcScale = () => Math.min(getUiScale(), window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H); // 큰 모니터에서는 키운다
 const useScreenScale = () => {
@@ -141,14 +139,11 @@ const Timer = () => {
     // 서버에는 초 단위로 보낸다 (명세서). 서고 달력도 서버 기록(GET /bookstore/bookstore_page)을 쓴다
     const seconds = Math.round(elapsed);
     const serverId = Number.isInteger(book.serverBookId) ? book.serverBookId : null;
-    const [, pageResult] = await Promise.all([addStudyTime(serverId, seconds), saveReadPages(serverId, readPage)]);
+    await Promise.all([addStudyTime(serverId, seconds), saveReadPages(book, readPage)]);
     updateShelfBook(book.id, { readPage });
     setSaving(false);
 
     navigate(`${PATHS.review}?write=1`, { state: { book } });
-    // XP 알림은 공통 레이아웃에 붙어 있어서, 감상문 화면(레이아웃 안)으로 넘어간 뒤에 띄운다
-    const xp = Number(pageResult?.gained_xp) || 0;
-    if (xp > 0) setTimeout(() => showXpToast({ title: "독서 보상", xp }), XP_TOAST_DELAY_MS);
   };
 
   const saveQuote = async ({ book: quoteBook, page: quotePage, text }) => {

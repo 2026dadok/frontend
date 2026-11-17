@@ -7,24 +7,23 @@ import { Avatar, XpTotal } from "../bookSearch/parts";
 import { getMe } from "../bookSearch/bookStore";
 import { showXpToast } from "../../components/xpToast/xpToastBus";
 import { currentWeekKey, fetchWeekCompetition, formatMinutes } from "./weeklyRankApi";
-import tierBronze from "../../images/tier-bronze.png";
-import tierSilver from "../../images/tier-silver.png";
-import tierGold from "../../images/tier-gold.png";
-import tierDiamond from "../../images/tier-diamond.png";
-import tierPlatinum from "../../images/tier-platinum.png";
-import tierByeongyeon from "../../images/tier-byeongyeon.png";
+import tierBronze from "../../images/tier-bronze.webp";
+import tierSilver from "../../images/tier-silver.webp";
+import tierGold from "../../images/tier-gold.webp";
+import tierDiamond from "../../images/tier-diamond.webp";
+import tierPlatinum from "../../images/tier-platinum.webp";
+import tierByeongyeon from "../../images/tier-byeongyeon.webp";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas, .bs-xp)을 책 검색과 같이 쓴다
 import "./WeeklyRank.css";
 
-// 백엔드가 주는 티어 이름 → 이미지. TODO: 백엔드의 티어 값(한글 이름인지 코드인지)이 정해지면 키를 맞춘다
+// 백엔드가 주는 티어 이름(Tier.displayName) → 이미지
 const TIER_IMAGES = {
   동: tierBronze,
-  은: tierSilver,
+  실버: tierSilver,
   금: tierGold,
-  금강: tierDiamond,
   백금: tierPlatinum,
-  병연: tierByeongyeon,
-  병연티어: tierByeongyeon,
+  금강: tierDiamond,
+  파이데이아: tierByeongyeon, // 가장 높은 티어 (이미지 파일 이름은 병연)
 };
 
 // 지난주 결과 알림을 띄운 주. 새 주(월요일 0시)에 처음 들어올 때 한 번만 띄운다.

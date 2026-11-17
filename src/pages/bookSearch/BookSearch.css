@@ -203,15 +203,20 @@
 .bs-reviews h2 { padding-left: 14px; }
 .bs-my-rating { margin: 8px 0 12px 14px; display: flex; align-items: center; gap: 4px; font-size: 16px; }
 .bs-review-form {
-  margin: 0 0 0 14px; height: 46px; padding-right: 6px;
-  display: flex; align-items: center; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px;
+  margin: 0 0 0 14px; min-height: 46px; padding: 6px 6px 6px 0;
+  display: flex; align-items: flex-end; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px;
 }
-.bs-review-form input { flex: 1; height: 100%; padding: 0 14px; border: 0; outline: none; background: transparent; font-size: 14px; }
-.bs-review-form button { height: 32px; padding: 0 20px; border: 0; border-radius: 14px; background: #fde6df; font-size: 14px; }
+/* 내용만큼 높이가 늘어난다 (field-sizing 을 모르는 브라우저는 세로 크기 조절로 대신한다). 너무 길면 칸 안에서 스크롤 */
+.bs-review-form textarea {
+  flex: 1; align-self: center; min-height: 20px; max-height: 160px; padding: 0 14px; border: 0; outline: none; background: transparent;
+  font: inherit; font-size: 14px; line-height: 20px; color: inherit; resize: none; field-sizing: content; overflow-y: auto;
+}
+@supports not (field-sizing: content) { .bs-review-form textarea { resize: vertical; } }
+.bs-review-form button { flex: none; height: 32px; padding: 0 20px; border: 0; border-radius: 14px; background: #fde6df; font-size: 14px; }
 .bs-review-form button:hover { background: #fbd9ce; }
 .bs-review-form .bs-review-cancel { margin-right: 6px; background: #f1f1f1; }
 .bs-review-form .bs-review-cancel:hover { background: #e8e8e8; }
-.bs-review-form input:read-only { color: #777; }
+.bs-review-form textarea:read-only { color: #777; }
 
 /* 리뷰 칸은 전체가 14px 들여써져 있어서, 리뷰가 없을 때 나오는 안내 문장도 같이 들여쓴다 */
 .bs-reviews .bs-status.left { padding-left: 14px; }
@@ -223,7 +228,7 @@
 .bs-review-head strong { font-size: 15px; font-weight: 500; }
 .bs-review-meta { margin-top: 4px; display: flex; align-items: center; gap: 10px; }
 .bs-review-meta time { font-size: 11px; color: #aaa; }
-.bs-review-list p { margin-top: 6px; font-size: 14px; line-height: 1.6; color: #555; word-break: break-all; }
+.bs-review-list p { margin-top: 6px; font-size: 14px; line-height: 1.6; color: #555; word-break: break-all; white-space: pre-line; } /* 줄바꿈을 그대로 보여준다 */
 
 /* ───────── 5·6. 친구 초대 / 7. 공동서재 ───────── */
 .bs-co-cover {

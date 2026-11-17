@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAuthorOtherBooks } from "./bookSearchApi";
-import { deleteMyReview, getAddedCount, getMe, getReviews, saveMyReview, summarizeReviews, updateMyReview } from "./bookStore";
+import { deleteMyReview, getMe, getReviews, saveMyReview, summarizeReviews, syncReviews, updateMyReview } from "./bookStore";
 import { Avatar, StarInput, Stars } from "./parts";
 
 const formatDate = (iso) => {
@@ -9,7 +9,7 @@ const formatDate = (iso) => {
   return `${d.getFullYear()} . ${pad(d.getMonth() + 1)} . ${pad(d.getDate())}`;
 };
 
-const MAX_REVIEW_LENGTH = 300; // 명세서: 감상문 300자 이하
+const MAX_REVIEW_LENGTH = 255; // 백엔드: 리뷰는 255자 이하 (CreateRatingRequest @Size(max = 255))
 const INTRO_FOLD_LENGTH = 160;
 
 // 3·4번 화면: 책 상세. 왼쪽은 고정, 오른쪽 카드만 스크롤된다.
@@ -24,6 +24,24 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
   const [editing, setEditing] = useState(false); // 내 리뷰 수정 중인지
   const [others, setOthers] = useState(null); // null = 불러오는 중
 
+  // 서버의 리뷰 목록을 받아 온다. 내 리뷰가 있으면 입력칸도 그 값으로 채운다 (새로고침해도 수정·삭제할 수 있게)
+  useEffect(() => {
+    let alive = true;
+    syncReviews(book).then((list) => {
+      if (!alive) return;
+      setReviews(list);
+      const myReview = list.find((r) => r.userKey === me.key);
+      if (myReview) {
+        setRating(myReview.rating);
+        setContent(myReview.content);
+      }
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [book]);
+
   useEffect(() => {
     let alive = true;
     fetchAuthorOtherBooks(book)
@@ -37,8 +55,7 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
     };
   }, [book]);
 
-  const { average } = summarizeReviews(reviews);
-  const addedCount = getAddedCount(book.id); // 서재에 추가한 사람 수 (추가 버튼을 누르면 부모가 다시 그려서 갱신)
+  const { count, average } = summarizeReviews(reviews);
   // 내 리뷰도 이 목록에 같이 들어간다 (최신순)
   const reviewList = [...reviews].sort((a, b) => new Date(b.date) - new Date(a.date));
   const intro = book.intro ?? ""; // 주간 경쟁에서 오는 책은 소개가 없을 수 있다
@@ -72,6 +89,10 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
       return;
     }
     const next = await saveMyReview(book, { rating, content: text });
+    if (next === "need-library") {
+      showToast("서재에 먼저 담아 주세요.");
+      return;
+    }
     if (!next) {
       showToast("리뷰를 저장하지 못했어요.");
       return;
@@ -121,7 +142,7 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
         <div className="bs-rating-badge">
           <span className="star">★</span>
           <strong>{average.toFixed(1)}</strong>
-          <span className="count" title="서재에 추가한 사람 수">({addedCount})</span>
+          <span className="count" title="리뷰 수">({count})</span>
         </div>
 
         <div className="bs-detail-scroll">
@@ -170,8 +191,9 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
                 submitReview();
               }}
             >
-              <input
-                type="text"
+              {/* 글이 길어지면 칸이 아래로 늘어난다. Enter = 등록, Shift+Enter = 줄바꿈 */}
+              <textarea
+                rows={1}
                 value={content}
                 maxLength={MAX_REVIEW_LENGTH}
                 placeholder="이 책에 대한 한줄평을 남겨주세요."
@@ -179,7 +201,9 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
                 readOnly={Boolean(mine) && !editing}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
+                  if (e.key !== "Enter" || e.shiftKey) return;
+                  e.preventDefault(); // 한글 입력 중(조합 중)인 Enter 는 글자 확정만 하고 등록하지 않는다
+                  if (!e.nativeEvent.isComposing) submitReview();
                 }}
               />
               {editing && (
@@ -210,7 +234,7 @@ const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, show
                     </div>
                     <div className="bs-review-meta">
                       <Stars value={r.rating} size={15} />
-                      <time>{formatDate(r.date)}</time>
+                      {r.date && <time>{formatDate(r.date)}</time>}
                     </div>
                     <p>{r.content}</p>
                   </div>

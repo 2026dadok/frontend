@@ -5,7 +5,7 @@ import dokImg from "../../images/dok.png";
 import glyphImg from "../../images/dadok-glyph.png";
 import glyphDaImg from "../../images/glyph-da.png";
 import glyphDokImg from "../../images/glyph-dok.png";
-import laptopImg from "../../images/laptop.png";
+import laptopImg from "../../images/laptop.webp";
 
 import myLibraryImg from "../../images/myLibrary.webp";
 import sharedLibraryImg from "../../images/sharedLibrary.png";

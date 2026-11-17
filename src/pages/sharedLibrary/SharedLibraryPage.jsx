@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
-import { showXpToast } from "../../components/xpToast/xpToastBus";
 import SharedLibrary from "../bookSearch/SharedLibrary";
 import { fetchJointDetail, getSharedLibrary, syncSharedLibrary } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
@@ -43,9 +42,7 @@ const SharedLibraryView = () => {
     }).then((result) => {
       if (!alive || !result) return;
       setDetail(result);
-      const won = result.myPercent === 100 && result.friendPercent < 100;
       if (result.myPercent === 100 && result.friendPercent === 100) setToast(ENDED_MESSAGE);
-      if (won && result.rewardXp > 0) showXpToast({ title: "공동 서재 승리 보상", xp: result.rewardXp });
     });
     return () => {
       alive = false;

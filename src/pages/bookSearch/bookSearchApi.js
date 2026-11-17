@@ -93,7 +93,7 @@ const toBook = (item) => {
 
 // 404(BEST_001, SEARCH_001 등 결과 없음)는 에러가 아니라 빈 결과로 본다.
 const getJson = async (url) => {
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) }); // 10초 안에 답이 없으면 실패
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`${url} ${res.status}`);
   return res.json();

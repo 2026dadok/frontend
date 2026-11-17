@@ -4,11 +4,11 @@
 //   - 공동서재 상세:  GET /library/joints/{id}  → fetchJointDetail()
 //   - 공동서재 만들기·초대: POST /shared-readings → requestCoReading()
 //   - 감상문:        GET /bookstore/feeling_page, POST /bookstore/feelings
-//   - 리뷰:          POST /books/reviews, PUT /books/reviews, DELETE /books/reviews?reviewID=
-// 표지·출판사·책 소개는 명세서의 책 데이터에 없어서 사본에 같이 둔다 (서버 목록에 없으면 YES24 에서 찾아 채운다).
-// TODO: 명세서에 안쪽 필드 이름이 없어서 여러 후보 이름을 받는다. 백엔드가 이름을 정하면 하나로 줄인다.
+//   - 리뷰:          GET /books/{id}/reviews, POST·PUT /books/reviews, DELETE /books/reviews?reviewID=
+// 출판사·책 소개는 백엔드 책 데이터에 없어서 사본에 같이 둔다 (표지가 없으면 YES24 에서 찾아 채운다).
+// 필드 이름은 백엔드(test 브랜치) 응답 그대로다.
 
-import { isLoggedIn, pick, requestServer } from "../../api/client";
+import { isLoggedIn, requestServer } from "../../api/client";
 import { getSessionUser, memRead, memWrite } from "../../api/session";
 import { searchBooks } from "./bookSearchApi";
 
@@ -16,7 +16,6 @@ const KEYS = {
   myLibrary: "myLibraryBooks",
   sharedLibrary: "sharedLibraryBooks",
   reviews: "bookReviews",
-  adders: "bookAdders", // { [bookId]: [서재에 추가한 사람 key, ...] }
   commentaries: "bookCommentaries", // { [bookId]: [{ day, content, date }, ...] }
 };
 
@@ -58,8 +57,8 @@ export const getMyLibrary = () => (isLoggedIn() ? read(KEYS.myLibrary, []) : [])
 
 // ───────── 서버 목록 받아서 사본 맞추기 ─────────
 const toInt = (v) => (v !== null && v !== "" && Number.isInteger(Number(v)) ? Number(v) : null);
-const listOf = (data, ...keys) =>
-  [data, data?.data, ...keys.flatMap((k) => [data?.[k], data?.data?.[k]])].find(Array.isArray) ?? [];
+// 응답이 배열이면 그대로, { key: [...] } 이면 그 배열
+const listOf = (data, key) => (Array.isArray(data) ? data : Array.isArray(data?.[key]) ? data[key] : []);
 
 // 표지가 없는 책은 제목으로 YES24 에서 찾아 표지·출판사·소개를 채운다 (한 번 찾으면 사본에 남는다)
 const fillFromYes24 = async (book) => {
@@ -75,22 +74,23 @@ const fillFromYes24 = async (book) => {
 };
 
 // 서버의 책 한 권 + 사본에 있던 같은 책(서버 번호로 찾는다) → 화면용 책
+// 나의 서재: { book_id, book_title, author, cover_url, total_page, read_page, finished }
+// 공동서재도 book_id, book_title, cover_url, total_page 를 같은 이름으로 준다 (author·read_page 는 없다)
 const mergeServerBook = (raw, cached) => {
-  const book = raw?.book && typeof raw.book === "object" ? { ...raw.book, ...raw } : raw;
-  const serverBookId = toInt(pick(book, "book_id", "bookID", "bookId"));
-  const totalPage = toInt(pick(book, "total_page", "total_pages", "totalPage")) ?? cached?.totalPage ?? null;
-  const readPage = toInt(pick(book, "read_page", "read_pages", "readPage")) ?? cached?.readPage ?? 0;
+  const serverBookId = toInt(raw.book_id);
+  const totalPage = toInt(raw.total_page) ?? cached?.totalPage ?? null;
+  const readPage = toInt(raw.read_page) ?? cached?.readPage ?? 0;
   return {
     ...cached,
-    id: cached?.id ?? (serverBookId !== null ? `server-${serverBookId}` : String(pick(book, "id") ?? "")),
+    id: cached?.id ?? `server-${serverBookId}`,
     serverBookId,
-    title: pick(book, "title", "book_title") ?? cached?.title ?? "",
-    author: pick(book, "author") ?? cached?.author ?? "",
-    cover: pick(book, "cover_url", "cover", "image") ?? cached?.cover ?? "",
+    title: raw.book_title ?? cached?.title ?? "",
+    author: raw.author ?? cached?.author ?? "",
+    cover: raw.cover_url || cached?.cover || "",
     totalPage,
     readPage,
-    completed: Boolean(pick(book, "finished", "completed", "is_finished")) || (totalPage ? readPage >= totalPage : false),
-    addedAt: pick(book, "created_at", "added_at", "start_date") ?? cached?.addedAt ?? new Date().toISOString(),
+    completed: Boolean(raw.finished) || (totalPage ? readPage >= totalPage : false),
+    addedAt: cached?.addedAt ?? new Date().toISOString(), // 서재 응답에 담은 날짜가 없다
   };
 };
 
@@ -101,8 +101,8 @@ export const syncMyLibrary = async () => {
   if (!ok) return getMyLibrary();
   const cached = getMyLibrary();
   const merged = await Promise.all(
-    listOf(data, "books", "my_library", "library").map((raw) => {
-      const id = toInt(pick(raw?.book ?? raw, "book_id", "bookID", "bookId") ?? pick(raw, "book_id", "bookID"));
+    listOf(data, "books").map((raw) => {
+      const id = toInt(raw.book_id);
       return fillFromYes24(mergeServerBook(raw, cached.find((b) => b.serverBookId === id)));
     })
   );
@@ -110,33 +110,29 @@ export const syncMyLibrary = async () => {
   return merged;
 };
 
-// ───────── 서재에 추가한 사람 수 (상세 화면 별점 옆 숫자) ─────────
-// 나의 서재/공동 서재 어느 쪽이든 추가한 사람을 한 번만 센다. (지금은 이 브라우저의 사용자들만)
-// TODO: 백엔드가 책별 추가 인원 수를 내려주면 이 두 함수만 API 값으로 교체
-const markAdded = (bookId) => {
-  const all = read(KEYS.adders, {});
-  const key = getMe().key;
-  const list = all[bookId] ?? [];
-  if (!list.includes(key)) write(KEYS.adders, { ...all, [bookId]: [...list, key] });
-};
-
-export const getAddedCount = (bookId) => {
-  const people = new Set(read(KEYS.adders, {})[bookId] ?? []);
-  // 이 기능이 생기기 전에 이미 서재에 넣어 둔 책도 내가 추가한 것으로 센다
-  const inMine = getMyLibrary().some((b) => b.id === bookId);
-  const inShared = getSharedLibrary().some((b) => b.id === bookId);
-  if (inMine || inShared) people.add(getMe().key);
-  return people.size;
+// 나의 서재에서 같은 책을 찾는다.
+// 서재에 담은 직후에는 YES24 의 책 id 로 찾을 수 있지만, 새로고침하면 서버에서 다시 받아서 id 가 "server-번호"가 된다.
+// 그래서 id → 서버 책 번호 → 제목·저자 순서로 찾는다. (백엔드 서재 응답에는 ISBN 이 없다)
+const sameText = (a, b) => String(a ?? "").replace(/\s+/g, "").toLowerCase() === String(b ?? "").replace(/\s+/g, "").toLowerCase();
+export const findInMyLibrary = (book) => {
+  if (!book) return null;
+  const list = getMyLibrary();
+  return (
+    list.find((b) => b.id === book.id) ??
+    (Number.isInteger(book.serverBookId) ? list.find((b) => b.serverBookId === book.serverBookId) : undefined) ??
+    (book.title ? list.find((b) => sameText(b.title, book.title) && (!b.author || !book.author || sameText(b.author, book.author))) : undefined) ??
+    null
+  );
 };
 
 // "added" | "exists" | "login" | "error"
 // 로그인하지 않았으면 담지 않고 "login" 을 돌려준다.
 // 백엔드(POST /library/books)가 받아줬을 때만 담는다. 표지·출판사는 백엔드 명세에 없어서 메모리 사본에 같이 둔다.
-// TODO: 책 추가의 요청 값 이름이 명세서에 없다. 지금은 title, author, total_page 에 isbn·표지 주소를 같이 보낸다
+// 백엔드는 isbn → 제목·저자 순으로 같은 책을 찾고, 없으면 새로 등록한다. 응답은 서재 책 한 권 (book_id 포함)
 export const addToMyLibrary = async (book) => {
   if (!isLoggedIn()) return "login";
   const list = getMyLibrary();
-  if (list.some((b) => b.id === book.id)) return "exists";
+  if (findInMyLibrary(book)) return "exists";
   const { ok, data } = await requestServer("POST", "/library/books", {
     title: book.title,
     author: book.author,
@@ -145,11 +141,8 @@ export const addToMyLibrary = async (book) => {
     cover_url: book.cover,
   });
   if (!ok) return "error"; // 서재는 서버에 저장되어야 한다 (브라우저에만 담지 않는다)
-  // 백엔드 답변: 등록하면 book_id(정수 번호)를 돌려준다. 응답에서 어느 위치에 오는지는 확인 필요 (지금은 book_id / data.book_id / id 를 찾는다)
-  const rawId = data?.book_id ?? data?.data?.book_id ?? data?.id ?? null;
-  const serverBookId = rawId !== null && Number.isInteger(Number(rawId)) ? Number(rawId) : null;
+  const serverBookId = toInt(data?.book_id ?? null);
   if (!write(KEYS.myLibrary, [{ ...toShelfBook(book), serverBookId }, ...list])) return "error";
-  markAdded(book.id);
   return "added";
 };
 
@@ -168,44 +161,31 @@ export const updateShelfBook = (bookId, patch) => {
 // 서버가 실패하거나 아직 없으면 책은 그대로 남는다.
 // 서버에 보내는 bookID 는 등록할 때 서버가 돌려준 정수 번호(book_id)다.
 // 번호를 모르는 책은 서버에 삭제를 요청할 수 없어서 지우지 않는다.
-// 삭제가 확인되면 "서재에 추가한 사람 수"(책 상세의 별점 옆 숫자)에서도 내가 빠진다.
 export const removeFromMyLibrary = async (bookId) => {
   const list = getMyLibrary();
   const book = list.find((b) => b.id === bookId);
   if (!book) return "removed";
   if (!Number.isInteger(book.serverBookId)) return "error";
-  // 명세서: DELETE /library/books/{book_id} (아직 미완료로 표시됨)
   const { ok } = await requestServer("DELETE", `/library/books/${book.serverBookId}`);
   if (!ok) return "error";
-  if (!write(KEYS.myLibrary, list.filter((b) => b.id !== bookId))) return "error";
-  const adders = read(KEYS.adders, {});
-  const me = getMe().key;
-  const stillShared = getSharedLibrary().some((b) => b.id === bookId);
-  if (!stillShared && adders[bookId]) {
-    write(KEYS.adders, { ...adders, [bookId]: adders[bookId].filter((k) => k !== me) });
-  }
-  return "removed";
+  return write(KEYS.myLibrary, list.filter((b) => b.id !== bookId)) ? "removed" : "error";
 };
 
 // ───────── 공동 서재 ─────────
 export const getSharedLibrary = () => (isLoggedIn() ? read(KEYS.sharedLibrary, []) : []); // 나의 서재와 같이 로그인해야 보인다
 
 // 공동서재 한 개: { id(책), jointId, title, cover, friendId, friendName, myPercent, friendPercent, startedAt, ... }
+// 서버: { shared_reading_id, book_id, book_title, cover_url, total_page, started_at, my_percent, partner_percent, partner: { ID, name } }
 const toPercent = (v) => Math.min(100, Math.max(0, Math.round(Number(v) || 0)));
-const mergeServerJoint = (raw, cached) => {
-  const partner = raw.partner ?? raw.friend ?? raw.member ?? {};
-  const book = mergeServerBook(raw.book ?? raw, cached);
-  return {
-    ...book,
-    jointId: toInt(pick(raw, "joint_id", "shared_reading_id", "jointID", "id")),
-    friendId: pick(partner, "ID", "user_id", "id") ?? pick(raw, "partner_id", "friend_id", "joinID") ?? cached?.friendId ?? "",
-    friendName: pick(partner, "name", "user_name", "nickname") ?? pick(raw, "partner_name", "friend_name") ?? cached?.friendName ?? "",
-    friendImage: pick(partner, "profile_image", "image_url") ?? "",
-    myPercent: toPercent(pick(raw, "my_percent", "my_progress", "percent")),
-    friendPercent: toPercent(pick(raw, "partner_percent", "friend_percent", "partner_progress")),
-    startedAt: pick(raw, "started_at", "start_date", "created_at") ?? cached?.startedAt ?? new Date().toISOString(),
-  };
-};
+const mergeServerJoint = (raw, cached) => ({
+  ...mergeServerBook(raw, cached),
+  jointId: toInt(raw.shared_reading_id),
+  friendId: raw.partner?.ID ?? cached?.friendId ?? "",
+  friendName: raw.partner?.name ?? cached?.friendName ?? "",
+  myPercent: toPercent(raw.my_percent),
+  friendPercent: toPercent(raw.partner_percent),
+  startedAt: raw.started_at ?? cached?.startedAt ?? new Date().toISOString(),
+});
 
 // GET /shared-readings 로 공동서재 목록을 받아 사본을 바꾼다. 실패하면 사본 그대로.
 export const syncSharedLibrary = async () => {
@@ -214,8 +194,8 @@ export const syncSharedLibrary = async () => {
   if (!ok) return getSharedLibrary();
   const cached = getSharedLibrary();
   const merged = await Promise.all(
-    listOf(data, "shared_readings", "joints", "list").map((raw) => {
-      const jointId = toInt(pick(raw, "joint_id", "shared_reading_id", "jointID", "id"));
+    listOf(data).map((raw) => {
+      const jointId = toInt(raw.shared_reading_id);
       return fillFromYes24(mergeServerJoint(raw, cached.find((b) => b.jointId === jointId)));
     })
   );
@@ -223,17 +203,15 @@ export const syncSharedLibrary = async () => {
   return merged;
 };
 
-// 공동서재 상세: GET /library/joints/{joint_id}. 두 사람의 진행률·승리 보상 등. 실패하면 null
+// 공동서재 상세: GET /library/joints/{joint_id}. 두 사람의 진행률. 실패하면 null
 export const fetchJointDetail = async (record) => {
   if (!Number.isInteger(record?.jointId)) return null;
   const { ok, data } = await requestServer("GET", `/library/joints/${record.jointId}`);
-  if (!ok || !data) return null;
-  const d = data.data ?? data;
-  return { ...mergeServerJoint(d, record), rewardXp: Number(pick(d, "reward_xp", "win_xp", "gained_xp")) || 0 };
+  return ok && data ? mergeServerJoint(data, record) : null;
 };
 
-// 함께 읽기 만들기·초대. 명세서: POST /shared-readings. 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
-// TODO: 요청 값 이름이 명세서에 없다. 지금은 친구 아이디(joinID), 이름, 책 정보를 보낸다
+// 함께 읽기 만들기·초대: POST /shared-readings. 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
+// 백엔드는 joinID(친구 아이디)·name·bookID 를 받고, bookID 가 없으면 title·author·total_page·isbn 으로 책을 찾는다.
 export const requestCoReading = async (friendId, friendName, book) =>
   (
     await requestServer("POST", "/shared-readings", {
@@ -247,57 +225,68 @@ export const requestCoReading = async (friendId, friendName, book) =>
     })
   ).ok;
 
-// 같은 책을 같은 친구와 다시 시작하면 기존 기록(시작일)을 그대로 쓴다. 저장 실패 시 null.
-export const addToSharedLibrary = (book, friend) => {
-  if (!isLoggedIn()) return null;
-  const list = getSharedLibrary();
-  const existing = list.find((b) => b.id === book.id && b.friendId === friend.id);
-  if (existing) return existing;
-  const record = {
-    ...toShelfBook(book),
-    friendId: friend.id,
-    friendName: friend.name,
-    startedAt: new Date().toISOString(),
-  };
-  if (!write(KEYS.sharedLibrary, [record, ...list])) return null;
-  markAdded(book.id);
-  return record;
+// ───────── 감상문 ─────────
+// 감상문: { day, content, date } 목록 (사본). 서버 값으로 맞추려면 syncCommentaries() 를 부른다.
+// 나의 서재 책과 공동서재 책은 감상문이 따로라서 사본도 따로 둔다. (같은 책이 양쪽에 있어도 섞이지 않게)
+//   나의 서재:  POST /bookstore/feelings, GET /bookstore/feeling_page?bookID=
+//   공동서재:   POST /shared-readings/{id}/reflections, GET /shared-readings/{id}/reflections?target=me|partner
+const isJoint = (book) => Number.isInteger(book?.jointId);
+const commentaryKey = (book, who = "me") => (isJoint(book) ? `joint-${book.jointId}-${who}` : book?.id);
+export const getCommentaries = (book, who = "me") => (read(KEYS.commentaries, {})[commentaryKey(book, who)] ?? []);
+
+// 공동서재 감상문을 받아 사본을 바꾼다. who: "me" | "partner". 실패하면 사본 그대로.
+const syncJointReflections = async (book, who) => {
+  if (!isLoggedIn()) return getCommentaries(book, who);
+  const { ok, data } = await requestServer("GET", `/shared-readings/${book.jointId}/reflections?target=${who}`);
+  if (!ok) return getCommentaries(book, who);
+  const list = listOf(data)
+    .map((r) => ({
+      day: toInt(r.readingDay) ?? 1,
+      content: r.content ?? "",
+      date: r.createdAt ?? new Date().toISOString(),
+      serverId: toInt(r.reflectionId),
+    }))
+    .sort((a, b) => b.day - a.day);
+  write(KEYS.commentaries, { ...read(KEYS.commentaries, {}), [commentaryKey(book, who)]: list });
+  return list;
 };
 
-// ───────── 감상문 ─────────
-// 내 감상문: { day, content, date } 목록 (사본). 서버 값으로 맞추려면 syncCommentaries() 를 부른다.
-export const getCommentaries = (bookId) => (read(KEYS.commentaries, {})[bookId] ?? []);
-
 // GET /bookstore/feeling_page?bookID= 로 이 책의 내 감상문을 받아 사본을 바꾼다. 실패하면 사본 그대로.
-// 일차(day)가 응답에 없으면 책을 담은 날부터 쓴 날까지의 날짜 수로 계산한다.
-// TODO: 요청 값(bookID)과 응답 필드 이름이 명세서에 없다. 백엔드가 정하면 맞춘다.
-export const syncCommentaries = async (book) => {
-  if (!isLoggedIn() || !Number.isInteger(book?.serverBookId)) return getCommentaries(book?.id);
+// 응답: { feelings: [{ feeling_id, day, feeling_content, date }] }
+export const syncCommentaries = async (book, who = "me") => {
+  if (isJoint(book)) return syncJointReflections(book, who);
+  if (who !== "me") return [];
+  if (!isLoggedIn() || !Number.isInteger(book?.serverBookId)) return getCommentaries(book);
   const { ok, data } = await requestServer("GET", `/bookstore/feeling_page?bookID=${book.serverBookId}`);
-  if (!ok) return getCommentaries(book.id);
-  const start = book.startedAt ?? book.addedAt;
-  const list = listOf(data, "feelings", "list")
-    .map((f) => {
-      const date = pick(f, "date", "created_at", "write_date") ?? new Date().toISOString();
-      const dayRaw = toInt(pick(f, "day", "day_count"));
-      const day = dayRaw ?? (start ? Math.max(1, Math.round((new Date(date) - new Date(start)) / 86400000) + 1) : 1);
-      return { day, content: pick(f, "feeling_content", "content") ?? "", date, serverId: toInt(pick(f, "feeling_id", "id")) };
-    })
+  if (!ok) return getCommentaries(book);
+  const list = listOf(data, "feelings")
+    .map((f) => ({
+      day: toInt(f.day) ?? 1,
+      content: f.feeling_content ?? "",
+      date: f.date ?? new Date().toISOString(),
+      serverId: toInt(f.feeling_id),
+    }))
     .sort((a, b) => b.day - a.day);
-  write(KEYS.commentaries, { ...read(KEYS.commentaries, {}), [book.id]: list });
+  write(KEYS.commentaries, { ...read(KEYS.commentaries, {}), [commentaryKey(book)]: list });
   return list;
 };
 
 // 감상문을 쓴다. 백엔드(POST /bookstore/feelings: bookID, feeling_content → feeling_id, new_achievements)가 받아줬을 때만 저장한다.
 // 서버의 책 번호(serverBookId)를 모르는 책은 보낼 수 없어서 "error". "saved" | "error"
 export const addCommentary = async (book, day, content) => {
-  if (!Number.isInteger(book.serverBookId)) return "error";
-  const { ok } = await requestServer("POST", "/bookstore/feelings", { bookID: book.serverBookId, feeling_content: content });
+  let ok;
+  if (isJoint(book)) {
+    ({ ok } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
+  } else {
+    if (!Number.isInteger(book.serverBookId)) return "error";
+    ({ ok } = await requestServer("POST", "/bookstore/feelings", { bookID: book.serverBookId, feeling_content: content }));
+  }
   if (!ok) return "error";
+  const key = commentaryKey(book);
   const all = read(KEYS.commentaries, {});
-  const list = (all[book.id] ?? []).filter((c) => c.day !== day); // 같은 일차는 하나만
+  const list = (all[key] ?? []).filter((c) => c.day !== day); // 같은 일차는 하나만
   const next = [{ day, content, date: new Date().toISOString() }, ...list];
-  return write(KEYS.commentaries, { ...all, [book.id]: next }) ? "saved" : "error";
+  return write(KEYS.commentaries, { ...all, [key]: next }) ? "saved" : "error";
 };
 
 // 시작일로부터 지난 날짜 수 (D+N). 자정 기준.
@@ -312,30 +301,53 @@ export const daysSince = (iso) => {
 // 책당 1인 1리뷰. 별점 평균은 리뷰가 없으면 5.0.
 export const getReviews = (bookId) => (read(KEYS.reviews, {})[bookId] ?? []);
 
+// 이 책의 리뷰 목록을 서버에서 받아 사본을 바꾼다: GET /books/{book_id}/reviews?page=N → { total, reviews: [{ reviewID, userID, content, rating }] }
+// 백엔드는 한 번에 5개씩 주므로 total 만큼 모일 때까지 다음 쪽을 받는다 (안 그러면 6번째부터와 평균이 틀어진다).
+// 서버 책 번호를 아는 책(서재에 담은 책)만 받을 수 있다. 없거나 실패하면 사본 그대로.
+// 응답에 작성 날짜·이름이 없어서 아이디를 이름 자리에 쓰고 날짜는 비워 둔다.
+const MAX_REVIEW_PAGES = 50; // 혹시 서버 total 이 이상해도 끝없이 요청하지 않게
+export const syncReviews = async (book) => {
+  const serverBookId = findInMyLibrary(book)?.serverBookId ?? book?.serverBookId;
+  if (!Number.isInteger(serverBookId)) return getReviews(book?.id);
+  const raws = [];
+  for (let page = 1; page <= MAX_REVIEW_PAGES; page += 1) {
+    const { ok, data } = await requestServer("GET", `/books/${serverBookId}/reviews?page=${page}`);
+    if (!ok) return getReviews(book.id);
+    const rows = Array.isArray(data?.reviews) ? data.reviews : [];
+    raws.push(...rows);
+    if (!rows.length || raws.length >= (Number(data?.total) || 0)) break;
+  }
+  const list = raws.map((r) => ({
+    userKey: String(r.userID ?? ""),
+    nickname: r.userID ?? "",
+    reviewId: toInt(r.reviewID),
+    rating: Number(r.rating) || 0,
+    content: r.content ?? "",
+    date: null,
+  }));
+  write(KEYS.reviews, { ...read(KEYS.reviews, {}), [book.id]: list });
+  return list;
+};
+
 // 내 리뷰 등록: POST /books/reviews (bookID, content, rating) → review_id. 서버가 받아줬을 때만 저장한다.
 // 이미 내 리뷰가 있으면 덮어쓰지 않고 null (수정은 updateMyReview). 실패해도 null. 성공하면 갱신된 목록.
-// bookID 는 서버의 책 번호다. 서재에 담지 않은 책은 번호가 없어서 제목·저자·ISBN 을 같이 보낸다.
-// TODO: 리뷰 목록(GET /books/{book_id}/reviews)은 아직 미완료라 다른 사람 리뷰는 아직 못 받는다.
+// bookID 는 서버의 책 번호다(필수). 서재에 담지 않아 번호가 없는 책은 요청하지 않고 "need-library".
 export const saveMyReview = async (book, { rating, content }) => {
   const bookId = book.id;
   const all = read(KEYS.reviews, {});
   const me = getMe();
   const list = all[bookId] ?? [];
   if (list.some((r) => r.userKey === me.key)) return null;
-  const shelf = getMyLibrary().find((b) => b.id === bookId);
-  const { ok, data } = await requestServer("POST", "/books/reviews", {
-    bookID: shelf?.serverBookId ?? book.serverBookId ?? null,
-    title: book.title,
-    author: book.author,
-    isbn: book.isbn,
-    content,
-    rating,
-  });
+  const shelf = findInMyLibrary(book);
+  // 백엔드는 bookID(서버의 책 번호)가 꼭 있어야 한다. 서재에 담지 않은 책은 번호가 없어서 요청하지 않는다.
+  const serverBookId = shelf?.serverBookId ?? book.serverBookId ?? null;
+  if (!Number.isInteger(serverBookId)) return "need-library";
+  const { ok, data } = await requestServer("POST", "/books/reviews", { bookID: serverBookId, content, rating });
   if (!ok) return null;
   const review = {
     userKey: me.key,
     nickname: me.displayName,
-    reviewId: toInt(pick(data?.data ?? data ?? {}, "review_id", "reviewID", "id")),
+    reviewId: toInt(data?.review_id ?? null),
     rating,
     content,
     date: new Date().toISOString(),

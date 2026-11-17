@@ -14,12 +14,11 @@
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
-.page-background > * { zoom: var(--ui, 1); } /* 로그인·회원가입 카드: 큰 모니터에서는 같은 비율로 키운다 */
+.page-background > * { zoom: var(--auth-zoom, 1); } /* 로그인·회원가입 카드: 창 크기에 맞춰 키우거나 줄인다 (useAuthScale) */
 
 .page-background {
   width: 100%;
-  min-width: 1289px;
-  min-height: 100vh;    
+  min-height: 100vh;
   overflow: auto; 
   height: 100vh;
   background-color: #f1f1f1;

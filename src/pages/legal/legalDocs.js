@@ -7,7 +7,6 @@
 //   - 개인정보 보호책임자 이름·이메일(PRIVACY_OFFICER), 시행일(EFFECTIVE_DATE)
 //   - 백엔드 서버를 어디(국내/해외, 어느 업체)에 올리는지 → "처리 위탁"·"국외 이전"에 추가
 //   - 인증 메일을 어떤 메일 서비스로 보내는지 → "처리 위탁"에 추가
-//   - 비밀번호를 암호화(해시)해서 저장하는지 백엔드와 확인
 //   - 만 14세 미만 가입: 문서에서는 뺐다. 받으려면 법정대리인 동의 절차가 필요하다 (개인정보 보호법 제22조의2)
 
 export const EFFECTIVE_DATE = "2026년 11월 3일";
@@ -16,7 +15,6 @@ const PRIVACY_OFFICER = {
   name: "다독다독 팀 (담당자 지정 예정)",
   email: "문의 이메일 준비 중",
 };
-export const CONTACT = `${PRIVACY_OFFICER.name}, ${PRIVACY_OFFICER.email}`;
 
 export const TERMS = {
   title: "이용약관",

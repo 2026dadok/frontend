@@ -28,8 +28,7 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
   const handleGoalNext = async (values) => {
     const goal_time = `${values.HRS}:${values.MIN}`; // 시:분 (초는 받지 않는다)
 
-    // 명세서: name, ID, passward. 회원 테이블에는 닉네임이 없고 이름(user_name)과 아이디(user_id)만 있다.
-    // 이름 칸에는 화면의 "닉네임" 입력을 보낸다. TODO: 이메일·생일·목표 시간의 키 이름과 목표 시간 단위는 백엔드와 확인
+    // 회원 테이블에는 닉네임이 없고 이름(name)과 아이디(ID)만 있다. 이름 칸에는 화면의 "닉네임" 입력을 보낸다.
     const payload = {
       name: signupData.nickname,
       ID: signupData.loginId,

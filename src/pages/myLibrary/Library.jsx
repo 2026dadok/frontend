@@ -153,11 +153,10 @@ const Library = () => {
     navigate(`${PATHS.search}?q=${encodeURIComponent(word)}`);
   };
 
-  // 나의 서재: 책 메뉴(바로 읽기 / 감상문 쓰기 / 삭제), 공동 서재: 그 책의 공동서재 페이지로 이동
-  const openBook = (book) => {
-    if (tab === "shared") navigate(PATHS.sharedLibrary, { state: { record: book } });
-    else setMenuId(menuId === book.id ? null : book.id);
-  };
+  // 책을 누르면 옆에 메뉴가 열린다. 나의 서재: 바로 읽기 / 감상문 쓰기 / 삭제, 공동 서재: 바로 읽기 / 감상문 쓰기 (삭제 없음)
+  // 공동 서재는 같은 책을 친구별로 따로 담을 수 있어서 책 id 와 친구 id 를 합쳐 메뉴를 구분한다.
+  const menuKey = (book) => `${book.id}-${book.friendId ?? ""}`;
+  const openBook = (book) => setMenuId(menuId === menuKey(book) ? null : menuKey(book));
   const readNow = (book) => navigate(PATHS.timer, { state: { book } });
   const writeReview = (book) => navigate(`${PATHS.review}?write=1`, { state: { book } });
 
@@ -227,15 +226,15 @@ const Library = () => {
                     <div key={`${book.id}-${book.friendId ?? ""}`} className={`lib-book-wrap ${i >= 3 ? "flip" : ""}`}>
                       <button
                         type="button"
-                        className={`lib-book ${menuId === book.id ? "selected" : ""}`}
-                        aria-haspopup={tab === "my" ? "menu" : undefined}
-                        aria-expanded={tab === "my" ? menuId === book.id : undefined}
+                        className={`lib-book ${menuId === menuKey(book) ? "selected" : ""}`}
+                        aria-haspopup="menu"
+                        aria-expanded={menuId === menuKey(book)}
                         onClick={() => openBook(book)}
                       >
                         <img src={book.cover} alt={book.title} />
                         {book.completed && <CompleteBadge className="lib-badge" />}
                       </button>
-                      {menuId === book.id && (
+                      {menuId === menuKey(book) && (
                         <div className="lib-menu" role="menu">
                           <button type="button" role="menuitem" onClick={() => readNow(book)}>
                             <MenuIcon name="read" /> 바로 읽기
@@ -243,9 +242,11 @@ const Library = () => {
                           <button type="button" role="menuitem" onClick={() => writeReview(book)}>
                             <MenuIcon name="write" /> 감상문 쓰기
                           </button>
-                          <button type="button" role="menuitem" onClick={() => deleteBook(book)}>
-                            <MenuIcon name="trash" /> 삭제
-                          </button>
+                          {tab === "my" && (
+                            <button type="button" role="menuitem" onClick={() => deleteBook(book)}>
+                              <MenuIcon name="trash" /> 삭제
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

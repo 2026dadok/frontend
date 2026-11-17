@@ -6,13 +6,12 @@ import { Toast } from "../bookSearch/parts";
 import GoalTimeInput from "../../components/goalTime/GoalTimeInput";
 import { normalizeGoalTime } from "../../components/goalTime/goalTime";
 import { fetchEditPage, saveEditInfo } from "./myPageApi";
-import { logout, withdraw } from "../../api/auth";
+import { logout, PASSWORD_MAX, passwordRuleError, withdraw } from "../../api/auth";
 import { Banner, Icon, ImagePencil, ProfileImage } from "./parts";
 import useProfileImages from "./useProfileImages";
 import "../bookSearch/BookSearch.css"; // .bs 버튼·알림 스타일을 같이 쓴다
 import "./MyPage.css";
 
-const MAX_PASSWORD = 50; // 회원가입과 같은 규칙
 const GO_BACK_MS = 800;
 
 const Field = ({ label, icon, children, extra }) => (
@@ -40,7 +39,7 @@ const PasswordField = ({ label, value, onChange, status }) => {
           </button>
         }
       >
-        <input type={visible ? "text" : "password"} value={value} maxLength={MAX_PASSWORD} onChange={(e) => onChange(e.target.value)} />
+        <input type={visible ? "text" : "password"} value={value} maxLength={PASSWORD_MAX} onChange={(e) => onChange(e.target.value)} />
       </Field>
       <p className={`ei-check ${status?.ok ? "ok" : "error"}`}>{status?.text}</p>
     </div>
@@ -84,9 +83,11 @@ const EditInfo = () => {
     current: passwords.current ? { ok: true } : { ok: false, text: "현재 비밀번호를 입력해주세요." },
     next: !passwords.next
       ? { ok: false, text: "새 비밀번호를 입력해주세요." }
-      : passwords.next === passwords.current
-        ? { ok: false, text: "현재 비밀번호와 달라야 해요." }
-        : { ok: true, text: "사용할 수 있어요." },
+      : passwordRuleError(passwords.next)
+        ? { ok: false, text: passwordRuleError(passwords.next) }
+        : passwords.next === passwords.current
+          ? { ok: false, text: "현재 비밀번호와 달라야 해요." }
+          : { ok: true, text: "사용할 수 있어요." },
     confirm:
       passwords.confirm && passwords.confirm === passwords.next
         ? { ok: true, text: "비밀번호가 일치해요." }
@@ -118,7 +119,14 @@ const EditInfo = () => {
       }
     }
     setSaving(true);
-    const ok = await saveEditInfo({ ...form, name: form.name.trim(), goalTime, password: changingPassword ? passwords.next : "" });
+    // 현재 비밀번호가 비어 있으면 위의 passwordStatus 검사에서 이미 막힌다
+    const ok = await saveEditInfo({
+      ...form,
+      name: form.name.trim(),
+      goalTime,
+      password: changingPassword ? passwords.next : "",
+      currentPassword: changingPassword ? passwords.current : "",
+    });
     setSaving(false);
     if (!ok) {
       showToast("저장하지 못했어요.");
@@ -175,7 +183,7 @@ const EditInfo = () => {
 
               <section className="ei-section">
                 <h2>계정</h2>
-                <Field label="이메일" icon="mail" extra={form.google && <span className="ei-chip">Google 연동</span>}>
+                <Field label="이메일" icon="mail">
                   {/* 이메일은 바꿀 수 없다 */}
                   <input type="email" value={form.email} readOnly tabIndex={-1} aria-readonly="true" />
                 </Field>

@@ -106,7 +106,7 @@ a.home-shelf-book { display: block; cursor: pointer; }
 
 /* 주간 */
 .home-weekly { flex: 0 0 188px; height: 188px; padding: 20px 30px 24px; }
-.home-weekly-title { font-size: 14px; margin: 22px 0 12px; }
+.home-weekly-title { font-size: 14px; margin: 32px 0 12px; } /* 제목(주간 퀘스트)과 퀘스트 사이를 넉넉히 */
 .home-weekly-bar { display: flex; align-items: center; gap: 14px; font-size: 11px; color: #777; }
 .home-progress { width: 155px; height: 6px; border-radius: 3px; background: #eee; overflow: hidden; }
 .home-progress div { height: 100%; background: #5fd496; border-radius: 3px; }
@@ -117,7 +117,7 @@ a.home-shelf-book { display: block; cursor: pointer; }
 .home-weekly-reward img { width: 60px; height: 70px; object-fit: contain; }
 
 /* 일일 */
-.home-daily { flex: 0 0 417px; height: 417px; min-height: 0; padding: 20px 38px 20px; }
+.home-daily { flex: 0 0 417px; height: 417px; min-height: 0; padding: 20px 38px 20px; margin-top: 16px; /* 주간 퀘스트와 사이를 더 띄운다 */ }
 .home-daily ul { list-style: none; margin-top: 18px; }
 .home-daily li { display: flex; align-items: center; gap: 14px; padding: 18px 0; }
 .home-daily-title { flex: 1; font-size: 14px; }
@@ -172,7 +172,7 @@ a.home-shelf-book { display: block; cursor: pointer; }
 }
 .home-quote-bubble p { white-space: pre-line; }
 .home-quote-bubble small { display: block; font-size: 11px; color: #555; }
-.home-mascot { position: absolute; left: 273px; top: 46px; width: 151px; }
+.home-mascot { position: absolute; left: 273px; top: 66px; width: 151px; }
 
 @media (max-width: 1280px) {
   .home-grid { grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }

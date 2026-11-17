@@ -31,6 +31,19 @@ const saveSession = () => {
 };
 
 export const getToken = () => session.token ?? "";
+
+// 토큰(JWT) 안의 만료 시각(exp)이 지났는지. 읽을 수 없는 토큰이면 만료로 보지 않는다 (서버가 판단).
+// 백엔드는 만료된 토큰으로 /library·/shared-readings 를 부르면 401 이 아니라 403 을 줘서, 응답만으로는 만료를 알 수 없다.
+export const isTokenExpired = () => {
+  try {
+    const payload = session.token?.split(".")[1];
+    if (!payload) return false;
+    const { exp } = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof exp === "number" && exp * 1000 <= Date.now();
+  } catch {
+    return false;
+  }
+};
 export const getSessionUser = () => session.user ?? {};
 
 // 로그인 성공 시

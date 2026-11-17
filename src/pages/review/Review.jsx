@@ -7,7 +7,7 @@ import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
 import { addCommentary, daysSince, getMyLibrary, getSharedLibrary, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
-import { DEMO_COMMENTARIES, fetchFriendCommentaries, fetchMyCommentaries, loadMyCommentaries } from "./reviewApi";
+import { fetchCommentaries, loadCommentaries } from "./reviewApi";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
 import { formatDate } from "./format";
 import mascotImg from "../../images/mascot.png";
@@ -65,7 +65,6 @@ const Review = () => {
   const location = useLocation();
   const [params] = useSearchParams();
   const isFriend = params.get("who") === "friend";
-  const demo = params.get("demo") === "1"; // 디자인 확인용 예시 데이터
 
   // 누른 책. 주소로 바로 들어오면 서재의 첫 책을 보여준다. (TODO: 책을 가리키는 값으로 교체)
   // (첫 책은 처음 한 번만 읽는다. 그릴 때마다 읽으면 매번 새 객체가 되어 아래 계산이 계속 다시 돈다)
@@ -89,31 +88,30 @@ const Review = () => {
 
   const entries = useMemo(() => {
     if (!book) return [];
-    if (demo) return DEMO_COMMENTARIES.map((e) => ({ ...e }));
-    return isFriend ? fetchFriendCommentaries() : fetchMyCommentaries(book.id);
+    return fetchCommentaries(book, isFriend ? "partner" : "me");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book, demo, isFriend, version]);
+  }, [book, isFriend, version]);
 
-  // 서버의 내 감상문(GET /bookstore/feeling_page)을 받아 오면 목록을 다시 그린다
+  // 서버의 감상문(나 / 공동서재 친구)을 받아 오면 목록을 다시 그린다
   useEffect(() => {
-    if (!book || isFriend || demo) return undefined;
+    if (!book) return undefined;
     let alive = true;
-    loadMyCommentaries(book).then(() => alive && setVersion((v) => v + 1));
+    loadCommentaries(book, isFriend ? "partner" : "me").then(() => alive && setVersion((v) => v + 1));
     return () => {
       alive = false;
     };
-  }, [book, isFriend, demo]);
+  }, [book, isFriend]);
 
   const { days, completedDay } = useMemo(() => {
     const lastWritten = Math.max(0, ...entries.map((e) => e.day));
     const startIso = book?.startedAt ?? book?.addedAt;
     const sinceStart = startIso ? daysSince(startIso) + 1 : 1;
-    const total = Math.max(1, lastWritten, demo ? 0 : sinceStart);
+    const total = Math.max(1, lastWritten, sinceStart);
     return {
       days: Array.from({ length: total }, (_, i) => total - i),
-      completedDay: book?.completed || demo ? total : null,
+      completedDay: book?.completed ? total : null,
     };
-  }, [entries, book, demo]);
+  }, [entries, book]);
 
   // 서재에 소개가 저장되지 않은 책은 YES24에서 다시 가져와서 채운다. introFetched[책 id] 가 undefined 면 가져오는 중.
   const [introFetched, setIntroFetched] = useState({});
@@ -216,7 +214,7 @@ const Review = () => {
                 day={day}
                 entry={entryOf(day)}
                 completed={day === completedDay}
-                canWrite={!isFriend && !demo}
+                canWrite={!isFriend}
                 onOpen={() => setOpenDay(day)}
                 onWrite={() => setWriteDay(day)}
               />

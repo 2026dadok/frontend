@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { LineInput } from "./components/LineInput";
 import useEmailTimer from "./useEmailTimer";
-import { EMAIL_PURPOSE, findId, sendEmailCode, verifyEmailCode } from "../../api/auth";
+import { EMAIL_PURPOSE, FIND_ID_FIELDS, findId, sendEmailCode, verifyEmailCode } from "../../api/auth";
 
 const FindId = ({ onBackToLogin }) => {
   const [email, setEmail] = useState("");
+  // 이메일 말고 더 받는 값(이름·생년월일). 어떤 칸이 있는지는 api/auth.js 의 FIND_ID_FIELDS 가 정한다.
+  const [extra, setExtra] = useState(() => Object.fromEntries(FIND_ID_FIELDS.map((f) => [f.key, ""])));
   const [code, setCode] = useState("");
   const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
   const [foundId, setFoundId] = useState(null);
@@ -39,19 +41,24 @@ const FindId = ({ onBackToLogin }) => {
       alert("인증번호 6자리를 입력하세요.");
       return;
     }
-
-    try {
-      const verified = await verifyEmailCode(email, code); // 명세서: POST /auth/email_verify
-      if (!verified.ok) throw new Error("인증 실패");
-
-      const { ok, data } = await findId(email); // 명세서: POST /auth/find_id (email) → ID
-      if (!ok || !data?.ID) throw new Error("조회 실패");
-
-      setFoundId(data.ID);
-    } catch (err) {
-      console.error(err);
-      alert("아이디 조회 중 오류가 발생했습니다.");
+    const missing = FIND_ID_FIELDS.find((f) => !extra[f.key].trim());
+    if (missing) {
+      alert(`${missing.placeholder}을(를) 입력하세요.`);
+      return;
     }
+
+    const verified = await verifyEmailCode(email, code, EMAIL_PURPOSE.findId); // POST /auth/email_verify (purpose 필수)
+    if (!verified.ok) {
+      alert("인증번호가 올바르지 않습니다.");
+      return;
+    }
+    const trimmed = Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, v.trim()]));
+    const { ok, id } = await findId({ ...trimmed, email }); // POST /auth/find_id
+    if (!ok) {
+      alert("일치하는 회원 정보를 찾지 못했습니다. 입력한 정보를 확인해주세요.");
+      return;
+    }
+    setFoundId(id);
   };
 
   if (foundId) {
@@ -68,6 +75,15 @@ const FindId = ({ onBackToLogin }) => {
 
   return (
     <div className="fa-step">
+      {FIND_ID_FIELDS.map((f) => (
+        <LineInput
+          key={f.key}
+          placeholder={f.placeholder}
+          type={f.type}
+          value={extra[f.key]}
+          onChange={(v) => setExtra((prev) => ({ ...prev, [f.key]: v }))}
+        />
+      ))}
       <LineInput placeholder="이메일" type="email" value={email} onChange={setEmail} />
 
       <div className="ev-code-row">

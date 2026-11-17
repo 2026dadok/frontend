@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../../routes";
 import { isLoggedIn } from "../../api/client";
 import { fetchGenreBooks, searchBooks } from "./bookSearchApi";
-import { addToMyLibrary, getMe, getMyLibrary, requestCoReading, syncMyLibrary } from "./bookStore";
+import { addToMyLibrary, findInMyLibrary, getMe, requestCoReading, syncMyLibrary, syncSharedLibrary } from "./bookStore";
 import useInfiniteBooks from "./useInfiniteBooks";
 import { SearchBar, Toast, XpTotal } from "./parts";
 import BookList from "./BookList";
@@ -103,22 +103,22 @@ const BookSearch = () => {
     go({ view: "invite" }, { book: b });
   };
 
-  // 친구는 실제 사용자여야 하고, 상대가 수락해야 함께 읽기가 시작된다.
-  // 여기서는 요청(POST /library/joints)만 보내고, 공동서재(7번)는 만들지 않는다.
-  // TODO: 수락 여부를 알 수 있는 API(요청 목록/상태 조회)가 생기면 수락된 요청부터 addToSharedLibrary + 7번 화면으로 연결
+  // 친구는 실제 사용자여야 한다. 백엔드(POST /shared-readings)는 수락 단계 없이 바로 함께 읽기를 시작한다.
+  // 성공하면 공동서재 목록을 다시 받아 둔다 (서고의 공동 서재 탭에 바로 보이게).
   const startTogether = async ({ id, name }) => {
     if (id === getMe().key) {
       showToast("자기 자신과는 함께 읽을 수 없어요.");
       return;
     }
     setStarting(true);
-    const sent = await requestCoReading(id, name, { ...book, ...getMyLibrary().find((item) => item.id === book?.id) });
+    const sent = await requestCoReading(id, name, { ...book, ...findInMyLibrary(book) });
     setStarting(false);
     if (!sent) {
       showToast("함께 읽기를 요청하지 못했어요. 아이디를 확인해주세요.");
       return;
     }
-    showToast("함께 읽기를 요청했어요. 친구가 수락하면 시작돼요.", START_TOAST_MS);
+    syncSharedLibrary();
+    showToast("공동 서재에 추가했어요.", START_TOAST_MS);
     go({ view: "detail" }, { replace: true }); // 초대 화면을 상세로 바꾼다 (뒤로 가기로 초대 화면에 다시 오지 않게)
   };
 
@@ -128,7 +128,7 @@ const BookSearch = () => {
       showToast("로그인이 필요해요.");
       return;
     }
-    const shelf = getMyLibrary().find((item) => item.id === b.id);
+    const shelf = findInMyLibrary(b);
     navigate(PATHS.timer, { state: { book: { ...b, totalPage: b.pages, ...shelf } } });
   };
 
