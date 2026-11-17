@@ -9,6 +9,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
   const [loginId, setLoginId] = useState("");           // id
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [checking, setChecking] = useState(false); // 아이디 중복 확인 중 (그동안 다시 눌러도 무시한다)
 
   const validate = () => {
     if (!nickname.trim() || !loginId.trim() || !password || !passwordConfirm) {
@@ -36,9 +37,11 @@ const SignupForm = ({ onNext, onFindAccount }) => {
   };
 
   const handleNext = async () => {
-    if (!validate()) return;
+    if (checking || !validate()) return;
     // 이미 있는 아이디면 여기서 막는다. 서버가 없으면(data 없음) 일단 넘어가고 가입할 때 서버가 판단한다.
+    setChecking(true);
     const { data } = await checkId(loginId.trim());
+    setChecking(false);
     if (data?.available === false) {
       alert("이미 사용 중인 아이디입니다.");
       return;
@@ -47,7 +50,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
   };
 
   const handleEnter = (e) => {
-    if (e.key === "Enter") handleNext();
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) handleNext();
   };
 
   return (
@@ -74,8 +77,8 @@ const SignupForm = ({ onNext, onFindAccount }) => {
         />
 
         <div className="signup-footer">
-          <button type="button" className="skip-link" onClick={handleNext}>
-            넘어가기
+          <button type="button" className="skip-link" onClick={handleNext} disabled={checking} aria-busy={checking}>
+            {checking ? "확인 중…" : "넘어가기"}
           </button>
           <button type="button" className="find-account" onClick={onFindAccount}>
             🔒 아이디 찾기 / 비밀번호 재설정

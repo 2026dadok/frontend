@@ -8,7 +8,7 @@ const FindId = ({ onBackToLogin }) => {
   // 이메일 말고 더 받는 값(이름·생년월일). 어떤 칸이 있는지는 api/auth.js 의 FIND_ID_FIELDS 가 정한다.
   const [extra, setExtra] = useState(() => Object.fromEntries(FIND_ID_FIELDS.map((f) => [f.key, ""])));
   const [code, setCode] = useState("");
-  const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
+  const { codeSent, secondsLeft, resendCooldown, sending, timeText, sendLabel, sendCode } = useEmailTimer();
   const [foundId, setFoundId] = useState(null);
 
   const handleStartVerify = async () => {
@@ -16,15 +16,7 @@ const FindId = ({ onBackToLogin }) => {
       alert("이메일을 입력하세요.");
       return;
     }
-    if (resendCooldown > 0) return;
-
-    const { ok } = await sendEmailCode(email, EMAIL_PURPOSE.findId);
-    if (!ok) {
-      alert("인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
-      return;
-    }
-
-    startTimer();
+    await sendCode(() => sendEmailCode(email, EMAIL_PURPOSE.findId), "인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
   };
 
   const handleFindId = async () => {
@@ -94,7 +86,7 @@ const FindId = ({ onBackToLogin }) => {
         type="button"
         className="fa-send-link"
         onClick={handleStartVerify}
-        disabled={resendCooldown > 0}
+        disabled={sending || resendCooldown > 0}
       >
         {sendLabel}
       </button>

@@ -17,7 +17,9 @@ const expireSession = (url) => {
 //   1) 시간 제한: timeout(기본 10초) 안에 답이 없으면 실패로 끝낸다.
 //   2) 로그인 만료: 토큰의 만료 시각이 지났거나, 토큰을 보냈는데 401 이 오면 로그인 화면으로 보낸다.
 export const apiFetch = async (url, { timeout = TIMEOUT_MS, ...options } = {}) => {
-  const sentToken = Boolean(getToken());
+  // 이 요청에 로그인 토큰을 실어 보내는지. 토큰을 안 보내는 요청(로그인·회원가입 등)의 401 은 만료가 아니다
+  // (예: 로그인 비밀번호가 틀리면 백엔드는 401 을 준다)
+  const sentToken = Boolean(getToken()) && new Headers(options.headers).has("authorization");
   // 이미 만료된 토큰이면 보내지 않고 바로 로그인 화면으로 보낸다
   if (sentToken && isTokenExpired() && !url.startsWith("/auth/logout")) {
     expireSession(url);

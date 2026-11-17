@@ -13,21 +13,14 @@ const ResetPassword = ({ onBackToLogin }) => {
   const [verified, setVerified] = useState(false); // 인증에 성공하면 true. 새 비밀번호 화면을 보여준다
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
+  const { codeSent, secondsLeft, resendCooldown, sending, timeText, sendLabel, sendCode } = useEmailTimer();
 
   const handleStartVerify = async () => {
     if (!email) {
       alert("이메일을 입력하세요.");
       return;
     }
-    if (resendCooldown > 0) return;
-
-    const { ok } = await sendEmailCode(email, EMAIL_PURPOSE.findPw);
-    if (!ok) {
-      alert("인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
-      return;
-    }
-    startTimer();
+    await sendCode(() => sendEmailCode(email, EMAIL_PURPOSE.findPw), "인증번호를 보내지 못했습니다. 등록된 이메일인지 확인해주세요.");
   };
 
   const handleVerify = async () => {
@@ -94,7 +87,7 @@ const ResetPassword = ({ onBackToLogin }) => {
         {codeSent && <span className="ev-timer">{timeText}</span>}
       </div>
 
-      <button type="button" className="fa-send-link" onClick={handleStartVerify} disabled={resendCooldown > 0}>
+      <button type="button" className="fa-send-link" onClick={handleStartVerify} disabled={sending || resendCooldown > 0}>
         {sendLabel}
       </button>
 

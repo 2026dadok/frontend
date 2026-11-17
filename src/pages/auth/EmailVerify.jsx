@@ -8,22 +8,14 @@ import { EMAIL_PURPOSE, sendEmailCode, verifyEmailCode } from "../../api/auth";
 const EmailVerify = ({ onNext, onFindAccount }) => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const { codeSent, secondsLeft, resendCooldown, timeText, sendLabel, startTimer } = useEmailTimer();
+  const { codeSent, secondsLeft, resendCooldown, sending, timeText, sendLabel, sendCode } = useEmailTimer();
 
   const handleStartVerify = async () => {
     if (!email) {
       alert("이메일을 입력하세요.");
       return;
     }
-    if (resendCooldown > 0) return;
-
-    const { ok } = await sendEmailCode(email, EMAIL_PURPOSE.signup);
-    if (!ok) {
-      alert("인증번호를 보내지 못했습니다. 이메일을 확인해주세요.");
-      return;
-    }
-
-    startTimer();
+    await sendCode(() => sendEmailCode(email, EMAIL_PURPOSE.signup), "인증번호를 보내지 못했습니다. 이메일을 확인해주세요.");
   };
 
   const handleCreateAccount = async () => {
@@ -62,7 +54,7 @@ const EmailVerify = ({ onNext, onFindAccount }) => {
             type="button"
             className="ev-send-link"
             onClick={handleStartVerify}
-            disabled={resendCooldown > 0}
+            disabled={sending || resendCooldown > 0}
           >
             {sendLabel}
           </button>

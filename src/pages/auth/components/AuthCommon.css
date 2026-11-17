@@ -20,6 +20,9 @@
 /* 가입 화면은 기존처럼 12px 유지 (specificity가 높아 import 순서와 무관) */
 .signup-footer .skip-link,
 .signup-footer .find-account { font-size: 12px; }
+/* 글자가 작아서 누르기 어렵다: 보이는 위치는 그대로 두고 눌리는 영역만 넓힌다 */
+.signup-footer .skip-link { padding: 10px 16px; margin: -10px -16px; }
+.skip-link:disabled { color: #999; cursor: default; }
 
 /* EmailVerify, FindId, ResetPassword 공통 */
 .ev-code-row {

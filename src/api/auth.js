@@ -18,9 +18,10 @@ const readBody = async (res) => {
   }
 };
 
-const post = async (url, body) => {
+const post = async (url, body, { timeout } = {}) => {
   try {
     const res = await apiFetch(url, {
+      timeout,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -53,7 +54,9 @@ export const withdraw = async () => {
 };
 
 // 이메일 인증번호 보내기: 요청 email, purpose → 응답 문장 ("인증 코드가 이메일로 발송되었습니다."). 유효 시간은 5분
-export const sendEmailCode = (email, purpose) => post("/auth/email_send", { email, purpose });
+// 백엔드는 Gmail 이 메일을 받아 줄 때까지 기다렸다가 답한다. Gmail 이 느리면 10초를 넘겨서, 넉넉히 30초 기다린다.
+const EMAIL_SEND_TIMEOUT_MS = 30000;
+export const sendEmailCode = (email, purpose) => post("/auth/email_send", { email, purpose }, { timeout: EMAIL_SEND_TIMEOUT_MS });
 
 // 이메일 인증번호 확인: 요청 email, code, purpose (purpose 필수)
 export const verifyEmailCode = (email, code, purpose) => post("/auth/email_verify", { email, code, purpose });
@@ -79,9 +82,11 @@ export const signup = (payload) =>
 
 // 아이디 중복 확인: GET /auth/check-id?userId=... → 맨 true/false ("이미 있으면 true").
 // 화면은 { available } 을 쓰므로 뒤집어서 돌려준다. 서버가 없거나 답이 이상하면 data 가 null 이다.
+// 가입 버튼을 누른 사람이 오래 기다리지 않게 5초만 기다린다 (못 받으면 가입할 때 서버가 다시 확인한다)
+const CHECK_ID_TIMEOUT_MS = 5000;
 export const checkId = async (userId) => {
   try {
-    const res = await apiFetch(`/auth/check-id?userId=${encodeURIComponent(userId)}`);
+    const res = await apiFetch(`/auth/check-id?userId=${encodeURIComponent(userId)}`, { timeout: CHECK_ID_TIMEOUT_MS });
     const taken = await readBody(res);
     if (!res.ok || typeof taken !== "boolean") return { ok: false, data: null };
     return { ok: true, data: { available: !taken } };

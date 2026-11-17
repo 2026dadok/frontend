@@ -55,6 +55,10 @@ async function handle(request) {
     const base = process.env.BACKEND_URL;
     if (!base) return json(503, { message: "BACKEND_URL 이 설정되지 않았어요." });
     target = `${base.replace(/\/+$/, "")}/${path}`;
+    // 브라우저가 붙인 Origin 을 그대로 넘기면 백엔드 CORS 설정에 이 사이트 주소가 없어서 POST·PUT·DELETE 가 403 이 된다.
+    // 여기서 백엔드로 가는 건 서버끼리의 요청이라 CORS 가 필요 없으니 뺀다.
+    headers.delete("origin");
+    headers.delete("referer");
   } else {
     return json(404, { message: "알 수 없는 경로예요." });
   }

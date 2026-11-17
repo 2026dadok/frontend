@@ -29,6 +29,11 @@ export default defineConfig(({ mode }) => {
         // 브라우저 주소창으로 들어온 화면 이동(예: /auth/log_page)은 백엔드로 보내지 않고 프런트 화면을 보여준다.
         // 화면 주소와 API 주소가 /auth/... 로 겹쳐도 충돌하지 않게 하기 위해서다. fetch 호출은 그대로 백엔드로 간다.
         bypass: (req) => (req.headers.accept?.includes('text/html') ? '/index.html' : undefined),
+        // 브라우저의 Origin 을 빼고 보낸다. 백엔드 CORS 목록에 없는 주소(다른 포트·다른 컴퓨터 IP)에서 열어도
+        // POST·PUT·DELETE 가 403("Invalid CORS request")이 되지 않게 한다. 프록시 → 백엔드는 서버끼리의 요청이다.
+        configure: (proxyServer) => {
+          proxyServer.on('proxyReq', (proxyReq) => proxyReq.removeHeader('origin'))
+        },
       }
     }
   }
