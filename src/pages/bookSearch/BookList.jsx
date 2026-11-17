@@ -24,6 +24,7 @@ const BookList = ({ list, genre, onGenreChange, onOpen }) => {
             <button key={b.id} type="button" className="bs-grid-book" onClick={() => onOpen(b)}>
               <img src={b.cover} alt="" />
               <span className="bs-grid-title">{b.title}</span>
+              {b.author && <span className="bs-grid-author">{b.author}</span>}
             </button>
           ))}
         </div>
