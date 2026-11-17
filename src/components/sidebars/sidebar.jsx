@@ -8,7 +8,6 @@ import homeIcon from "../../images/icon-home.png";
 import rankIcon from "../../images/icon-rank.png";
 import searchIcon from "../../images/icon-search.png";
 import libraryIcon from "../../images/icon-library.png";
-import settingsIcon from "../../images/icon-settings.png";
 
 const MENUS = [
   { label: "마이페이지", to: PATHS.mypage, icon: mypageIcon },
@@ -36,10 +35,6 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-
-      <NavLink to={PATHS.settings} className="sidebar-settings" aria-label="설정">
-        <img src={settingsIcon} alt="" />
-      </NavLink>
     </aside>
   );
 };

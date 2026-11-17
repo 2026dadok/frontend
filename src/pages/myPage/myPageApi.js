@@ -2,7 +2,7 @@
 //   GET /users/my_page    → ID, name, title, all_reading_time(분), sequence_day, all_reading_page, league_in5, profile_image, background_image
 //   GET /users/edit_page  → ID, name, birthdate, goal_time("HH:mm"), email, profile_image, background_image
 //   PUT /users/edit_info  (name, birthdate, goal_time, current_password, new_password) → message
-//   PUT /users/title      (titleID) → message           : 이름 앞에 붙일 업적 고르기
+//   PUT /users/title      { titleId } → message          : 이름 앞에 붙일 업적 고르기
 //   PUT /users/image      form-data (type, image) → image_url : 프로필·배경 변경 (5MB 이하)
 //   DELETE /users/image?type= → image_url(기본 이미지)  : 프로필·배경 삭제
 //   GET /users/achievements → [{ achievement_id, title, description, achieved, equipped }]
@@ -94,7 +94,7 @@ export const saveEditInfo = async ({ name, birthdate, goalTime, password, curren
 };
 
 // 이름 앞에 붙일 업적을 고른다. 성공하면 true
-export const applyTitle = async (titleID) => (await requestServer("PUT", "/users/title", { titleID })).ok;
+export const applyTitle = async (titleId) => (await requestServer("PUT", "/users/title", { titleId })).ok;
 
 // 프로필(kind: "profile") / 배경(kind: "background") 이미지 변경. 성공하면 서버의 이미지 주소, 실패하면 null
 export const uploadImage = async (kind, file) => {

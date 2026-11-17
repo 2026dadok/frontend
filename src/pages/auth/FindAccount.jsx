@@ -4,7 +4,7 @@ import FindId from "./FindId";
 import ResetPassword from "./ResetPassword";
 import "./FindAccount.css";
 
-const FindAccount = ({ onBackToLogin, onGoToSignup }) => {
+const FindAccount = ({ onBackToLogin, onGoToSignup, onBack }) => {
   // 고른 탭은 주소(?pageGubun=password)에 둔다. 새로고침해도 보던 탭이 그대로 열린다.
   // replace: 탭을 바꿀 때마다 방문 기록을 쌓지 않는다 (뒤로 가기는 바로 로그인 화면으로)
   const [params, setParams] = useSearchParams();
@@ -12,7 +12,7 @@ const FindAccount = ({ onBackToLogin, onGoToSignup }) => {
   const setTab = (next) => setParams(next === "password" ? { pageGubun: "password" } : {}, { replace: true });
 
   return (
-    <AuthLayout>
+    <AuthLayout onBack={onBack}>
       <div className="find-account-page">
         <h1>아이디 찾기 / 비밀번호 재설정</h1>
 

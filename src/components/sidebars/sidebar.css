@@ -55,13 +55,3 @@
 .sidebar-item.active {
   background: #eeeeee;
 }
-
-.sidebar-settings {
-  margin-top: auto;
-}
-
-.sidebar-settings img {
-  width: 36px;
-  height: 36px;
-  display: block;
-}

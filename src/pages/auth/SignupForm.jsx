@@ -4,7 +4,7 @@ import { LineInput } from "./components/LineInput";
 import { checkId, PASSWORD_MAX, passwordRuleError } from "../../api/auth";
 import "./SignupForm.css";
 
-const SignupForm = ({ onNext, onFindAccount }) => {
+const SignupForm = ({ onNext, onFindAccount, onBack }) => {
   const [nickname, setNickname] = useState(""); // nickname
   const [loginId, setLoginId] = useState("");           // id
   const [password, setPassword] = useState("");
@@ -54,7 +54,7 @@ const SignupForm = ({ onNext, onFindAccount }) => {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout onBack={onBack}>
       <div className="signup-form">
         <h1>회원 가입하기</h1>
 

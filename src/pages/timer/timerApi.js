@@ -7,13 +7,13 @@
 
 import { requestServer } from "../../api/client";
 
-// 이번에 읽은 시간을 백엔드에 보낸다: POST /times (bookID, readTime) → message, today_readtime
-// readTime 은 초 단위(1초 ~ 6시간). bookID 는 서재에 담을 때 서버가 준 책 번호(book_id)다. 성공하면 true
+// 이번에 읽은 시간을 백엔드에 보낸다: POST /times { bookId, readTime } → message, today_readtime
+// readTime 은 초 단위(1초 ~ 6시간). bookId 는 서재에 담을 때 서버가 준 책 번호(book_id)다. 성공하면 true
 const MAX_READ_SECONDS = 6 * 3600;
-export const addStudyTime = async (bookID, seconds) => {
-  if (!Number.isInteger(bookID) || !Number.isInteger(seconds) || seconds <= 0) return false;
+export const addStudyTime = async (bookId, seconds) => {
+  if (!Number.isInteger(bookId) || !Number.isInteger(seconds) || seconds <= 0) return false;
   const readTime = Math.min(seconds, MAX_READ_SECONDS);
-  return (await requestServer("POST", "/times", { bookID, readTime })).ok;
+  return (await requestServer("POST", "/times", { bookId, readTime })).ok;
 };
 
 // 타이머 첫 화면의 목표 시간: GET /times/timer_page → goal_readtime(분), today_readtime(초)
@@ -27,12 +27,12 @@ export const fetchGoalTime = async () => {
 };
 
 // 오늘 어디까지 읽었는지 보낸다. 성공하면 true
-//   나의 서재 책: PUT /library/pages (bookID, read_pages)
+//   나의 서재 책: PUT /library/books/{bookId}/progress { currentPage }
 //   공동서재 책(jointId 가 있는 책): PUT /shared-readings/{id}/progress (currentPage)
 export const saveReadPages = async (book, readPages) => {
   if (Number.isInteger(book?.jointId)) {
     return (await requestServer("PUT", `/shared-readings/${book.jointId}/progress`, { currentPage: readPages })).ok;
   }
   if (!Number.isInteger(book?.serverBookId)) return false;
-  return (await requestServer("PUT", "/library/pages", { bookID: book.serverBookId, read_pages: readPages })).ok;
+  return (await requestServer("PUT", `/library/books/${book.serverBookId}/progress`, { currentPage: readPages })).ok;
 };

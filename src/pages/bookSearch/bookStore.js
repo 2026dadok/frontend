@@ -157,7 +157,7 @@ export const updateShelfBook = (bookId, patch) => {
 // 나의 서재에서 책을 삭제한다. "removed" | "error"
 // 삭제는 DB에 반영되어야 하므로 백엔드(DELETE /library/books)가 성공했을 때만 지운다.
 // 서버가 실패하거나 아직 없으면 책은 그대로 남는다.
-// 서버에 보내는 bookID 는 등록할 때 서버가 돌려준 정수 번호(book_id)다.
+// 주소에 넣는 책 번호는 등록할 때 서버가 돌려준 정수 번호(book_id)다.
 // 번호를 모르는 책은 서버에 삭제를 요청할 수 없어서 지우지 않는다.
 export const removeFromMyLibrary = async (bookId) => {
   const list = getMyLibrary();
@@ -209,13 +209,13 @@ export const fetchJointDetail = async (record) => {
 };
 
 // 함께 읽기 만들기·초대: POST /shared-readings. 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
-// 백엔드는 joinID(친구 아이디)·name·bookID 를 받고, bookID 가 없으면 title·author·total_page·isbn 으로 책을 찾는다.
+// 요청: { partnerUserId(친구 아이디), partnerName(친구 이름), bookId } — bookId 가 없으면 title·author·total_page·isbn 으로 책을 찾는다.
 export const requestCoReading = async (friendId, friendName, book) =>
   (
     await requestServer("POST", "/shared-readings", {
-      joinID: friendId,
-      name: friendName,
-      bookID: book?.serverBookId ?? null,
+      partnerUserId: friendId,
+      partnerName: friendName,
+      bookId: book?.serverBookId ?? null,
       title: book?.title,
       author: book?.author,
       total_page: book?.pages ?? book?.totalPage,
@@ -226,7 +226,7 @@ export const requestCoReading = async (friendId, friendName, book) =>
 // ───────── 감상문 ─────────
 // 감상문: { day, content, date } 목록 (사본). 서버 값으로 맞추려면 syncCommentaries() 를 부른다.
 // 나의 서재 책과 공동서재 책은 감상문이 따로라서 사본도 따로 둔다. (같은 책이 양쪽에 있어도 섞이지 않게)
-//   나의 서재:  POST /bookstore/feelings, GET /bookstore/feeling_page?bookID=
+//   나의 서재:  POST /bookstore/feelings { bookId, feeling_content }, GET /bookstore/feeling_page?bookID=
 //   공동서재:   POST /shared-readings/{id}/reflections, GET /shared-readings/{id}/reflections?target=me|partner
 const isJoint = (book) => Number.isInteger(book?.jointId);
 const commentaryKey = (book, who = "me") => (isJoint(book) ? `joint-${book.jointId}-${who}` : book?.id);
@@ -269,7 +269,7 @@ export const syncCommentaries = async (book, who = "me") => {
   return list;
 };
 
-// 감상문을 쓴다. 백엔드(POST /bookstore/feelings: bookID, feeling_content → feeling_id, new_achievements)가 받아줬을 때만 저장한다.
+// 감상문을 쓴다. 백엔드(POST /bookstore/feelings { bookId, feeling_content } → feeling_id)가 받아줬을 때만 저장한다.
 // 서버의 책 번호(serverBookId)를 모르는 책은 보낼 수 없어서 "error". "saved" | "error"
 export const addCommentary = async (book, day, content) => {
   let ok;
@@ -277,7 +277,7 @@ export const addCommentary = async (book, day, content) => {
     ({ ok } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
   } else {
     if (!Number.isInteger(book.serverBookId)) return "error";
-    ({ ok } = await requestServer("POST", "/bookstore/feelings", { bookID: book.serverBookId, feeling_content: content }));
+    ({ ok } = await requestServer("POST", "/bookstore/feelings", { bookId: book.serverBookId, feeling_content: content }));
   }
   if (!ok) return "error";
   const key = commentaryKey(book);

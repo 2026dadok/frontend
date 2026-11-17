@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { fetchAuthorOtherBooks } from "./bookSearchApi";
 import { deleteMyReview, getMe, getReviews, saveMyReview, summarizeReviews, syncReviews, updateMyReview } from "./bookStore";
 import { Avatar, StarInput, Stars } from "./parts";
-import backIcon from "../../images/back.png";
 
 const formatDate = (iso) => {
   const d = new Date(iso);
@@ -15,7 +14,7 @@ const INTRO_FOLD_LENGTH = 160;
 
 // 3·4번 화면: 책 상세. 왼쪽은 고정, 오른쪽 카드만 스크롤된다.
 // 책이 바뀌면 부모에서 key={book.id} 로 새로 그린다.
-const BookDetail = ({ book, onBack, onReadNow, onAddMine, onAddShared, onOpenOther, showToast }) => {
+const BookDetail = ({ book, onReadNow, onAddMine, onAddShared, onOpenOther, showToast }) => {
   const me = getMe();
   const [reviews, setReviews] = useState(() => getReviews(book.id));
   const mine = reviews.find((r) => r.userKey === me.key);
@@ -124,10 +123,6 @@ const BookDetail = ({ book, onBack, onReadNow, onAddMine, onAddShared, onOpenOth
 
   return (
     <>
-      {/* 뒤로 가기: 들어온 곳(검색 결과·베스트셀러 목록, 홈의 이달의 추천 도서 등)으로 돌아간다 */}
-      <button type="button" className="bs-back" aria-label="뒤로 가기" onClick={onBack}>
-        <img src={backIcon} alt="" />
-      </button>
       <div className="bs-detail-left">
         <div className="bs-cover-card">
           <img src={book.cover} alt={book.title} />

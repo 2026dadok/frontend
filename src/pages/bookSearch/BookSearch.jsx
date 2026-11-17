@@ -12,6 +12,7 @@ import BookDetail from "./BookDetail";
 import CoInvite from "./CoInvite";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
+import backIcon from "../../images/back.png";
 import "./BookSearch.css";
 
 const START_TOAST_MS = 2500;
@@ -80,10 +81,12 @@ const BookSearch = () => {
     go({ q: next, view: null }, { book: null, replace: view === "results" && next === term });
   };
 
-  // 책 상세의 뒤로 가기. 앞 화면이 있으면 그리로(홈 추천 도서 → 홈, 검색 결과 → 검색 결과), 없으면(새로고침 등) 책 검색 목록으로
+  // 뒤로 가기 (모든 화면 왼쪽 위). 앞 화면이 있으면 그리로(홈 추천 도서 → 홈, 상세 → 검색 결과 등).
+  // 앞 화면이 없으면(새로고침·주소 직접 입력) 목록 화면은 홈으로, 나머지 화면은 책 검색 목록으로
   const goBack = () => {
     if ((window.history.state?.idx ?? 0) > 0) navigate(-1);
-    else go({ view: null }, { book: null, replace: true });
+    else if (view === "list") navigate(PATHS.main);
+    else go({ q: null, view: null }, { book: null, replace: true });
   };
 
   const openBook = (b) => {
@@ -144,6 +147,9 @@ const BookSearch = () => {
 
       <div className="bs-stage" style={{ "--s": scale }}>
         <div className="bs-canvas">
+          <button type="button" className="bs-back" aria-label="뒤로 가기" onClick={goBack}>
+            <img src={backIcon} alt="" />
+          </button>
           {showSearchBar && <SearchBar value={query} onChange={setQuery} onSubmit={handleSearch} />}
 
           {view === "list" && <BookList list={bestsellers} genre={genre} onGenreChange={setGenre} onOpen={openBook} />}
@@ -159,7 +165,6 @@ const BookSearch = () => {
             <BookDetail
               key={book.id}
               book={book}
-              onBack={goBack}
               onReadNow={readNow}
               onAddMine={addMine}
               onAddShared={openInvite}

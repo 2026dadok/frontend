@@ -5,7 +5,7 @@ import AuthBirth from "./AuthBirth";
 import AuthGoalTime from "./AuthGoalTime";
 import { signup } from "../../api/auth";
 
-const SignupFlow = ({ onComplete, onFindAccount }) => {
+const SignupFlow = ({ onComplete, onFindAccount, onBack }) => {
   const [step, setStep] = useState("signup");
   const [signupData, setSignupData] = useState({});
 
@@ -28,20 +28,15 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
   const handleGoalNext = async (values) => {
     const goal_time = `${values.HRS}:${values.MIN}`; // 시:분 (초는 받지 않는다)
 
+    // 백엔드 SignUpRequest(test 브랜치): { ID, password, name, email, birthdate("yyyy-MM-dd"), goal_time("HH:mm") }
     // 회원 테이블에는 닉네임이 없고 이름(name)과 아이디만 있다. 이름 칸에는 화면의 "닉네임" 입력을 보낸다.
-    // 백엔드 SignUpRequest 가 버전마다 키 이름이 달라서 두 가지 모양을 같이 보낸다 (모르는 키는 백엔드가 무시한다).
-    //   test 브랜치: ID, birthdate, goal_time("HH:mm")
-    //   다른 버전:   userId, birthDate, defaultTimerTime(초)
     const payload = {
-      name: signupData.nickname,
       ID: signupData.loginId,
-      userId: signupData.loginId,
       password: signupData.password,
+      name: signupData.nickname,
       email: signupData.email,
       birthdate: signupData.birthday,
-      birthDate: signupData.birthday,
       goal_time,
-      defaultTimerTime: Number(values.HRS) * 3600 + Number(values.MIN) * 60,
     };
 
     try {
@@ -62,6 +57,7 @@ const SignupFlow = ({ onComplete, onFindAccount }) => {
         <SignupForm
           onNext={handleSignupNext}
           onFindAccount={onFindAccount}
+          onBack={onBack}
         />
       )}
 

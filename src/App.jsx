@@ -18,15 +18,22 @@ import EditInfo from "./pages/myPage/EditInfo";
 import Timer from "./pages/timer/Timer";
 import Landing from "./pages/landing/Landing";
 import LegalPage from "./pages/legal/LegalPage";
-import Settings from "./pages/settings/Settings";
 import { PRIVACY, TERMS } from "./pages/legal/legalDocs";
+
+// 뒤로 가기: 앞 화면이 있으면 그리로, 주소로 바로 들어와 앞 화면이 없으면 로그인으로
+const useGoBack = () => {
+  const navigate = useNavigate();
+  return () => (window.history.state?.idx > 0 ? navigate(-1) : navigate(PATHS.login));
+};
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   return (
     <SignupFlow
       onComplete={() => navigate(PATHS.login, { replace: true })}
       onFindAccount={() => navigate(PATHS.find)}
+      onBack={goBack}
     />
   );
 };
@@ -55,10 +62,12 @@ const LoginPage = () => {
 
 const FindPage = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   return (
     <FindAccount
       onBackToLogin={() => navigate(PATHS.login)}
       onGoToSignup={() => navigate(PATHS.signup)}
+      onBack={goBack}
     />
   );
 };
@@ -94,7 +103,6 @@ const App = () => (
         <Route path={PATHS.review} element={<Review />} />
         <Route path={PATHS.sharedLibrary} element={<SharedLibraryPage />} />
         <Route path={PATHS.quote} element={<Quote />} />
-        <Route path={PATHS.settings} element={<Settings />} />
       </Route>
       {/* 없는 주소는 첫 화면으로 */}
       <Route path="*" element={<Navigate to={PATHS.guest} replace />} />
