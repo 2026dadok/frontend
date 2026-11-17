@@ -80,6 +80,12 @@ const BookSearch = () => {
     go({ q: next, view: null }, { book: null, replace: view === "results" && next === term });
   };
 
+  // 책 상세의 뒤로 가기. 앞 화면이 있으면 그리로(홈 추천 도서 → 홈, 검색 결과 → 검색 결과), 없으면(새로고침 등) 책 검색 목록으로
+  const goBack = () => {
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1);
+    else go({ view: null }, { book: null, replace: true });
+  };
+
   const openBook = (b) => {
     go({ view: "detail" }, { book: b });
   };
@@ -153,6 +159,7 @@ const BookSearch = () => {
             <BookDetail
               key={book.id}
               book={book}
+              onBack={goBack}
               onReadNow={readNow}
               onAddMine={addMine}
               onAddShared={openInvite}
