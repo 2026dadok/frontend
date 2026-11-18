@@ -173,6 +173,10 @@ const Review = () => {
     setSaving(true);
     const result = await addCommentary(book, writeDay, content);
     setSaving(false);
+    if (result === "duplicate") {
+      showToast("오늘의 감상문은 이미 작성했어요.");
+      return;
+    }
     if (result !== "saved") {
       showToast("감상문을 저장하지 못했어요.");
       return;

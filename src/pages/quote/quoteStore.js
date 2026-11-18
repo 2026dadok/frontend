@@ -1,6 +1,6 @@
 // 인용구 노트. 기준은 백엔드이고 메모리에 화면용 사본을 둔다 (브라우저 저장소에는 남기지 않는다). 홈의 "오늘의 문장"도 같은 사본을 읽는다.
 //   항목: { id, text, bookId, book(책 제목), author, page, date(ISO), createdAt, favorite, serverNoteId }
-// 백엔드 명세서(모두 /bookstore/notes). 코드가 아직 GitHub 에 올라오지 않아 응답 필드 이름은 명세서 기준이다:
+// 백엔드(모두 /bookstore/notes, 목록은 GET /bookstore/note_page → { notes: [...] }):
 //   작성 POST   (bookID, book_page, date, note_content) → note_id, new_achievements
 //   수정 PUT    (note_ID, book_page, date, note_content) → message
 //   삭제 DELETE (note_ID)                               → message

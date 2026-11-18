@@ -19,7 +19,7 @@ const readSession = () => {
   }
 };
 
-let session = readSession(); // { token, refreshToken, user }
+let session = readSession(); // { token, user }
 
 const saveSession = () => {
   try {
@@ -33,7 +33,7 @@ const saveSession = () => {
 export const getToken = () => session.token ?? "";
 
 // 토큰(JWT) 안의 만료 시각(exp)이 지났는지. 읽을 수 없는 토큰이면 만료로 보지 않는다 (서버가 판단).
-// 백엔드는 만료된 토큰으로 /library·/shared-readings 를 부르면 401 이 아니라 403 을 줘서, 응답만으로는 만료를 알 수 없다.
+// 만료되면 api/client.js 가 /auth/refresh 로 먼저 재발급을 시도한다.
 export const isTokenExpired = () => {
   try {
     const payload = session.token?.split(".")[1];
@@ -47,8 +47,17 @@ export const isTokenExpired = () => {
 export const getSessionUser = () => session.user ?? {};
 
 // 로그인 성공 시
-export const startSession = ({ token, refreshToken, user }) => {
-  session = { token, refreshToken: refreshToken ?? null, user: user ?? {} };
+// refresh 토큰은 백엔드가 httpOnly 쿠키로 관리하므로 브라우저 저장소에 두지 않는다.
+// 다른 계정의 화면 데이터가 남지 않게 메모리 사본도 비운다.
+export const startSession = ({ token, user }) => {
+  memory.clear();
+  session = { token, user: user ?? {} };
+  saveSession();
+};
+
+// 토큰 재발급(POST /auth/refresh) 후 새 access 토큰으로 바꾼다
+export const updateToken = (token) => {
+  session = { ...session, token };
   saveSession();
 };
 

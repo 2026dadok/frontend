@@ -89,6 +89,7 @@ const mergeServerBook = (raw, cached) => {
     totalPage,
     readPage,
     completed: Boolean(raw.finished) || (totalPage ? readPage >= totalPage : false),
+    addedAt: raw.created_at ?? raw.started_at ?? cached?.addedAt ?? new Date().toISOString(), // 서재에 담은 날짜 (서버 created_at)
   };
 };
 
@@ -131,13 +132,17 @@ export const addToMyLibrary = async (book) => {
   if (!isLoggedIn()) return "login";
   const list = getMyLibrary();
   if (findInMyLibrary(book)) return "exists";
-  const { ok, data } = await requestServer("POST", "/library/books", {
+  const { ok, status, data } = await requestServer("POST", "/library/books", {
     title: book.title,
     author: book.author,
     total_page: book.pages,
     isbn: book.isbn,
     cover_url: book.cover,
   });
+  if (status === 409) {
+    await syncMyLibrary(); // 서버에는 이미 있는데 화면 사본이 오래된 경우
+    return "exists";
+  }
   if (!ok) return "error"; // 서재는 서버에 저장되어야 한다 (브라우저에만 담지 않는다)
   const serverBookId = toInt(data?.book_id ?? null);
   if (!write(KEYS.myLibrary, [{ ...toShelfBook(book), serverBookId }, ...list])) return "error";
@@ -210,18 +215,19 @@ export const fetchJointDetail = async (record) => {
 
 // 함께 읽기 만들기·초대: POST /shared-readings. 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
 // 요청: { partnerUserId(친구 아이디), partnerName(친구 이름), bookId } — bookId 가 없으면 title·author·total_page·isbn 으로 책을 찾는다.
-export const requestCoReading = async (friendId, friendName, book) =>
-  (
-    await requestServer("POST", "/shared-readings", {
-      partnerUserId: friendId,
-      partnerName: friendName,
-      bookId: book?.serverBookId ?? null,
-      title: book?.title,
-      author: book?.author,
-      total_page: book?.pages ?? book?.totalPage,
-      isbn: book?.isbn,
-    })
-  ).ok;
+// { ok, status } — status 로 실패 이유를 구분한다 (400 본인, 404 아이디·이름 불일치, 409 이미 함께 읽는 중)
+export const requestCoReading = async (friendId, friendName, book) => {
+  const { ok, status } = await requestServer("POST", "/shared-readings", {
+    partnerUserId: friendId,
+    partnerName: friendName,
+    bookId: book?.serverBookId ?? null,
+    title: book?.title,
+    author: book?.author,
+    total_page: book?.pages ?? book?.totalPage,
+    isbn: book?.isbn,
+  });
+  return { ok, status };
+};
 
 // ───────── 감상문 ─────────
 // 감상문: { day, content, date } 목록 (사본). 서버 값으로 맞추려면 syncCommentaries() 를 부른다.
@@ -270,15 +276,17 @@ export const syncCommentaries = async (book, who = "me") => {
 };
 
 // 감상문을 쓴다. 백엔드(POST /bookstore/feelings { bookId, feeling_content } → feeling_id)가 받아줬을 때만 저장한다.
-// 서버의 책 번호(serverBookId)를 모르는 책은 보낼 수 없어서 "error". "saved" | "error"
+// 서버의 책 번호(serverBookId)를 모르는 책은 보낼 수 없어서 "error". "saved" | "duplicate" | "error"
 export const addCommentary = async (book, day, content) => {
   let ok;
+  let status;
   if (isJoint(book)) {
-    ({ ok } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
+    ({ ok, status } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
   } else {
     if (!Number.isInteger(book.serverBookId)) return "error";
-    ({ ok } = await requestServer("POST", "/bookstore/feelings", { bookId: book.serverBookId, feeling_content: content }));
+    ({ ok, status } = await requestServer("POST", "/bookstore/feelings", { bookId: book.serverBookId, feeling_content: content }));
   }
+  if (status === 409) return "duplicate"; // 공동서재 감상문은 하루 한 번
   if (!ok) return "error";
   const key = commentaryKey(book);
   const all = read(KEYS.commentaries, {});

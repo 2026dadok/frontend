@@ -123,4 +123,10 @@ export const resetImage = async (kind) => {
   return { ok, url: ok ? data?.image_url ?? "" : "" };
 };
 
-export const formatHours = (minutes) => `${Math.floor(minutes / 60)}시간`;
+// 1시간 미만은 분, 이상은 "N시간 M분"
+export const formatHours = (minutes) => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}분`;
+  return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
+};

@@ -2,7 +2,7 @@
 // GET /main/week_competition → { tier, competitors_books, my_rank, ranking, reading_book, last_week_result }
 //   순위 한 줄: { rank(0분이면 null), nickname, title, profile_image, total_seconds, minutes, is_me }
 //   지난주 결과: { rank, gained_xp }
-// competitors_books·reading_book 은 백엔드가 아직 빈 값으로 준다 (책 정보 연결 전). 채워지면 아래 책 함수들이 YES24 표지를 붙인다.
+// competitors_books·reading_book 은 { book_id, title, author, cover_url, isbn, total_page (+ read_page, percent) }. 표지가 없으면 YES24 에서 찾는다.
 
 import { apiFetch, authHeaders, isLoggedIn, pick } from "../../api/client";
 import { searchBooks } from "../bookSearch/bookSearchApi";

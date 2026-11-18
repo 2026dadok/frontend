@@ -86,9 +86,13 @@ const Timer = () => {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [toast, showToast] = useToast();
 
+  // 목표 시간 응답이 늦게 와도, 이미 읽기를 시작했거나 직접 바꿨으면 덮어쓰지 않는다
+  const goalTouchedRef = useRef(false);
   useEffect(() => {
     let alive = true;
-    fetchGoalTime().then((value) => alive && setGoal(value));
+    fetchGoalTime().then((value) => {
+      if (alive && !goalTouchedRef.current) setGoal(value);
+    });
     return () => {
       alive = false;
     };
@@ -102,6 +106,7 @@ const Timer = () => {
       showToast("목표 시간을 입력해주세요.");
       return;
     }
+    goalTouchedRef.current = true;
     setGoal(normalizeGoalTime(goal));
     setStep("reading");
     setRunning(true);
@@ -135,6 +140,12 @@ const Timer = () => {
       showToast(total ? `1 ~ ${total} 사이의 쪽수를 입력해주세요.` : "읽은 쪽수를 입력해주세요.");
       return;
     }
+    // 서버는 이전 진행도보다 낮은 쪽수를 받지 않는다
+    const minPage = Number(book.readPage) || 0;
+    if (readPage < minPage) {
+      showToast(`지난번에 ${minPage}쪽까지 읽었어요. ${minPage}쪽 이상으로 입력해주세요.`);
+      return;
+    }
     setSaving(true);
     // 읽은 시간·쪽수는 서버의 책 번호로 저장한다. 서재에 없는 책(책 검색의 '바로 읽기')이면 먼저 나의 서재에 담는다
     let target = book;
@@ -150,6 +161,9 @@ const Timer = () => {
       showToast("독서 기록을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
       return;
     }
+    // 하나만 실패하면 다시 저장하면 다른 쪽이 중복되므로, 알리고 넘어간다
+    if (!timeSaved) alert("읽은 쪽수는 저장했지만 읽은 시간은 저장하지 못했어요.");
+    if (!pagesSaved) alert("읽은 시간은 저장했지만 쪽수는 저장하지 못했어요.");
     updateShelfBook(target.id, { readPage });
     navigate(`${PATHS.review}?write=1`, { state: { book: target } });
   };
@@ -182,7 +196,14 @@ const Timer = () => {
       return (
         <>
           <p className="tm-question">오늘의 목표 시간은 무엇인가요?</p>
-          <GoalTimeInput className="tm-time" value={goal} onChange={setGoal} />
+          <GoalTimeInput
+            className="tm-time"
+            value={goal}
+            onChange={(value) => {
+              goalTouchedRef.current = true;
+              setGoal(value);
+            }}
+          />
           <div className="tm-buttons">
             <button type="button" onClick={start}>시작하기</button>
             <button type="button" onClick={() => navigate(-1)}>돌아가기</button>
