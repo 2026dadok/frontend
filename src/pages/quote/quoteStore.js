@@ -7,7 +7,7 @@
 // bookID 는 데이터베이스에 저장된 책의 고유 번호(서재에 담을 때 서버가 준 book_id). 인용구는 200자 이하(DB varchar 200).
 // 즐겨찾기는 백엔드에 없어서 메모리에서만 처리한다 (새로 열면 사라진다). TODO: 백엔드에 즐겨찾기 저장 API 요청
 
-import { isLoggedIn, pick, requestServer } from "../../api/client";
+import { isLoggedIn, notifyAchievements, pick, requestServer } from "../../api/client";
 import { memRead, memWrite } from "../../api/session";
 
 const KEY = "quotes";
@@ -70,6 +70,7 @@ export const addQuote = async ({ book, page, text }) => {
     note_content: text,
   });
   if (!ok) return "error";
+  notifyAchievements(data?.new_achievements);
   // 응답에서 인용구 번호(note_id)를 찾는다. TODO: 응답 안에서의 위치(최상위 / data 안)는 백엔드와 확인
   const raw = data?.note_id ?? data?.data?.note_id ?? null;
   const serverNoteId = raw !== null && Number.isInteger(Number(raw)) ? Number(raw) : null;

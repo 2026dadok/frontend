@@ -32,17 +32,25 @@ const saveSession = () => {
 
 export const getToken = () => session.token ?? "";
 
+// 토큰(JWT) 가운데 부분(payload)을 읽는다. 읽을 수 없으면 null
+const readPayload = (token) => {
+  try {
+    const payload = token?.split(".")[1];
+    if (!payload) return null;
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+};
+
+// 토큰의 주인(로그인 아이디, JWT sub). 읽을 수 없으면 ""
+export const tokenUserId = (token = session.token) => String(readPayload(token)?.sub ?? "");
+
 // 토큰(JWT) 안의 만료 시각(exp)이 지났는지. 읽을 수 없는 토큰이면 만료로 보지 않는다 (서버가 판단).
 // 만료되면 api/client.js 가 /auth/refresh 로 먼저 재발급을 시도한다.
 export const isTokenExpired = () => {
-  try {
-    const payload = session.token?.split(".")[1];
-    if (!payload) return false;
-    const { exp } = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-    return typeof exp === "number" && exp * 1000 <= Date.now();
-  } catch {
-    return false;
-  }
+  const exp = readPayload(session.token)?.exp;
+  return typeof exp === "number" && exp * 1000 <= Date.now();
 };
 export const getSessionUser = () => session.user ?? {};
 

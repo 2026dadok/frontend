@@ -1,5 +1,5 @@
 // 백엔드를 부를 때 공통으로 쓰는 것들.
-import { endSession, getToken, isTokenExpired, updateToken } from "./session";
+import { endSession, getToken, isTokenExpired, tokenUserId, updateToken } from "./session";
 import { PATHS } from "../routes";
 
 // 서버가 이 시간 안에 답하지 않으면 포기한다 (안 그러면 화면이 "불러오는 중"에서 멈춘다)
@@ -23,6 +23,10 @@ const refreshToken = () => {
         if (!res.ok) return false;
         const data = await res.json().catch(() => null);
         if (!data?.accessToken) return false;
+        // refresh 쿠키는 브라우저에 하나라서, 다른 탭에서 다른 계정으로 로그인하면 그 계정 토큰이 온다.
+        // 지금 탭의 계정과 다르면 받지 않고 로그인 만료로 처리한다
+        const before = tokenUserId();
+        if (before && tokenUserId(data.accessToken) !== before) return false;
         updateToken(data.accessToken);
         return true;
       })
@@ -95,3 +99,10 @@ export const requestServer = async (method, url, body) => {
 // 응답 필드 이름이 아직 정해지지 않은 곳에서 쓴다. 후보 이름 중 값이 있는 첫 번째를 돌려준다.
 // 예: pick(raw, "name", "user_name")
 export const pick = (obj, ...names) => names.map((n) => obj?.[n]).find((v) => v != null && v !== "");
+
+// 응답의 new_achievements(이번에 달성한 업적 이름 목록)가 있으면 알린다.
+// 화면의 저장 처리(알림·이동)가 먼저 끝나도록 다음 차례에 띄운다
+export const notifyAchievements = (list) => {
+  const names = Array.isArray(list) ? list.filter((n) => typeof n === "string" && n) : [];
+  if (names.length) setTimeout(() => alert(`업적을 달성했어요: ${names.join(", ")}`), 0);
+};

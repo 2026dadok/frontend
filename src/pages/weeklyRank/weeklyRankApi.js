@@ -48,7 +48,7 @@ const loadCompetitorBooks = async (list) => {
   return books.filter((b) => b?.cover);
 };
 
-// 오른쪽 카드: 나의 서재에서 최근에 읽고 있는 책. { id, title, cover, readPage, totalPage, percent }
+// 오른쪽 카드: 나의 서재(없으면 공동서재)에서 최근에 읽고 있는 책. { id, title, cover, readPage, totalPage, percent }
 const loadReadingBook = async (raw) => {
   if (!raw) return null;
   const book = await withCover(raw);
@@ -60,6 +60,7 @@ const loadReadingBook = async (raw) => {
     ...book,
     id: String(pick(raw, "book_id", "bookID", "id") ?? book.id ?? ""),
     serverBookId: toNumber(pick(raw, "book_id", "bookID")), // 타이머가 읽은 시간·쪽수를 서버에 보낼 때 쓴다
+    jointId: toNumber(pick(raw, "shared_reading_id")) ?? undefined, // 공동서재 책이면 쪽수를 공동서재로 보낸다
     readPage,
     totalPage,
     percent: Math.max(0, Math.min(100, percent)),

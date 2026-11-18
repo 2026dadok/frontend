@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { PATHS } from "./routes";
 import { startSession } from "./api/session";
+import { flushPendingRead } from "./pages/timer/pendingRead";
 import { isLoggedIn } from "./api/client";
 import SignupFlow from "./pages/auth/SignupFlow";
 import LoginForm from "./pages/auth/LoginForm";
@@ -56,6 +57,10 @@ const LoginPage = () => {
         delete profile.accessToken;
         delete profile.refreshToken;
         startSession({ token: data.accessToken, user: profile });
+        // 로그인 만료로 저장하지 못한 독서 기록이 있으면 보낸다
+        flushPendingRead().then((sent) => {
+          if (sent) alert("로그인 전에 저장하지 못한 독서 기록을 저장했어요.");
+        });
         navigate(PATHS.main, { replace: true });
       }}
     />

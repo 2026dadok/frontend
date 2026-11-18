@@ -9,6 +9,8 @@ import { addToMyLibrary, findInMyLibrary, updateShelfBook } from "../bookSearch/
 import { QuoteAddModal } from "../quote/QuoteModals";
 import { addQuote } from "../quote/quoteStore";
 import { addStudyTime, fetchGoalTime, saveReadPages } from "./timerApi";
+import { clearPendingRead, markPendingRead, savePendingRead } from "./pendingRead";
+import { isLoggedIn } from "../../api/client";
 import moleImg from "../../images/dokddage.png";
 import "../bookSearch/BookSearch.css"; // .bs 버튼·알림 스타일을 같이 쓴다
 import "../quote/Quote.css"; // 인용구 쓰기 팝업
@@ -155,8 +157,21 @@ const Timer = () => {
       target = shelf ? { ...book, ...shelf } : book;
     }
     const seconds = Math.round(elapsed); // 서버에는 초 단위로 보낸다
-    const [timeSaved, pagesSaved] = await Promise.all([addStudyTime(target.serverBookId, seconds), saveReadPages(target, readPage)]);
+    // 저장 중에 로그인이 만료되면 로그인 화면으로 넘어가므로, 보내기 전에 기록을 보관해 둔다 (다시 로그인하면 전송)
+    savePendingRead({ bookId: target.serverBookId, jointId: target.jointId, seconds, readPage });
+    const [timeSaved, pagesSaved] = await Promise.all([
+      addStudyTime(target.serverBookId, seconds).then((ok) => {
+        if (ok) markPendingRead("time");
+        return ok;
+      }),
+      saveReadPages(target, readPage).then((ok) => {
+        if (ok) markPendingRead("pages");
+        return ok;
+      }),
+    ]);
     setSaving(false);
+    if (!isLoggedIn()) return; // 로그인 만료: 보관한 기록은 다시 로그인한 뒤 보낸다
+    clearPendingRead();
     if (!timeSaved && !pagesSaved) {
       showToast("독서 기록을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
       return;
