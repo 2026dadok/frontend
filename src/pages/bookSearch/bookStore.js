@@ -282,7 +282,7 @@ export const addCommentary = async (book, day, content) => {
   let status;
   let data;
   if (isJoint(book)) {
-    ({ ok, status } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
+    ({ ok, status, data } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
   } else {
     if (!Number.isInteger(book.serverBookId)) return "error";
     ({ ok, status, data } = await requestServer("POST", "/bookstore/feelings", { bookId: book.serverBookId, feeling_content: content }));
