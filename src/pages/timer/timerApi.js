@@ -5,7 +5,7 @@
 // 읽은 시간만 보내면 백엔드가 오늘 읽은 시간을 합쳐서 퀘스트 달성 여부를 계산하고,
 // 홈의 퀘스트 목록(GET /quests/daily)에 done 값으로 내려준다.
 
-import { requestServer } from "../../api/client";
+import { notifyAchievements, requestServer } from "../../api/client";
 
 // 이번에 읽은 시간을 백엔드에 보낸다: POST /times { bookId, readTime } → message, today_readtime
 // readTime 은 초 단위(1초 ~ 6시간). bookId 는 서재에 담을 때 서버가 준 책 번호(book_id)다. 성공하면 true
@@ -29,10 +29,15 @@ export const fetchGoalTime = async () => {
 // 오늘 어디까지 읽었는지 보낸다. 성공하면 true
 //   나의 서재 책: PUT /library/books/{bookId}/progress { currentPage }
 //   공동서재 책(jointId 가 있는 책): PUT /shared-readings/{id}/progress (currentPage)
+// 이번 저장으로 완독해서 업적을 달성했으면 알린다 (응답의 new_achievements)
 export const saveReadPages = async (book, readPages) => {
+  let result;
   if (Number.isInteger(book?.jointId)) {
-    return (await requestServer("PUT", `/shared-readings/${book.jointId}/progress`, { currentPage: readPages })).ok;
+    result = await requestServer("PUT", `/shared-readings/${book.jointId}/progress`, { currentPage: readPages });
+  } else {
+    if (!Number.isInteger(book?.serverBookId)) return false;
+    result = await requestServer("PUT", `/library/books/${book.serverBookId}/progress`, { currentPage: readPages });
   }
-  if (!Number.isInteger(book?.serverBookId)) return false;
-  return (await requestServer("PUT", `/library/books/${book.serverBookId}/progress`, { currentPage: readPages })).ok;
+  if (result.ok) notifyAchievements(result.data?.new_achievements);
+  return result.ok;
 };
