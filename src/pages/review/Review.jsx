@@ -178,6 +178,10 @@ const Review = () => {
     setSaving(true);
     const result = await addCommentary(book, writeDay, content);
     setSaving(false);
+    if (result === "duplicate") {
+      showToast("오늘의 감상문은 이미 작성했어요.");
+      return;
+    }
     if (result !== "saved") {
       // TODO: 백엔드 main 은 감상문을 300자까지만 받는다. 1000자로 늘려 달라고 요청함
       showToast(content.length > 300 ? "지금은 300자까지만 저장할 수 있어요." : "감상문을 저장하지 못했어요.");

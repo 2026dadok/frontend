@@ -68,9 +68,11 @@ export const fetchMyPage = async () => {
 
 export const fetchEditPage = async () => {
   const needLogin = !isLoggedIn();
-  const data = needLogin ? {} : (await load("/users/edit_page")) ?? {};
+  const loaded = needLogin ? {} : await load("/users/edit_page");
+  const data = loaded ?? {};
   return {
     needLogin,
+    loadFailed: !needLogin && loaded == null, // 불러오지 못했으면 화면은 저장을 막는다
     id: data.ID ?? getSavedUser().ID ?? "",
     name: data.name ?? "",
     birthdate: data.birthdate ?? "",
@@ -81,16 +83,17 @@ export const fetchEditPage = async () => {
   };
 };
 
-// 회원정보 저장. 비밀번호는 바꿀 때만 보낸다. 성공하면 true
+// 회원정보 저장. 비밀번호는 바꿀 때만 보낸다. { ok, message } (message 는 서버가 보낸 실패 이유)
 // 백엔드: 비밀번호를 바꿀 때는 current_password 가 맞아야 한다 (없거나 틀리면 거절)
 export const saveEditInfo = async ({ name, birthdate, goalTime, password, currentPassword }) => {
   const body = { name, birthdate, goal_time: goalTime }; // 이메일은 바꿀 수 없어서 보내지 않는다
   if (password) {
-    if (passwordRuleError(password)) return false; // 8~50자가 아니면 백엔드로 보내지 않는다
+    if (passwordRuleError(password)) return { ok: false, message: passwordRuleError(password) }; // 8~50자가 아니면 백엔드로 보내지 않는다
     body.current_password = currentPassword;
     body.new_password = password;
   }
-  return (await requestServer("PUT", "/users/edit_info", body)).ok;
+  const { ok, status, data } = await requestServer("PUT", "/users/edit_info", body);
+  return { ok, message: status === 400 && typeof data?.message === "string" ? data.message : "" };
 };
 
 // 이름 앞에 붙일 업적을 고른다. 성공하면 true
@@ -123,4 +126,10 @@ export const resetImage = async (kind) => {
   return { ok, url: ok ? data?.image_url ?? "" : "" };
 };
 
-export const formatHours = (minutes) => `${Math.floor(minutes / 60)}시간`;
+// 1시간 미만은 분, 이상은 "N시간 M분"
+export const formatHours = (minutes) => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}분`;
+  return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
+};

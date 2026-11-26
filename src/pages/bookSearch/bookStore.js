@@ -8,7 +8,7 @@
 // 출판사·책 소개는 백엔드 책 데이터에 없어서 사본에 같이 둔다 (표지가 없으면 YES24 에서 찾아 채운다).
 // 필드 이름은 백엔드(test 브랜치) 응답 그대로다.
 
-import { isLoggedIn, requestServer } from "../../api/client";
+import { isLoggedIn, notifyAchievements, requestServer } from "../../api/client";
 import { getSessionUser, memRead, memWrite } from "../../api/session";
 import { searchBooks } from "./bookSearchApi";
 
@@ -75,7 +75,7 @@ const fillFromYes24 = async (book) => {
 // 서버의 책 한 권 + 사본에 있던 같은 책(서버 번호로 찾는다) → 화면용 책
 // 나의 서재: { libraryBookId, book_id, book_title, author, cover_url, total_page, read_page, finished }
 //   book_id = 책 번호(쪽수·읽은 시간·리뷰에 쓴다), libraryBookId = 내 서재에 담긴 칸의 번호(AI 감상문 lib_book_id 에 쓴다)
-// 공동서재도 book_id, book_title, cover_url, total_page 를 같은 이름으로 준다 (author·read_page 는 없다)
+// 공동서재도 book_id, book_title, cover_url, total_page, read_page(내 쪽수) 를 같은 이름으로 준다 (author 는 없다)
 const mergeServerBook = (raw, cached) => {
   const serverBookId = toInt(raw.book_id);
   const totalPage = toInt(raw.total_page) ?? cached?.totalPage ?? null;
@@ -91,6 +91,7 @@ const mergeServerBook = (raw, cached) => {
     totalPage,
     readPage,
     completed: Boolean(raw.finished) || (totalPage ? readPage >= totalPage : false),
+    addedAt: raw.created_at ?? raw.started_at ?? cached?.addedAt ?? new Date().toISOString(), // 서재에 담은 날짜 (서버 created_at)
   };
 };
 
@@ -133,13 +134,17 @@ export const addToMyLibrary = async (book) => {
   if (!isLoggedIn()) return "login";
   const list = getMyLibrary();
   if (findInMyLibrary(book)) return "exists";
-  const { ok, data } = await requestServer("POST", "/library/books", {
+  const { ok, status, data } = await requestServer("POST", "/library/books", {
     title: book.title,
     author: book.author,
     total_page: book.pages,
     isbn: book.isbn,
     cover_url: book.cover,
   });
+  if (status === 409) {
+    await syncMyLibrary(); // 서버에는 이미 있는데 화면 사본이 오래된 경우
+    return "exists";
+  }
   if (!ok) return "error"; // 서재는 서버에 저장되어야 한다 (브라우저에만 담지 않는다)
   const serverBookId = toInt(data?.book_id ?? null);
   const libBookId = toInt(data?.libraryBookId ?? null);
@@ -213,18 +218,19 @@ export const fetchJointDetail = async (record) => {
 
 // 함께 읽기 만들기·초대: POST /shared-readings. 친구가 실제 사용자일 때만 서버가 성공을 돌려준다.
 // 요청: { partnerUserId(친구 아이디), partnerName(친구 이름), bookId } — bookId 가 없으면 title·author·total_page·isbn 으로 책을 찾는다.
-export const requestCoReading = async (friendId, friendName, book) =>
-  (
-    await requestServer("POST", "/shared-readings", {
-      partnerUserId: friendId,
-      partnerName: friendName,
-      bookId: book?.serverBookId ?? null,
-      title: book?.title,
-      author: book?.author,
-      total_page: book?.pages ?? book?.totalPage,
-      isbn: book?.isbn,
-    })
-  ).ok;
+// { ok, status } — status 로 실패 이유를 구분한다 (400 본인, 404 아이디·이름 불일치, 409 이미 함께 읽는 중)
+export const requestCoReading = async (friendId, friendName, book) => {
+  const { ok, status } = await requestServer("POST", "/shared-readings", {
+    partnerUserId: friendId,
+    partnerName: friendName,
+    bookId: book?.serverBookId ?? null,
+    title: book?.title,
+    author: book?.author,
+    total_page: book?.pages ?? book?.totalPage,
+    isbn: book?.isbn,
+  });
+  return { ok, status };
+};
 
 // ───────── 감상문 ─────────
 // 감상문: { day, content, date } 목록 (사본). 서버 값으로 맞추려면 syncCommentaries() 를 부른다.
@@ -273,16 +279,20 @@ export const syncCommentaries = async (book, who = "me") => {
 };
 
 // 감상문을 쓴다. 백엔드(POST /bookstore/feelings { bookId, feeling_content } → feeling_id)가 받아줬을 때만 저장한다.
-// 서버의 책 번호(serverBookId)를 모르는 책은 보낼 수 없어서 "error". "saved" | "error"
+// 서버의 책 번호(serverBookId)를 모르는 책은 보낼 수 없어서 "error". "saved" | "duplicate" | "error"
 export const addCommentary = async (book, day, content) => {
   let ok;
+  let status;
+  let data;
   if (isJoint(book)) {
-    ({ ok } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
+    ({ ok, status, data } = await requestServer("POST", `/shared-readings/${book.jointId}/reflections`, { content }));
   } else {
     if (!Number.isInteger(book.serverBookId)) return "error";
-    ({ ok } = await requestServer("POST", "/bookstore/feelings", { bookId: book.serverBookId, feeling_content: content }));
+    ({ ok, status, data } = await requestServer("POST", "/bookstore/feelings", { bookId: book.serverBookId, feeling_content: content }));
   }
+  if (status === 409) return "duplicate"; // 공동서재 감상문은 하루 한 번
   if (!ok) return "error";
+  notifyAchievements(data?.new_achievements);
   const key = commentaryKey(book);
   const all = read(KEYS.commentaries, {});
   const list = (all[key] ?? []).filter((c) => c.day !== day); // 같은 일차는 하나만

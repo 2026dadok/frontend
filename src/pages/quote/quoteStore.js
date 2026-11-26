@@ -8,7 +8,7 @@
 // bookId 는 서재에 담을 때 서버가 준 책 번호(book_id). 인용구는 200자 이하.
 // 즐겨찾기는 백엔드에 없어서 메모리에서만 처리한다 (새로 열면 사라진다). TODO: 백엔드에 즐겨찾기 저장 API 요청
 
-import { isLoggedIn, requestServer } from "../../api/client";
+import { isLoggedIn, notifyAchievements, requestServer } from "../../api/client";
 import { memRead, memWrite } from "../../api/session";
 
 const KEY = "quotes";
@@ -70,6 +70,7 @@ export const addQuote = async ({ book, page, text }) => {
     note_content: text,
   });
   if (!ok) return "error";
+  notifyAchievements(data?.new_achievements);
   const raw = data?.note_id ?? null;
   const serverNoteId = raw !== null && Number.isInteger(Number(raw)) ? Number(raw) : null;
   const item = {

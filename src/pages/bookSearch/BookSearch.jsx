@@ -118,10 +118,15 @@ const BookSearch = () => {
       return;
     }
     setStarting(true);
-    const sent = await requestCoReading(id, name, { ...book, ...findInMyLibrary(book) });
+    const { ok, status } = await requestCoReading(id, name, { ...book, ...findInMyLibrary(book) });
     setStarting(false);
-    if (!sent) {
-      showToast("함께 읽기를 요청하지 못했어요. 아이디를 확인해주세요.");
+    if (!ok) {
+      const message = {
+        400: "입력한 친구 정보나 책 정보를 다시 확인해주세요.",
+        404: "아이디와 이름이 맞는 친구 또는 책을 찾지 못했어요.",
+        409: "이 친구와 이미 이 책을 함께 읽고 있어요.",
+      }[status] ?? "함께 읽기를 요청하지 못했어요. 잠시 후 다시 시도해주세요.";
+      showToast(message);
       return;
     }
     syncSharedLibrary();

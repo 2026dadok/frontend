@@ -2,7 +2,7 @@
 // GET /main/week_competition → { tier, competitors_books, my_rank, ranking, reading_book, last_week_result }
 //   순위 한 줄: { rank(0분이면 null), nickname, title, profile_image, total_seconds, minutes, is_me }
 //   지난주 결과: { rank, gained_xp }
-// competitors_books·reading_book 은 백엔드가 아직 빈 값으로 준다 (책 정보 연결 전). 채워지면 아래 책 함수들이 YES24 표지를 붙인다.
+// competitors_books·reading_book 은 { book_id, title, author, cover_url, isbn, total_page (+ read_page, percent) }. 표지가 없으면 YES24 에서 찾는다.
 
 import { apiFetch, authHeaders, isLoggedIn, pick } from "../../api/client";
 import { searchBooks } from "../bookSearch/bookSearchApi";
@@ -48,7 +48,7 @@ const loadCompetitorBooks = async (list) => {
   return books.filter((b) => b?.cover);
 };
 
-// 오른쪽 카드: 나의 서재에서 최근에 읽고 있는 책. { id, title, cover, readPage, totalPage, percent }
+// 오른쪽 카드: 나의 서재(없으면 공동서재)에서 최근에 읽고 있는 책. { id, title, cover, readPage, totalPage, percent }
 const loadReadingBook = async (raw) => {
   if (!raw) return null;
   const book = await withCover(raw);
@@ -60,6 +60,7 @@ const loadReadingBook = async (raw) => {
     ...book,
     id: String(pick(raw, "book_id", "bookID", "id") ?? book.id ?? ""),
     serverBookId: toNumber(pick(raw, "book_id", "bookID")), // 타이머가 읽은 시간·쪽수를 서버에 보낼 때 쓴다
+    jointId: toNumber(pick(raw, "shared_reading_id")) ?? undefined, // 공동서재 책이면 쪽수를 공동서재로 보낸다
     readPage,
     totalPage,
     percent: Math.max(0, Math.min(100, percent)),

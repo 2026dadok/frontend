@@ -88,6 +88,7 @@ const toBook = (item) => {
     intro,
     pages: item.pages ?? null, // detail=Y 일 때만 내려온다. 없으면 null
     link: item.link ?? "",
+    isbn: item.isbn13 ?? item.isbn ?? undefined, // 서재·공동서재 등록 때 같은 책을 찾는 기준
   };
 };
 

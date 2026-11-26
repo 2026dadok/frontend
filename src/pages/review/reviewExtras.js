@@ -1,5 +1,5 @@
 // 감상문 화면들(감상문, AI 감상문, 홈, 타이머)이 같이 쓰는 것들.
-import { memRead, memWrite } from "../../api/session";
+import { memRead, memWrite, tokenUserId } from "../../api/session";
 import { daysSince } from "../bookSearch/bookStore";
 
 // ───────── 일차 계산 ─────────
@@ -52,10 +52,11 @@ export const pageRangeOf = (book, entryOrDate) => {
 // localStorage 는 쓰지 않는다 → sessionStorage (새로고침해도 남고, 탭을 닫으면 사라진다)
 const DRAFT_KEY = "dadok.reviewDraft";
 
+// 같은 탭에서 다른 계정으로 로그인하면 이전 계정의 글은 보여주지 않는다 (owner = 로그인 아이디)
 export const getDraft = () => {
   try {
     const draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY));
-    return draft?.book && draft.content ? draft : null;
+    return draft?.book && draft.content && draft.owner === tokenUserId() ? draft : null;
   } catch {
     return null;
   }
@@ -70,7 +71,7 @@ const slimBook = (b) => ({
 export const saveDraft = (book, day, content) => {
   try {
     if (!content.trim()) sessionStorage.removeItem(DRAFT_KEY);
-    else sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ book: slimBook(book), day, content }));
+    else sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ owner: tokenUserId(), book: slimBook(book), day, content }));
   } catch {
     // 저장이 막힌 브라우저에서는 이어쓰기를 하지 않는다
   }

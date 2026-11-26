@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { PATHS } from "./routes";
 import { startSession } from "./api/session";
+import { flushPendingRead } from "./pages/timer/pendingRead";
 import { isLoggedIn } from "./api/client";
 import SignupFlow from "./pages/auth/SignupFlow";
 import LoginForm from "./pages/auth/LoginForm";
@@ -51,10 +52,16 @@ const LoginPage = () => {
           alert("로그인 응답에 토큰이 없습니다.");
           return;
         }
-        const { accessToken, refreshToken, ...profile } = data;
         // 토큰은 다른 API 호출이 Authorization 헤더에 쓴다. 내 정보는 화면용 (로그인 응답에는 ID 만 있다)
-        // localStorage 가 아니라 이 탭에만 둔다 (api/session.js)
-        startSession({ token: accessToken, refreshToken, user: profile });
+        // localStorage 가 아니라 이 탭에만 둔다 (api/session.js). refresh 토큰은 httpOnly 쿠키로만 쓴다
+        const profile = { ...data };
+        delete profile.accessToken;
+        delete profile.refreshToken;
+        startSession({ token: data.accessToken, user: profile });
+        // 로그인 만료로 저장하지 못한 독서 기록이 있으면 보낸다
+        flushPendingRead().then((sent) => {
+          if (sent) alert("로그인 전에 저장하지 못한 독서 기록을 저장했어요.");
+        });
         navigate(PATHS.main, { replace: true });
       }}
     />
@@ -73,8 +80,10 @@ const FindPage = () => {
   );
 };
 
-// TODO: 개발 중에는 미사용. 인증을 다시 켤 때 Layout 라우트를 감싸는 데 사용
-// eslint-disable-next-line no-unused-vars
+// 로그인하지 않은 사람만 보는 화면 (로그인 화면)
+const GuestOnly = ({ children }) => (isLoggedIn() ? <Navigate to={PATHS.main} replace /> : children);
+
+// 로그인해야 들어갈 수 있는 화면을 감싼다
 const RequireAuth = ({ children }) => {
   const loggedIn = isLoggedIn();
   return loggedIn ? children : <Navigate to={PATHS.login} replace />;
@@ -87,14 +96,14 @@ const App = () => (
       <Route path={PATHS.guest} element={<Landing />} />
       <Route path={PATHS.terms} element={<LegalPage doc={TERMS} />} />
       <Route path={PATHS.privacy} element={<LegalPage doc={PRIVACY} />} />
-      <Route path={PATHS.login} element={<LoginPage />} />
+      {/* 이미 로그인했으면 홈으로 (다른 계정으로 바꾸려면 로그아웃부터) */}
+      <Route path={PATHS.login} element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path={PATHS.signup} element={<SignupPage />} />
       <Route path={PATHS.find} element={<FindPage />} />
-      {/* TODO: 아래 화면들은 개발 중이라 로그인 없이 열어 둠. 완성 후 RequireAuth 로 감싸기 */}
       {/* 타이머는 사이드바 없이 화면 전체를 쓴다 */}
-      <Route path={PATHS.timer} element={<Timer />} />
+      <Route path={PATHS.timer} element={<RequireAuth><Timer /></RequireAuth>} />
       {/* Layout 안의 화면은 왼쪽에 사이드바가 붙는다 */}
-      <Route element={<Layout />}>
+      <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route path={PATHS.main} element={<Home />} />
         <Route path={PATHS.mypage} element={<MyPage />} />
         <Route path={PATHS.mypageEdit} element={<EditInfo />} />

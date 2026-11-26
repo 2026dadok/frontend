@@ -1,5 +1,5 @@
 // 백엔드를 부를 때 공통으로 쓰는 것들.
-import { endSession, getToken, isTokenExpired } from "./session";
+import { endSession, getToken, isTokenExpired, tokenUserId, updateToken } from "./session";
 import { PATHS } from "../routes";
 
 // 서버가 이 시간 안에 답하지 않으면 포기한다 (안 그러면 화면이 "불러오는 중"에서 멈춘다)
@@ -13,20 +13,62 @@ const expireSession = (url) => {
   window.location.replace(`${PATHS.login}?expired=1`);
 };
 
-// 백엔드에 보내는 모든 요청은 이 함수를 쓴다. fetch 와 같은데 두 가지를 더 한다.
+// access 토큰 재발급. refresh 토큰은 httpOnly 쿠키라서 같이 보내기만 하면 된다.
+// 동시에 여러 요청이 401 을 받아도 재발급은 한 번만 한다. 성공하면 true
+let refreshing = null;
+const refreshToken = () => {
+  if (!refreshing) {
+    refreshing = fetch("/auth/refresh", { method: "POST", credentials: "include", signal: AbortSignal.timeout(TIMEOUT_MS) })
+      .then(async (res) => {
+        if (!res.ok) return false;
+        const data = await res.json().catch(() => null);
+        if (!data?.accessToken) return false;
+        // refresh 쿠키는 브라우저에 하나라서, 다른 탭에서 다른 계정으로 로그인하면 그 계정 토큰이 온다.
+        // 지금 탭의 계정과 다르면 받지 않고 로그인 만료로 처리한다
+        const before = tokenUserId();
+        if (before && tokenUserId(data.accessToken) !== before) return false;
+        updateToken(data.accessToken);
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => {
+        refreshing = null;
+      });
+  }
+  return refreshing;
+};
+
+// 헤더의 Authorization 을 지금 토큰으로 바꾼다 (재발급 뒤 다시 보낼 때)
+const withCurrentToken = (options) => {
+  const headers = new Headers(options.headers ?? {});
+  if (headers.has("Authorization")) headers.set("Authorization", `Bearer ${getToken()}`);
+  return { ...options, headers };
+};
+
+// 백엔드에 보내는 모든 요청은 이 함수를 쓴다. fetch 와 같은데 세 가지를 더 한다.
 //   1) 시간 제한: timeout(기본 10초) 안에 답이 없으면 실패로 끝낸다.
-//   2) 로그인 만료: 토큰의 만료 시각이 지났거나, 토큰을 보냈는데 401 이 오면 로그인 화면으로 보낸다.
+//   2) 토큰 재발급: 토큰이 만료됐거나 401 이 오면 /auth/refresh 로 한 번 재발급받고 다시 보낸다.
+//   3) 로그인 만료: 재발급도 실패하면 로그인 화면으로 보낸다.
 export const apiFetch = async (url, { timeout = TIMEOUT_MS, ...options } = {}) => {
   // 이 요청에 로그인 토큰을 실어 보내는지. 토큰을 안 보내는 요청(로그인·회원가입 등)의 401 은 만료가 아니다
   // (예: 로그인 비밀번호가 틀리면 백엔드는 401 을 준다)
   const sentToken = Boolean(getToken()) && new Headers(options.headers).has("authorization");
-  // 이미 만료된 토큰이면 보내지 않고 바로 로그인 화면으로 보낸다
-  if (sentToken && isTokenExpired() && !url.startsWith("/auth/logout")) {
-    expireSession(url);
-    throw new Error("로그인이 만료됐어요.");
+  const isAuthCall = url.startsWith("/auth/logout") || url.startsWith("/auth/refresh");
+  // 이미 만료된 토큰이면 먼저 재발급받고, 재발급도 안 되면 로그인 화면으로 보낸다
+  if (sentToken && isTokenExpired() && !isAuthCall) {
+    if (!(await refreshToken())) {
+      expireSession(url);
+      throw new Error("로그인이 만료됐어요.");
+    }
+    options = withCurrentToken(options);
   }
-  const res = await fetch(url, { ...options, signal: AbortSignal.timeout(timeout) });
-  if (res.status === 401 && sentToken) expireSession(url);
+  let res = await fetch(url, { ...options, signal: AbortSignal.timeout(timeout) });
+  if (res.status === 401 && sentToken && !isAuthCall) {
+    if (await refreshToken()) {
+      res = await fetch(url, { ...withCurrentToken(options), signal: AbortSignal.timeout(timeout) });
+    }
+    if (res.status === 401) expireSession(url);
+  }
   return res;
 };
 
@@ -48,12 +90,19 @@ export const requestServer = async (method, url, body) => {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => null);
-    return { ok: res.ok, data };
+    return { ok: res.ok, status: res.status, data };
   } catch {
-    return { ok: false, data: null };
+    return { ok: false, status: 0, data: null };
   }
 };
 
 // 응답 필드 이름이 아직 정해지지 않은 곳에서 쓴다. 후보 이름 중 값이 있는 첫 번째를 돌려준다.
 // 예: pick(raw, "name", "user_name")
 export const pick = (obj, ...names) => names.map((n) => obj?.[n]).find((v) => v != null && v !== "");
+
+// 응답의 new_achievements(이번에 달성한 업적 이름 목록)가 있으면 알린다.
+// 화면의 저장 처리(알림·이동)가 먼저 끝나도록 다음 차례에 띄운다
+export const notifyAchievements = (list) => {
+  const names = Array.isArray(list) ? list.filter((n) => typeof n === "string" && n) : [];
+  if (names.length) setTimeout(() => alert(`업적을 달성했어요: ${names.join(", ")}`), 0);
+};

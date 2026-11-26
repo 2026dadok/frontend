@@ -14,6 +14,9 @@ import "./MyPage.css";
 
 const GO_BACK_MS = 800;
 
+// 직접 올린 사진인지. 사진이 없으면 서버는 기본 이미지 주소(/images/default-*.png)를 준다
+const isCustomImage = (url) => Boolean(url) && !String(url).includes("/images/default-");
+
 const Field = ({ label, icon, children, extra }) => (
   <label className="ei-field">
     <span className="ei-label">{label}</span>
@@ -101,6 +104,10 @@ const EditInfo = () => {
       showToast("로그인이 필요해요.");
       return;
     }
+    if (form.loadFailed) {
+      showToast("정보를 불러오지 못했어요. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
     if (!form.name.trim()) {
       showToast("이름을 입력해주세요.");
       return;
@@ -120,7 +127,7 @@ const EditInfo = () => {
     }
     setSaving(true);
     // 현재 비밀번호가 비어 있으면 위의 passwordStatus 검사에서 이미 막힌다
-    const ok = await saveEditInfo({
+    const { ok, message } = await saveEditInfo({
       ...form,
       name: form.name.trim(),
       goalTime,
@@ -129,7 +136,7 @@ const EditInfo = () => {
     });
     setSaving(false);
     if (!ok) {
-      showToast("저장하지 못했어요.");
+      showToast(message || "저장하지 못했어요.");
       return;
     }
     showToast("저장했어요.");
@@ -156,7 +163,7 @@ const EditInfo = () => {
       <div className="mp-stage" style={{ "--s": scale }}>
         <div className="mp-top">
           <Banner image={images.background} className="short" />
-          <ImagePencil label="배경 이미지 바꾸기" className="banner-edit" onPick={(file) => changeImage("background", file)} canReset={Boolean(images.background)} onReset={() => resetToDefault("background")} />
+          <ImagePencil label="배경 이미지 바꾸기" className="banner-edit" onPick={(file) => changeImage("background", file)} canReset={isCustomImage(images.background)} onReset={() => resetToDefault("background")} />
         </div>
 
         <div className="ei-panel">
@@ -164,9 +171,9 @@ const EditInfo = () => {
             <div className="ei-column">
               <div className="mp-profile ei-profile">
                 <ProfileImage image={images.profile} size={111} />
-                <ImagePencil label="프로필 사진 바꾸기" className="avatar" onPick={(file) => changeImage("profile", file)} canReset={Boolean(images.profile)} onReset={() => resetToDefault("profile")} />
+                <ImagePencil label="프로필 사진 바꾸기" className="avatar" onPick={(file) => changeImage("profile", file)} canReset={isCustomImage(images.profile)} onReset={() => resetToDefault("profile")} />
               </div>
-              <h1 className="ei-id">{form.needLogin ? "로그인이 필요해요." : form.id}</h1>
+              <h1 className="ei-id">{form.needLogin ? "로그인이 필요해요." : form.loadFailed ? "정보를 불러오지 못했어요." : form.id}</h1>
 
               <section className="ei-section">
                 <h2>기본 정보</h2>
@@ -220,7 +227,7 @@ const EditInfo = () => {
       </div>
 
       {form && (
-        <button type="button" className="ei-save" disabled={saving} onClick={save}>
+        <button type="button" className="ei-save" disabled={saving || form.loadFailed} onClick={save}>
           {saving ? "저장 중…" : "저장하기"}
         </button>
       )}
