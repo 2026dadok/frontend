@@ -6,9 +6,9 @@ import { draftFor, pageRangeOf, saveDraft } from "./reviewExtras";
 // 감상문 최대 글자 수 (피그마 시안). TODO: 백엔드 main 은 아직 300자까지만 받는다 (FeelingCreateRequest, CreateReflectionRequest)
 export const MAX_LENGTH = 1000;
 
-// 팝업 안쪽 오른쪽 위의 회색 동그란 닫기 버튼 (마우스를 올리면 빨간색)
-const CloseButton = ({ onClick }) => (
-  <button type="button" className="review-modal-close" aria-label="닫기" onClick={onClick}>
+// 팝업 안쪽 오른쪽 위의 닫기(×) 버튼. plain: 동그라미 없이 연한 × (감상문 전체 보기, 피그마)
+const CloseButton = ({ onClick, plain = false }) => (
+  <button type="button" className={`review-modal-close ${plain ? "plain" : ""}`} aria-label="닫기" onClick={onClick}>
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
       <path d="M6 6l12 12M18 6L6 18" />
     </svg>
@@ -32,21 +32,74 @@ const Arrow = ({ side, onClick }) => (
 );
 
 // 일차 카드를 누르면 나오는 감상문 전체 보기. 좌우 화살표로 다른 일차의 감상문으로 넘어간다.
-export const CommentaryDetailModal = ({ scale, label, entry, range, onPrev, onNext, onClose }) => {
+//   위: 일차(/ 완독), 그 아래 읽은 쪽수, 오른쪽 위 닫기(×)
+//   아래: 왼쪽 날짜, 오른쪽 [수정] (내 감상문이고 고칠 수 있을 때만. onSave 가 없으면 버튼이 없다)
+export const CommentaryDetailModal = ({ scale, label, entry, range, saving, onSave, onPrev, onNext, onClose }) => {
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState(entry.content);
   useEscape(onClose);
+  const text = content.trim();
+
+  // 다른 일차로 넘어가면 고치던 것은 접는다
+  const [shownEntry, setShownEntry] = useState(entry);
+  if (shownEntry !== entry) {
+    setShownEntry(entry);
+    setEditing(false);
+    setContent(entry.content);
+  }
+
+  const save = async () => {
+    if (!text || saving) return;
+    if (text === entry.content) {
+      setEditing(false);
+      return;
+    }
+    if (await onSave(text)) setEditing(false);
+  };
+
   return (
     <Overlay scale={scale} onClose={onClose} label={`${label} 감상문`}>
-      <div className="review-modal-card">
+      <div className="review-modal-card detail">
         <header>
           <h2>{label}</h2>
-          {range && <span className="review-modal-pages">{range}</span>}
-          <CloseButton onClick={onClose} />
+          {range && <p className="review-modal-range">{range}</p>}
+          <CloseButton plain onClick={onClose} />
         </header>
-        <div className="review-modal-text">{entry.content}</div>
-        <time>{formatDate(entry.date)}</time>
+        {editing ? (
+          <label className="review-write-field edit">
+            <textarea
+              autoFocus
+              value={content}
+              maxLength={MAX_LENGTH}
+              aria-label="감상문 고치기"
+              onChange={(e) => setContent(e.target.value)}
+            />
+            <span className="review-write-count">{content.length} / {MAX_LENGTH}자</span>
+          </label>
+        ) : (
+          <div className="review-modal-text">{entry.content}</div>
+        )}
+        <footer className="review-modal-foot">
+          <time>{formatDate(entry.date)}</time>
+          {onSave &&
+            (editing ? (
+              <div>
+                <button type="button" className="skip" onClick={() => { setEditing(false); setContent(entry.content); }}>
+                  취소
+                </button>
+                <button type="button" className="done" disabled={!text || saving} onClick={save}>
+                  {saving ? "저장 중…" : "저장"}
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="review-modal-edit" onClick={() => setEditing(true)}>
+                수정
+              </button>
+            ))}
+        </footer>
       </div>
-      {onPrev && <Arrow side="prev" onClick={onPrev} />}
-      {onNext && <Arrow side="next" onClick={onNext} />}
+      {!editing && onPrev && <Arrow side="prev" onClick={onPrev} />}
+      {!editing && onNext && <Arrow side="next" onClick={onNext} />}
     </Overlay>
   );
 };

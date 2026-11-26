@@ -5,7 +5,7 @@ import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
-import { addCommentary, getCommentaries, getMyLibrary, getSharedLibrary, syncCommentaries, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
+import { addCommentary, canEditCommentary, getCommentaries, getMyLibrary, getSharedLibrary, syncCommentaries, syncMyLibrary, syncSharedLibrary, updateCommentary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
 import { clearDraft, countDays, pageRangeOf } from "./reviewExtras";
@@ -151,13 +151,28 @@ const Review = () => {
 
   const ownerName = isFriend ? `${book.friendName ?? "친구"}님` : "나";
   const entryOf = (day) => entries.find((e) => e.day === day);
-  const dayLabel = (day) => `${day}일차${day === completedDay ? " | 완독" : ""}`;
+  const dayLabel = (day) => `${day}일차${day === completedDay ? " / 완독" : ""}`;
 
   // 전체 보기 팝업에서 넘길 수 있는 일차 = 글이 있는 일차 (큰 번호 → 작은 번호)
   const writtenDays = days.filter((d) => entryOf(d));
   const openIndex = writtenDays.indexOf(openDay);
   const goPrev = openIndex > 0 ? () => setOpenDay(writtenDays[openIndex - 1]) : null;
   const goNext = openIndex >= 0 && openIndex < writtenDays.length - 1 ? () => setOpenDay(writtenDays[openIndex + 1]) : null;
+
+  // 전체 보기에서 [수정] → 저장. 성공하면 true (팝업이 보기 모드로 돌아간다)
+  const editCommentary = async (entry, content) => {
+    setSaving(true);
+    const result = await updateCommentary(book, entry, content);
+    setSaving(false);
+    if (result !== "saved") {
+      // TODO: 백엔드 main 은 고칠 때도 300자까지만 받는다 (ReviewUpdateRequest). ai-review-integration 은 1000자
+      showToast(content.length > 300 ? "지금은 300자까지만 저장할 수 있어요." : "감상문을 고치지 못했어요.");
+      return false;
+    }
+    setVersion((v) => v + 1);
+    showToast("감상문을 고쳤어요.");
+    return true;
+  };
 
   const submitCommentary = async (content) => {
     setSaving(true);
@@ -242,6 +257,8 @@ const Review = () => {
           label={dayLabel(openDay)}
           entry={entryOf(openDay)}
           range={pageRangeOf(book, entryOf(openDay))}
+          saving={saving}
+          onSave={!isFriend && canEditCommentary(book, entryOf(openDay)) ? (content) => editCommentary(entryOf(openDay), content) : undefined}
           onPrev={goPrev}
           onNext={goNext}
           onClose={() => setOpenDay(null)}

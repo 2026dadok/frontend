@@ -59,7 +59,7 @@ const ReadingBook = ({ book, failed, onRead, onLibrary }) => (
   <section className="rk-card rk-reading">
     {book ? (
       <>
-        <p className="rk-pages">{book.readPage} / {book.totalPage}p</p>
+        <p className="rk-pages">{book.readPage} / {book.totalPage}쪽</p>
         <img className="rk-reading-cover" src={book.cover} alt={book.title} />
         <div className="rk-progress">
           <div className="track">

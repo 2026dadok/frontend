@@ -33,7 +33,7 @@ const QuoteRow = ({ quote, menuOpen, onOpen, onToggleMenu, onFavorite, onEdit, o
     </p>
     <p className="quote-row-meta">
       <strong>{quote.book}</strong>
-      {quote.page ? <span>{quote.page}p</span> : null}
+      {quote.page ? <span>{quote.page}쪽</span> : null}
       <span>{formatShort(quote.date)}</span>
     </p>
     <button

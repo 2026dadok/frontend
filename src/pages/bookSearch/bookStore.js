@@ -290,6 +290,19 @@ export const addCommentary = async (book, day, content) => {
   return write(KEYS.commentaries, { ...all, [key]: next }) ? "saved" : "error";
 };
 
+// 내 감상문 고치기: PUT /api/v1/reviews/{feeling_id} { review } (감상문 = 백엔드의 Review). "saved" | "error"
+// 나의 서재 책만 된다. 공동서재 감상문은 고치는 API 가 없다. TODO: 백엔드에 요청
+export const canEditCommentary = (book, entry) => !isJoint(book) && Number.isInteger(entry?.serverId);
+export const updateCommentary = async (book, entry, content) => {
+  if (!canEditCommentary(book, entry)) return "error";
+  const { ok } = await requestServer("PUT", `/api/v1/reviews/${entry.serverId}`, { review: content });
+  if (!ok) return "error";
+  const key = commentaryKey(book);
+  const all = read(KEYS.commentaries, {});
+  const list = (all[key] ?? []).map((c) => (c.serverId === entry.serverId ? { ...c, content } : c));
+  return write(KEYS.commentaries, { ...all, [key]: list }) ? "saved" : "error";
+};
+
 // 시작일로부터 지난 날짜 수 (D+N). 자정 기준.
 export const daysSince = (iso) => {
   if (!iso) return 0;

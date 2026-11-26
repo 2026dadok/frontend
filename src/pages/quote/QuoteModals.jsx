@@ -46,7 +46,7 @@ export const QuoteDetailModal = ({ scale, quote, onClose }) => {
       </QuoteBody>
       <footer>
         &lt; {quote.book}
-        {quote.page ? ` | ${quote.page}p` : ""} &gt;
+        {quote.page ? ` | ${quote.page}쪽` : ""} &gt;
       </footer>
     </Frame>
   );
@@ -90,7 +90,7 @@ export const QuoteEditModal = ({ scale, quote, saving, onSubmit, onClose }) => {
         <footer className="with-actions">
           <span>
             &lt; {quote.book}
-            {quote.page ? ` | ${quote.page}p` : ""} &gt;
+            {quote.page ? ` | ${quote.page}쪽` : ""} &gt;
           </span>
           <Actions saving={saving} canSubmit={Boolean(trimmed) && trimmed !== quote.text} onCancel={onClose} />
         </footer>
@@ -151,7 +151,7 @@ export const QuoteAddModal = ({ scale, books, saving, onSubmit, onClose }) => {
               aria-label="쪽수"
               onChange={(e) => setPage(e.target.value)}
             />
-            p &gt;
+            쪽 &gt;
           </span>
           <Actions saving={saving} canSubmit={Boolean(trimmed) && Boolean(book)} onCancel={onClose} />
         </footer>

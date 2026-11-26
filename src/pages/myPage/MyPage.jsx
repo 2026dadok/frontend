@@ -107,7 +107,7 @@ const MyPage = () => {
                 {/* 통계를 불러오지 못했으면(stats 가 null) 0 대신 "-" */}
                 <StatCard icon="clock" label="총 독서 시간" value={data.stats ? formatHours(data.stats.minutes) : "-"} />
                 <StatCard icon="calendar" label="최대 연속 독서일" value={data.stats ? `${data.stats.streakDays}일` : "-"} />
-                <StatCard icon="book" label="총 독서 페이지" value={data.stats ? `${data.stats.pages}p` : "-"} />
+                <StatCard icon="book" label="총 독서 페이지" value={data.stats ? `${data.stats.pages}쪽` : "-"} />
                 <StatCard icon="podium" label="경쟁 5위권 진입 횟수" value={data.stats ? `${data.stats.top5Count}회` : "-"} />
               </div>
             </section>
