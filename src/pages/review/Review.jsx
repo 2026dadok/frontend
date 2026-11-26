@@ -165,8 +165,8 @@ const Review = () => {
     const result = await updateCommentary(book, entry, content);
     setSaving(false);
     if (result !== "saved") {
-      // TODO: 백엔드 main 은 고칠 때도 300자까지만 받는다 (ReviewUpdateRequest). ai-review-integration 은 1000자
-      showToast(content.length > 300 ? "지금은 300자까지만 저장할 수 있어요." : "감상문을 고치지 못했어요.");
+      // 고치기는 백엔드(ai-review-integration)가 1000자까지 받는다
+      showToast("감상문을 고치지 못했어요.");
       return false;
     }
     setVersion((v) => v + 1);
@@ -183,7 +183,7 @@ const Review = () => {
       return;
     }
     if (result !== "saved") {
-      // TODO: 백엔드 main 은 감상문을 300자까지만 받는다. 1000자로 늘려 달라고 요청함
+      // TODO: 백엔드는 새 감상문을 아직 300자까지만 받는다 (고치기는 1000자). 1000자로 늘려 달라고 요청함
       showToast(content.length > 300 ? "지금은 300자까지만 저장할 수 있어요." : "감상문을 저장하지 못했어요.");
       return;
     }

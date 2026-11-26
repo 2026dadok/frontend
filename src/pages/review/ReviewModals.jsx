@@ -3,7 +3,7 @@ import useEscape from "../../hooks/useEscape";
 import { formatDate } from "./format";
 import { draftFor, pageRangeOf, saveDraft } from "./reviewExtras";
 
-// 감상문 최대 글자 수 (피그마 시안). TODO: 백엔드 main 은 아직 300자까지만 받는다 (FeelingCreateRequest, CreateReflectionRequest)
+// 감상문 최대 글자 수 (피그마 시안). TODO: 백엔드는 새 감상문을 아직 300자까지만 받는다 (FeelingCreateRequest, CreateReflectionRequest). 고치기는 1000자
 export const MAX_LENGTH = 1000;
 
 // 팝업 안쪽 오른쪽 위의 닫기(×) 버튼. plain: 동그라미 없이 연한 × (감상문 전체 보기, 피그마)

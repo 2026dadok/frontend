@@ -1,5 +1,5 @@
-// AI 감상문 ("독다지와 함께" 쓰기). 백엔드 ai-review-integration 브랜치의 API 를 쓴다.
-// (main 브랜치에는 아직 없다 → 서버가 main 이면 404 가 와서 "아직 준비 중" 안내를 보여준다)
+// AI 감상문 ("독다지와 함께" 쓰기). 백엔드 기준 브랜치 ai-review-integration 의 API 를 쓴다.
+// (서버가 이 API 가 없는 버전이면 404 가 와서 "아직 준비 중" 안내를 보여준다)
 //
 //   POST /api/v1/reviews/interview
 //     보냄: { book_title, author, messages: [{ role: "user" | "assistant", content }] }   (messages 최대 20개, 내용 2000자 이하)

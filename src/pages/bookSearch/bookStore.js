@@ -300,7 +300,7 @@ export const addCommentary = async (book, day, content) => {
   return write(KEYS.commentaries, { ...all, [key]: next }) ? "saved" : "error";
 };
 
-// 내 감상문 고치기: PUT /api/v1/reviews/{feeling_id} { review } (감상문 = 백엔드의 Review). "saved" | "error"
+// 내 감상문 고치기: PUT /api/v1/reviews/{feeling_id} { review } (감상문 = 백엔드의 Review, 1000자까지). "saved" | "error"
 // 나의 서재 책만 된다. 공동서재 감상문은 고치는 API 가 없다. TODO: 백엔드에 요청
 export const canEditCommentary = (book, entry) => !isJoint(book) && Number.isInteger(entry?.serverId);
 export const updateCommentary = async (book, entry, content) => {
