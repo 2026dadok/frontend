@@ -11,6 +11,7 @@ import Quote from "./pages/quote/Quote";
 import Library from "./pages/myLibrary/Library";
 import SharedLibraryPage from "./pages/sharedLibrary/SharedLibraryPage";
 import Review from "./pages/review/Review";
+import AiReview from "./pages/review/AiReview";
 import BookSearch from "./pages/bookSearch/BookSearch";
 import WeeklyRank from "./pages/weeklyRank/WeeklyRank";
 import MyPage from "./pages/myPage/MyPage";
@@ -101,6 +102,7 @@ const App = () => (
         <Route path={PATHS.search} element={<BookSearch />} />
         <Route path={PATHS.library} element={<Library />} />
         <Route path={PATHS.review} element={<Review />} />
+        <Route path={PATHS.reviewAi} element={<AiReview />} />
         <Route path={PATHS.sharedLibrary} element={<SharedLibraryPage />} />
         <Route path={PATHS.quote} element={<Quote />} />
       </Route>

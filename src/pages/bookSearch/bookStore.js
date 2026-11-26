@@ -73,7 +73,8 @@ const fillFromYes24 = async (book) => {
 };
 
 // 서버의 책 한 권 + 사본에 있던 같은 책(서버 번호로 찾는다) → 화면용 책
-// 나의 서재: { book_id, book_title, author, cover_url, total_page, read_page, finished }
+// 나의 서재: { libraryBookId, book_id, book_title, author, cover_url, total_page, read_page, finished }
+//   book_id = 책 번호(쪽수·읽은 시간·리뷰에 쓴다), libraryBookId = 내 서재에 담긴 칸의 번호(AI 감상문 lib_book_id 에 쓴다)
 // 공동서재도 book_id, book_title, cover_url, total_page 를 같은 이름으로 준다 (author·read_page 는 없다)
 const mergeServerBook = (raw, cached) => {
   const serverBookId = toInt(raw.book_id);
@@ -83,6 +84,7 @@ const mergeServerBook = (raw, cached) => {
     ...cached,
     id: cached?.id ?? `server-${serverBookId}`,
     serverBookId,
+    libBookId: toInt(raw.libraryBookId) ?? cached?.libBookId ?? null,
     title: raw.book_title ?? cached?.title ?? "",
     author: raw.author ?? cached?.author ?? "",
     cover: raw.cover_url || cached?.cover || undefined, // 빈 글자 대신 undefined (img src="" 방지)
@@ -140,7 +142,8 @@ export const addToMyLibrary = async (book) => {
   });
   if (!ok) return "error"; // 서재는 서버에 저장되어야 한다 (브라우저에만 담지 않는다)
   const serverBookId = toInt(data?.book_id ?? null);
-  if (!write(KEYS.myLibrary, [{ ...toShelfBook(book), serverBookId }, ...list])) return "error";
+  const libBookId = toInt(data?.libraryBookId ?? null);
+  if (!write(KEYS.myLibrary, [{ ...toShelfBook(book), serverBookId, libBookId }, ...list])) return "error";
   return "added";
 };
 

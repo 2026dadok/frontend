@@ -51,7 +51,9 @@
   height: 242px; display: flex; flex-direction: column; overflow: hidden;
   background: #fff; border-radius: 24px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
-.review-day h3 { padding: 14px 18px 8px; font-size: 16px; font-weight: 400; }
+.review-day h3 { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 18px 8px; font-size: 16px; font-weight: 400; }
+/* 그날 읽은 쪽수 (예: 150-182쪽) */
+.review-day-pages { font-size: 12px; color: #999; }
 .review-day-body { flex: 1; min-height: 0; padding: 8px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #fcf7f5; }
 .review-day-text {
   font-size: 13.5px; line-height: 1.7; text-align: center; word-break: keep-all; overflow-wrap: anywhere;
@@ -83,6 +85,7 @@
 }
 .review-modal-card header { position: relative; padding: 34px 96px 26px 44px; }
 .review-modal-card h2 { font-size: 24px; font-weight: 500; color: #444; }
+.review-modal-pages { position: absolute; top: 40px; right: 92px; font-size: 15px; color: #999; }
 .review-modal-text {
   flex: 1; min-height: 0; overflow-y: auto; padding: 56px 56px; background: #fdf8f6;
   font-size: 16px; line-height: 1.95; text-align: center; white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere;

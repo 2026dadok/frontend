@@ -5,9 +5,10 @@ import { PATHS } from "../../routes";
 import useFitScale from "../../hooks/useFitScale";
 import useToast from "../../hooks/useToast";
 import { fetchBookIntro } from "../bookSearch/bookSearchApi";
-import { addCommentary, daysSince, getCommentaries, getMyLibrary, getSharedLibrary, syncCommentaries, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
+import { addCommentary, getCommentaries, getMyLibrary, getSharedLibrary, syncCommentaries, syncMyLibrary, syncSharedLibrary, updateShelfBook } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { CommentaryDetailModal, CommentaryWriteModal } from "./ReviewModals";
+import { clearDraft, countDays, pageRangeOf } from "./reviewExtras";
 import { formatDate } from "./format";
 import mascotImg from "../../images/mascot.png";
 import "../bookSearch/BookSearch.css"; // 알림창(.bs-toast)과 오른쪽 위 XP(.bs-xp) 모양을 같이 쓴다
@@ -27,21 +28,7 @@ const updateIntroFade = (el) => {
   wrap.style.setProperty("--bottom", clamp01(hiddenBelow / FADE_RANGE).toFixed(3));
 };
 
-// 일차 계산. 일차는 백엔드가 정한다.
-//   공동서재 책: 함께 읽기 시작한 날부터 센 날짜 (서버가 시작일 started_at 을 준다)
-//   나의 서재 책: 감상문을 쓴 순서 (1번째, 2번째 …). 서재 응답에 담은 날짜가 없어서 날짜로는 셀 수 없다.
-//     그래서 오늘 이미 썼으면 마지막 일차가, 아니면 그다음 일차가 오늘이다.
-const isToday = (iso) => Boolean(iso) && new Date(iso).toDateString() === new Date().toDateString();
-const countDays = (book, entries) => {
-  const lastWritten = Math.max(0, ...entries.map((e) => e.day));
-  if (!Number.isInteger(book?.jointId)) {
-    const today = entries.some((e) => isToday(e.date)) ? lastWritten : lastWritten + 1;
-    return Math.max(1, today);
-  }
-  return Math.max(1, lastWritten, book.startedAt ? daysSince(book.startedAt) + 1 : 1);
-};
-
-const DayCard = ({ day, entry, completed, canWrite, onOpen, onWrite }) => (
+const DayCard = ({ day, entry, range, completed, canWrite, onOpen, onWrite }) => (
   <article
     className={`review-day ${entry ? "clickable" : ""}`}
     tabIndex={entry ? 0 : undefined}
@@ -49,7 +36,8 @@ const DayCard = ({ day, entry, completed, canWrite, onOpen, onWrite }) => (
     onKeyDown={(e) => entry && e.key === "Enter" && onOpen()}
   >
     <h3>
-      {day}일차{completed && " / 완독"}
+      <span>{day}일차{completed && " / 완독"}</span>
+      {range && <span className="review-day-pages">{range}</span>}
     </h3>
     <div className="review-day-body">
       {entry ? (
@@ -109,6 +97,7 @@ const Review = () => {
   // 서버 목록을 받은 뒤에 판단한다 (받기 전 메모리 값으로 판단하면 일차가 틀릴 수 있다)
   const [writeDay, setWriteDay] = useState(null);
   const wantsWrite = params.get("write") === "1" && !isFriend;
+  const resumeDay = location.state?.resumeDay ?? null; // 홈의 이어쓰기 말풍선에서 온 일차
 
   // 서버의 감상문(나 / 공동서재 친구)을 받아 오면 목록을 다시 그린다
   useEffect(() => {
@@ -118,13 +107,14 @@ const Review = () => {
       if (!alive) return;
       setVersion((v) => v + 1);
       if (!wantsWrite) return;
-      const today = countDays(book, list);
-      if (!list.some((e) => e.day === today)) setWriteDay(today);
+      // 홈의 "감상문을 마저 써볼까요?" 로 오면 쓰다 만 일차를, 아니면 오늘 일차를 연다
+      const day = resumeDay ?? countDays(book, list);
+      if (!list.some((e) => e.day === day)) setWriteDay(day);
     });
     return () => {
       alive = false;
     };
-  }, [book, isFriend, wantsWrite]);
+  }, [book, isFriend, wantsWrite, resumeDay]);
 
   const { days, completedDay } = useMemo(() => {
     const total = countDays(book, entries);
@@ -174,9 +164,11 @@ const Review = () => {
     const result = await addCommentary(book, writeDay, content);
     setSaving(false);
     if (result !== "saved") {
-      showToast("감상문을 저장하지 못했어요.");
+      // TODO: 백엔드 main 은 감상문을 300자까지만 받는다. 1000자로 늘려 달라고 요청함
+      showToast(content.length > 300 ? "지금은 300자까지만 저장할 수 있어요." : "감상문을 저장하지 못했어요.");
       return;
     }
+    clearDraft();
     setWriteDay(null);
     setVersion((v) => v + 1);
     showToast("감상문을 저장했어요.");
@@ -231,6 +223,7 @@ const Review = () => {
                 key={day}
                 day={day}
                 entry={entryOf(day)}
+                range={entryOf(day) ? pageRangeOf(book, entryOf(day)) : ""}
                 completed={day === completedDay}
                 canWrite={!isFriend}
                 onOpen={() => setOpenDay(day)}
@@ -248,6 +241,7 @@ const Review = () => {
           scale={scale}
           label={dayLabel(openDay)}
           entry={entryOf(openDay)}
+          range={pageRangeOf(book, entryOf(openDay))}
           onPrev={goPrev}
           onNext={goNext}
           onClose={() => setOpenDay(null)}

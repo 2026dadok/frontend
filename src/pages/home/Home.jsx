@@ -10,6 +10,7 @@ import {
   loadMainPage,
   fetchRandomQuote,
 } from "./homeApi";
+import { getDraft } from "../review/reviewExtras";
 import "./Home.css";
 
 import xpIcon from "../../images/icon-xp.png";
@@ -130,6 +131,19 @@ const DailyQuest = ({ daily, note }) => (
   </section>
 );
 
+// 감상문을 쓰다가 나갔으면 말풍선이 이어 쓰기를 권한다 (피그마 '감상문 작성 도중 이탈'). 누르면 그 일차의 쓰기 창이 다시 열린다
+const DraftBubble = ({ draft, onResume }) => (
+  <div className="home-quote">
+    <button type="button" className="home-quote-bubble home-draft" onClick={onResume}>
+      <span className="home-draft-ask">감상문을 마저 써볼까요?</span>
+      <small>
+        {draft.book.title} {draft.day}일차
+      </small>
+    </button>
+    <img className="home-mascot" src={mascotImg} alt="" />
+  </div>
+);
+
 const QuoteBubble = ({ quote }) => (
   <div className="home-quote">
     <div className="home-quote-bubble">
@@ -167,6 +181,8 @@ const Home = () => {
   const navigate = useNavigate();
   // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다
   const openRecommended = (book) => navigate(`${PATHS.search}?view=detail`, { state: { book } });
+  const [draft] = useState(getDraft); // 쓰다 만 감상문 (없으면 null)
+  const resumeDraft = () => navigate(`${PATHS.review}?write=1`, { state: { book: draft.book, resumeDay: draft.day } });
 
   return (
     <div className="home">
@@ -185,7 +201,7 @@ const Home = () => {
           <div className="home-right">
             <WeeklyQuest quest={weekly} note={questNote} />
             <DailyQuest daily={daily} note={main?.daily ? "오늘의 퀘스트가 없어요." : questNote} />
-            <QuoteBubble quote={quote} />
+            {draft ? <DraftBubble draft={draft} onResume={resumeDraft} /> : <QuoteBubble quote={quote} />}
           </div>
         </div>
       </div>

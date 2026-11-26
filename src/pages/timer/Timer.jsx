@@ -9,6 +9,8 @@ import { addToMyLibrary, findInMyLibrary, updateShelfBook } from "../bookSearch/
 import { QuoteAddModal } from "../quote/QuoteModals";
 import { addQuote } from "../quote/quoteStore";
 import { addStudyTime, fetchGoalTime, saveReadPages } from "./timerApi";
+import { recordReadPages } from "../review/reviewExtras";
+import { AskMascot } from "../../components/Mascots";
 import moleImg from "../../images/dokddage.png";
 import "../bookSearch/BookSearch.css"; // .bs 버튼·알림 스타일을 같이 쓴다
 import "../quote/Quote.css"; // 인용구 쓰기 팝업
@@ -68,14 +70,16 @@ const NoteIcon = () => (
   </svg>
 );
 
-// 타이머: 목표 시간 정하기 → 읽는 중(일시정지·시간 추가·책 덮기) → 여기까지인지 묻기 → 읽은 쪽수 → 감상문 쓰기
+// 타이머: 목표 시간 정하기 → 읽는 중(일시정지·시간 추가·책 덮기) → 여기까지인지 묻기 → 읽은 쪽수
+//        → 감상문을 어떻게 쓸지 고르기 (독다지와 함께 = AI 감상문 / 스스로 = 감상문 쓰기 창)
 // 서고·주간 경쟁의 '바로 읽기'에서 state.book 으로 읽을 책을 받는다.
 const Timer = () => {
   const scale = useScreenScale();
   const navigate = useNavigate();
   const book = useLocation().state?.book ?? null;
 
-  const [step, setStep] = useState("setup"); // setup | reading | askClose | pages
+  const [step, setStep] = useState("setup"); // setup | reading | askClose | pages | howRecord
+  const [savedBook, setSavedBook] = useState(null); // 쪽수까지 저장한 책 (서버 번호가 채워진 값)
   const [goal, setGoal] = useState("00:30");
   const [running, setRunning] = useState(false);
   const elapsed = useStopwatch(running);
@@ -150,8 +154,17 @@ const Timer = () => {
       showToast("독서 기록을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
       return;
     }
+    // 감상문 카드에 "몇 쪽부터 몇 쪽까지" 보여주려고 기록해 둔다 (지난번 쪽수 다음 ~ 오늘 쪽수)
+    const lastPage = findInMyLibrary(target)?.readPage ?? target.readPage ?? 0;
+    recordReadPages(target, lastPage, readPage);
     updateShelfBook(target.id, { readPage });
-    navigate(`${PATHS.review}?write=1`, { state: { book: target } });
+    // AI 감상문은 나의 서재 책만 만들 수 있다 (백엔드가 내 서재 칸 번호 lib_book_id 를 받는다). 공동서재 책은 바로 쓰기 창으로
+    if (Number.isInteger(target.jointId) || !Number.isInteger(target.libBookId)) {
+      navigate(`${PATHS.review}?write=1`, { state: { book: target } });
+      return;
+    }
+    setSavedBook(target);
+    setStep("howRecord");
   };
 
   const saveQuote = async ({ book: quoteBook, page: quotePage, text }) => {
@@ -198,6 +211,18 @@ const Timer = () => {
           <div className="tm-buttons wide">
             <button type="button" onClick={() => setStep("pages")}>네!</button>
             <button type="button" onClick={keepReading}>아니요</button>
+          </div>
+        </>
+      );
+    }
+
+    if (step === "howRecord") {
+      return (
+        <>
+          <p className="tm-question big">책을 읽은 감상을 어떻게 기록하고 싶나요?</p>
+          <div className="tm-buttons wide">
+            <button type="button" onClick={() => navigate(PATHS.reviewAi, { state: { book: savedBook } })}>독다지와 함께</button>
+            <button type="button" onClick={() => navigate(`${PATHS.review}?write=1`, { state: { book: savedBook } })}>스스로</button>
           </div>
         </>
       );
@@ -277,7 +302,7 @@ const Timer = () => {
           </button>
         )}
         <section className={`tm-bubble ${step === "reading" && clockHidden ? "short" : ""}`}>{renderBubble()}</section>
-        <img className="tm-mole" src={moleImg} alt="" />
+        {step === "howRecord" ? <AskMascot className="tm-ask" /> : <img className="tm-mole" src={moleImg} alt="" />}
       </div>
 
       {quoteOpen && (

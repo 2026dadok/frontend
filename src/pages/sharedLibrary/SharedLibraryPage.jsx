@@ -5,16 +5,31 @@ import useFitScale from "../../hooks/useFitScale";
 import SharedLibrary from "../bookSearch/SharedLibrary";
 import { fetchJointDetail, getSharedLibrary, syncSharedLibrary } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
+import { showXpToast } from "../../components/xpToast/xpToastBus";
 import "../bookSearch/BookSearch.css"; // 화면 틀(.bs, .bs-stage, .bs-canvas)과 공동서재 모양(.bs-co-*, .bs-shared-*)을 같이 쓴다
 import "./SharedLibraryPage.css";
 
 const TOAST_MS = 2500;
 const ENDED_MESSAGE = "함께 읽기가 종료되었습니다";
 
+// 승리 알림은 공동서재마다 이 탭에서 한 번만 띄운다 (화면 상태라 sessionStorage)
+const winShownKey = (jointId) => `sharedWinShown:${jointId}`;
+const showWinToast = (detail) => {
+  try {
+    if (sessionStorage.getItem(winShownKey(detail.jointId))) return;
+    sessionStorage.setItem(winShownKey(detail.jointId), "1");
+  } catch {
+    // 저장이 막힌 브라우저에서는 들어올 때마다 보여준다
+  }
+  // TODO: 백엔드가 승리 보상 XP 를 주면(지금은 지급 코드 없음) 그 값을 xp 로 넣는다 → "공동 서재 승리 보상 + N XP 획득"
+  const xp = detail.winXp ?? null;
+  showXpToast({ title: xp != null ? "공동 서재 승리 보상" : "공동 서재에서 승리했어요!", xp });
+};
+
 // 서고 > 공동 서재에서 책을 누르면 오는 공동서재 페이지.
 // 두 사람의 진행률은 백엔드(GET /library/joints/{joint_id})가 준 값만 쓴다.
 //   진행 중:       두 사람의 진행률
-//   내가 먼저 완독: 맨 위에 "승리"
+//   내가 먼저 완독: 맨 위에 "승리" + 승리 알림 (처음 한 번)
 //   둘 다 완독:     "함께 읽기가 종료되었습니다" 알림
 const SharedLibraryView = () => {
   const scale = useFitScale();
@@ -41,6 +56,7 @@ const SharedLibraryView = () => {
       if (!alive || !result) return;
       setDetail(result);
       if (result.myPercent === 100 && result.friendPercent === 100) setToast(ENDED_MESSAGE);
+      else if (result.myPercent === 100) showWinToast(result); // 내가 먼저 완독 = 승리
     });
     return () => {
       alive = false;

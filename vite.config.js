@@ -3,7 +3,8 @@ import { defineConfig, loadEnv } from 'vite'
 
 // 백엔드 API 경로 (API 명세서 기준). BACKEND_URL 이 있을 때만 프록시로 넘긴다.
 // /shared-readings: 공동서재, /images: 서버에 올린 프로필·배경 사진 (명세서: image_url 이 /images/... 형태)
-const BACKEND_PATHS = ['/auth', '/library', '/quests', '/users', '/bookstore', '/books', '/times', '/main', '/shared-readings', '/images']
+// /api/v1: AI 감상문 (/api/v1/reviews/interview, /generate)
+const BACKEND_PATHS = ['/auth', '/library', '/quests', '/users', '/bookstore', '/books', '/times', '/main', '/shared-readings', '/images', '/api/v1']
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {

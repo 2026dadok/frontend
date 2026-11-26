@@ -1,0 +1,7 @@
+/* 그림 파일에서 마스코트 부분만 잘라 보여준다. 퍼센트는 잘라낸 부분의 폭 기준 (BookSearch.css 의 .bs-list-ask, .bs-list-mascot 과 같은 값) */
+.mascot-crop { overflow: hidden; pointer-events: none; }
+.mascot-crop img { display: block; max-width: none; }
+.mascot-crop.ask { aspect-ratio: 339 / 459; }
+.mascot-crop.ask img { width: 283.19%; margin: -24.48% 0 0 -157.52%; }
+.mascot-crop.v { aspect-ratio: 428 / 535; }
+.mascot-crop.v img { width: 224.3%; margin: -14.49% 0 0 -14.72%; }

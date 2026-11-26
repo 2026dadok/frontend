@@ -13,6 +13,7 @@ export const PATHS = {
   quote: "/quote",
   timer: "/timer",
   review: "/review",
+  reviewAi: "/review/ai",
   terms: "/terms",
   privacy: "/privacy",
 };

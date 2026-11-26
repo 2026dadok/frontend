@@ -27,7 +27,12 @@ const XpToast = () => {
       <i style={{ maskImage: `url(${xpIcon})`, WebkitMaskImage: `url(${xpIcon})` }} aria-hidden="true" />
       <p>
         {toast.title}
-        <br />+ {toast.xp} XP 획득
+        {/* XP 를 모르는 알림(예: 공동서재 승리, 백엔드가 아직 보상 XP 를 주지 않음)은 제목만 */}
+        {toast.xp != null && (
+          <>
+            <br />+ {toast.xp} XP 획득
+          </>
+        )}
       </p>
     </div>
   );

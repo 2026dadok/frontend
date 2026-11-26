@@ -27,6 +27,8 @@
 .tm-bubble.short { top: 278px; height: 330px; }
 .tm-bubble.short::after { height: 110px; clip-path: polygon(0 0, 100% 0, 50% 100%); }
 .tm-mole { position: absolute; left: 700px; top: 738px; width: 222px; transform: scaleX(-1); }
+/* 감상문을 어떻게 쓸지 물을 때는 "다?" 하는 독다지 */
+.tm-ask { position: absolute; left: 720px; top: 720px; width: 180px; }
 
 .tm-question { font-size: 28px; color: #444; }
 .tm-question.big { font-size: 32px; color: #222; }

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import useEscape from "../../hooks/useEscape";
 import { formatDate } from "./format";
+import { draftFor, pageRangeOf, saveDraft } from "./reviewExtras";
 
-const MAX_LENGTH = 300; // 백엔드: 감상문 300자 이하
+// 감상문 최대 글자 수 (피그마 시안). TODO: 백엔드 main 은 아직 300자까지만 받는다 (FeelingCreateRequest, CreateReflectionRequest)
+export const MAX_LENGTH = 1000;
 
 // 팝업 안쪽 오른쪽 위의 회색 동그란 닫기 버튼 (마우스를 올리면 빨간색)
 const CloseButton = ({ onClick }) => (
@@ -30,13 +32,14 @@ const Arrow = ({ side, onClick }) => (
 );
 
 // 일차 카드를 누르면 나오는 감상문 전체 보기. 좌우 화살표로 다른 일차의 감상문으로 넘어간다.
-export const CommentaryDetailModal = ({ scale, label, entry, onPrev, onNext, onClose }) => {
+export const CommentaryDetailModal = ({ scale, label, entry, range, onPrev, onNext, onClose }) => {
   useEscape(onClose);
   return (
     <Overlay scale={scale} onClose={onClose} label={`${label} 감상문`}>
       <div className="review-modal-card">
         <header>
           <h2>{label}</h2>
+          {range && <span className="review-modal-pages">{range}</span>}
           <CloseButton onClick={onClose} />
         </header>
         <div className="review-modal-text">{entry.content}</div>
@@ -49,8 +52,10 @@ export const CommentaryDetailModal = ({ scale, label, entry, onPrev, onNext, onC
 };
 
 // 감상문 쓰기. [오늘은 넘기기] 는 쓰지 않고 닫고, [완료] 는 저장한다.
+// 쓰는 중인 글은 그때그때 남겨 둔다 → 저장하지 않고 나가면 홈 말풍선에서 이어 쓸 수 있다 (reviewExtras.saveDraft)
 export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClose }) => {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(() => draftFor(book, day));
+  const range = pageRangeOf(book);
   useEscape(onClose);
   const text = content.trim();
 
@@ -65,6 +70,7 @@ export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClo
       >
         <header>
           <h2>이 책의 감상문 쓰기 | {day}일차</h2>
+          {range && <span className="review-modal-pages">{range}</span>}
           <CloseButton onClick={onClose} />
         </header>
 
@@ -84,7 +90,10 @@ export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClo
               maxLength={MAX_LENGTH}
               placeholder="자유롭게 책을 읽었을 때 느낀 모든 것을 자유롭게 적어보세요!"
               aria-label="감상문"
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                saveDraft(book, day, e.target.value);
+              }}
             />
             <span className="review-write-count">{content.length} / {MAX_LENGTH}자</span>
           </label>
