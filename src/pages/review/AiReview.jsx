@@ -101,7 +101,7 @@ const AiReview = () => {
       showToast(aiErrorMessage(result.status));
       return;
     }
-    clearDraft("ai"); // 감상문이 저장됐으니 홈의 이어 하기 말풍선은 없앤다
+    clearDraft(); // 감상문이 저장됐으니 홈의 이어 하기 말풍선은 없앤다
     // 다시 만들기였으면 새 감상문이 저장된 뒤 이전 것을 지운다 (감상문이 두 개 남지 않게)
     if (review?.id) deleteReview(review.id);
     setReview({ id: result.reviewId, content: result.content, date: new Date().toISOString() });

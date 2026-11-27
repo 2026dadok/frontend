@@ -97,7 +97,6 @@ const Review = () => {
   // 서버 목록을 받은 뒤에 판단한다 (받기 전 메모리 값으로 판단하면 일차가 틀릴 수 있다)
   const [writeDay, setWriteDay] = useState(null);
   const wantsWrite = params.get("write") === "1" && !isFriend;
-  const resumeDay = location.state?.resumeDay ?? null; // 홈의 이어쓰기 말풍선에서 온 일차
 
   // 서버의 감상문(나 / 공동서재 친구)을 받아 오면 목록을 다시 그린다
   useEffect(() => {
@@ -107,14 +106,13 @@ const Review = () => {
       if (!alive) return;
       setVersion((v) => v + 1);
       if (!wantsWrite) return;
-      // 홈의 "감상문을 마저 써볼까요?" 로 오면 쓰다 만 일차를, 아니면 오늘 일차를 연다
-      const day = resumeDay ?? countDays(book, list);
+      const day = countDays(book, list);
       if (!list.some((e) => e.day === day)) setWriteDay(day);
     });
     return () => {
       alive = false;
     };
-  }, [book, isFriend, wantsWrite, resumeDay]);
+  }, [book, isFriend, wantsWrite]);
 
   const { days, completedDay } = useMemo(() => {
     const total = countDays(book, entries);
@@ -187,7 +185,7 @@ const Review = () => {
       showToast(content.length > 300 ? "지금은 300자까지만 저장할 수 있어요." : "감상문을 저장하지 못했어요.");
       return;
     }
-    clearDraft();
+    clearDraft(book); // 이 책을 AI 감상문으로 쓰다 만 기록이 있으면 지운다 (오늘 감상문을 썼으니)
     setWriteDay(null);
     setVersion((v) => v + 1);
     showToast("감상문을 저장했어요.");

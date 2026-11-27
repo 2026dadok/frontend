@@ -173,19 +173,11 @@ a.home-shelf-book { display: block; cursor: pointer; }
   background: #fffefb; clip-path: polygon(0 0, 100% 100%, 0 100%);
 }
 .home-quote-bubble p { white-space: pre-line; }
-/* 쓰다 만 감상문 이어 쓰기 말풍선 (전체가 버튼) */
-.home-draft {
-  border: 0; font: inherit; color: inherit; cursor: pointer; text-align: center;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-}
-.home-draft:hover { background: #f4faf6; }
-.home-draft:hover::after { background: #f4faf6; }
+/* AI 감상문 이어 하기 말풍선: 말풍선 자체는 버튼이 아니고 [AI감상문 바로 가기] 만 누른다 */
+.home-draft { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
 .home-draft-ask { font-size: 15px; }
 .home-draft small { font-size: 12px; color: #555; }
-/* AI 감상문 이어 하기: 말풍선 자체는 버튼이 아니고 [AI감상문 바로 가기] 만 누른다 */
-.home-draft.ai { cursor: default; gap: 8px; }
-.home-draft.ai:hover, .home-draft.ai:hover::after { background: #fffefb; }
-.home-draft.ai .home-quote-link { border: 0; font: inherit; font-size: 13px; cursor: pointer; }
+.home-draft .home-quote-link { border: 0; font: inherit; font-size: 13px; cursor: pointer; }
 .home-quote-bubble small { display: block; font-size: 11px; color: #555; }
 .home-mascot { position: absolute; left: 273px; top: 66px; width: 151px; }
 

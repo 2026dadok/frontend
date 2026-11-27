@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useEscape from "../../hooks/useEscape";
 import { formatDate } from "./format";
-import { draftFor, pageRangeOf, saveDraft } from "./reviewExtras";
+import { pageRangeOf } from "./reviewExtras";
 
 // 감상문 최대 글자 수 (피그마 시안). TODO: 백엔드는 새 감상문을 아직 300자까지만 받는다 (FeelingCreateRequest, CreateReflectionRequest). 고치기는 1000자
 export const MAX_LENGTH = 1000;
@@ -15,8 +15,9 @@ const CloseButton = ({ onClick, plain = false }) => (
   </button>
 );
 
+// 바깥(어두운 곳)을 누르면 닫힌다. onClose 가 없으면 바깥을 눌러도 닫히지 않는다 (감상문 쓰기)
 const Overlay = ({ scale, onClose, children, label }) => (
-  <div className="review-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+  <div className="review-overlay" onMouseDown={(e) => onClose && e.target === e.currentTarget && onClose()}>
     <div className="review-modal" style={{ "--s": scale }} role="dialog" aria-modal="true" aria-label={label}>
       {children}
     </div>
@@ -104,16 +105,15 @@ export const CommentaryDetailModal = ({ scale, label, entry, range, saving, onSa
   );
 };
 
-// 감상문 쓰기. [오늘은 넘기기] 는 쓰지 않고 닫고, [완료] 는 저장한다.
-// 쓰는 중인 글은 그때그때 남겨 둔다 → 저장하지 않고 나가면 홈 말풍선에서 이어 쓸 수 있다 (reviewExtras.saveDraft)
+// 감상문 쓰기. 쓰는 동안은 주위가 어두워지고 [나가기] 로만 닫힌다 (바깥 누르기·Esc·다른 메뉴 이동 불가, 피그마·디자이너).
+// [나가기] 를 누르면 쓰던 글은 버린다 (일반 감상문은 이어 쓰기가 없다. 이어 하기는 AI 감상문만). [완료] 는 저장한다.
 export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClose }) => {
-  const [content, setContent] = useState(() => draftFor(book, day));
+  const [content, setContent] = useState("");
   const range = pageRangeOf(book);
-  useEscape(onClose);
   const text = content.trim();
 
   return (
-    <Overlay scale={scale} onClose={onClose} label="감상문 쓰기">
+    <Overlay scale={scale} label="감상문 쓰기">
       <form
         className="review-modal-card write"
         onSubmit={(e) => {
@@ -124,7 +124,6 @@ export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClo
         <header>
           <h2>이 책의 감상문 쓰기 | {day}일차</h2>
           {range && <span className="review-modal-pages">{range}</span>}
-          <CloseButton onClick={onClose} />
         </header>
 
         <div className="review-write-body">
@@ -143,10 +142,7 @@ export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClo
               maxLength={MAX_LENGTH}
               placeholder="자유롭게 책을 읽었을 때 느낀 모든 것을 자유롭게 적어보세요!"
               aria-label="감상문"
-              onChange={(e) => {
-                setContent(e.target.value);
-                saveDraft(book, day, e.target.value);
-              }}
+              onChange={(e) => setContent(e.target.value)}
             />
             <span className="review-write-count">{content.length} / {MAX_LENGTH}자</span>
           </label>
@@ -154,7 +150,7 @@ export const CommentaryWriteModal = ({ scale, book, day, saving, onSubmit, onClo
 
         <footer>
           <button type="button" className="skip" onClick={onClose}>
-            오늘은 넘기기
+            나가기
           </button>
           <button type="submit" className="done" disabled={!text || saving}>
             완료

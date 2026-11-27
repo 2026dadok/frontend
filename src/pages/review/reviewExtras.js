@@ -47,11 +47,10 @@ export const pageRangeOf = (book, entryOrDate) => {
   return range.from && range.from !== range.to ? `${range.from}-${range.to}쪽` : `${range.to}쪽`;
 };
 
-// ───────── 쓰다 만 감상문 (이어쓰기) ─────────
-// 감상문을 쓰다가 저장하지 않고 나가면 남겨 두었다가, 홈 말풍선에서 "감상문을 마저 써볼까요?" 로 이어 쓰게 한다.
-//   kind "write": 쓰기 창에 쓰던 글 (content)            → 홈 말풍선을 누르면 쓰기 창
-//   kind "ai":    AI 감상문 채팅에서 나눈 말 (messages)   → 홈 말풍선의 [AI감상문 바로 가기]
-// 마지막에 쓰던 것 하나만 남긴다. localStorage 는 쓰지 않는다 → sessionStorage (새로고침해도 남고, 탭을 닫으면 사라진다)
+// ───────── 하다 만 AI 감상문 (이어 하기) ─────────
+// AI 감상문 채팅을 하다가 나가면 나눈 말을 남겨 두었다가, 홈 말풍선의 [AI감상문 바로 가기] 로 이어서 하게 한다.
+// 일반 감상문(스스로 쓰기)은 이어 쓰기가 없다: 쓰기 창은 [나가기] 로만 닫히고, 닫으면 쓰던 글은 버린다 (디자이너).
+// localStorage 는 쓰지 않는다 → sessionStorage (새로고침해도 남고, 탭을 닫으면 사라진다)
 const DRAFT_KEY = "dadok.reviewDraft";
 
 const readDraft = () => {
@@ -66,16 +65,15 @@ const writeDraft = (draft) => {
     if (draft) sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ owner: tokenUserId(), ...draft }));
     else sessionStorage.removeItem(DRAFT_KEY);
   } catch {
-    // 저장이 막힌 브라우저에서는 이어쓰기를 하지 않는다
+    // 저장이 막힌 브라우저에서는 이어 하기를 하지 않는다
   }
 };
 
 // 같은 탭에서 다른 계정으로 로그인하면 이전 계정의 것은 보여주지 않는다 (owner = 로그인 아이디)
 export const getDraft = () => {
   const draft = readDraft();
-  if (!draft?.book || draft.owner !== tokenUserId()) return null;
-  if (draft.kind === "ai") return Array.isArray(draft.messages) && draft.messages.length ? draft : null;
-  return draft.content ? { ...draft, kind: "write" } : null;
+  if (!draft?.book || draft.owner !== tokenUserId() || draft.kind !== "ai") return null;
+  return Array.isArray(draft.messages) && draft.messages.length ? draft : null;
 };
 
 // 화면에 필요한 책 정보만 남긴다
@@ -83,18 +81,6 @@ const slimBook = (b) => ({
   id: b.id, title: b.title, author: b.author, cover: b.cover, intro: b.intro,
   serverBookId: b.serverBookId, libBookId: b.libBookId, jointId: b.jointId, startedAt: b.startedAt, friendName: b.friendName, completed: b.completed,
 });
-
-// 쓰기 창의 글. 글을 다 지우면 쓰기 창 것만 지운다 (AI 채팅 기록은 그대로)
-export const saveDraft = (book, day, content) => {
-  if (content.trim()) writeDraft({ kind: "write", book: slimBook(book), day, content });
-  else if (getDraft()?.kind !== "ai") writeDraft(null);
-};
-
-// 이 책·이 일차의 쓰다 만 글 (없으면 "")
-export const draftFor = (book, day) => {
-  const draft = getDraft();
-  return draft?.kind === "write" && bookKey(draft.book) === bookKey(book) && draft.day === day ? draft.content : "";
-};
 
 // AI 감상문 채팅 (내가 한 번이라도 답했을 때만 남긴다)
 export const saveAiDraft = (book, day, messages, ready) => {
@@ -105,10 +91,10 @@ export const saveAiDraft = (book, day, messages, ready) => {
 // 이 책의 AI 채팅 기록 (없으면 null)
 export const aiDraftFor = (book) => {
   const draft = getDraft();
-  return draft?.kind === "ai" && bookKey(draft.book) === bookKey(book) ? draft : null;
+  return draft && bookKey(draft.book) === bookKey(book) ? draft : null;
 };
 
-// 감상문을 저장했으면 지운다. kind 를 주면 그 종류일 때만 지운다
-export const clearDraft = (kind) => {
-  if (!kind || getDraft()?.kind === kind) writeDraft(null);
+// 감상문을 저장했으면 지운다. book 을 주면 그 책의 것일 때만 지운다
+export const clearDraft = (book) => {
+  if (!book || aiDraftFor(book)) writeDraft(null);
 };
