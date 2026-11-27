@@ -7,7 +7,7 @@ import { syncCommentaries } from "../bookSearch/bookStore";
 import { Toast, XpTotal } from "../bookSearch/parts";
 import { AskMascot, VMascot } from "../../components/Mascots";
 import { aiErrorMessage, askNextQuestion, deleteReview, generateReview, MAX_MESSAGES } from "./aiReviewApi";
-import { countDays } from "./reviewExtras";
+import { aiDraftFor, clearDraft, countDays, saveAiDraft } from "./reviewExtras";
 import { MAX_LENGTH } from "./ReviewModals";
 import { formatDate } from "./format";
 import moleImg from "../../images/dokddage.png";
@@ -21,17 +21,21 @@ const DONE_MS = 1600; // "감상문을 모두 작성했어요!" 를 보여주는
 //   writing "나눈 이야기를 바탕으로 감상문 작성 중..." (POST /api/v1/reviews/generate, 서버가 만들고 바로 저장)
 //   done    "감상문을 모두 작성했어요!"
 //   result  만든 감상문 확인 → 다시 만들기 / 저장하기(감상문 화면으로)
+// 채팅 중에 나가면 나눈 말을 남겨 두고(reviewExtras.saveAiDraft), 홈 말풍선의 [AI감상문 바로 가기]로 오면(state.resume) 이어서 한다.
 const AiReview = () => {
   const scale = useFitScale();
   const navigate = useNavigate();
-  const book = useLocation().state?.book ?? null;
+  const location = useLocation();
+  const book = location.state?.book ?? null;
   const [toast, showToast] = useToast();
+  // 홈에서 이어 하러 왔으면 남겨 둔 채팅을 불러온다 (처음 한 번만 읽는다)
+  const [saved] = useState(() => (location.state?.resume && book ? aiDraftFor(book) : null));
 
   const [step, setStep] = useState("chat");
-  const [day, setDay] = useState(null);
-  const [messages, setMessages] = useState([]); // { role: "assistant" | "user", content }
+  const [day, setDay] = useState(saved?.day ?? null);
+  const [messages, setMessages] = useState(saved?.messages ?? []); // { role: "assistant" | "user", content }
   const [waiting, setWaiting] = useState(false); // 독다지의 답을 기다리는 중
-  const [ready, setReady] = useState(false); // 감상문을 만들 만큼 이야기했는지 (서버가 알려준다)
+  const [ready, setReady] = useState(saved?.ready ?? false); // 감상문을 만들 만큼 이야기했는지 (서버가 알려준다)
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
   const [review, setReview] = useState(null); // { id, content, date }
@@ -63,12 +67,18 @@ const AiReview = () => {
     setReady(result.ready || history.length + 1 >= MAX_MESSAGES - 1);
   };
 
-  // 첫 질문
+  // 첫 질문. 이어 하는 중이면 묻지 않는다 (마지막 말이 내 답이면 그 답에 대한 질문만 다시 받는다)
   useEffect(() => {
     if (!book) return;
-    Promise.resolve().then(() => ask([]));
+    if (!saved) Promise.resolve().then(() => ask([]));
+    else if (saved.messages.at(-1)?.role === "user" && !saved.ready) Promise.resolve().then(() => ask(saved.messages));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 채팅 중에 나가도 이어 할 수 있게 나눈 말을 남긴다 (감상문을 만들면 지운다)
+  useEffect(() => {
+    if (book && step === "chat") saveAiDraft(book, day, messages, ready);
+  }, [book, step, day, messages, ready]);
 
   // 새 말이 오면 맨 아래로
   useEffect(() => {
@@ -91,6 +101,7 @@ const AiReview = () => {
       showToast(aiErrorMessage(result.status));
       return;
     }
+    clearDraft("ai"); // 감상문이 저장됐으니 홈의 이어 하기 말풍선은 없앤다
     // 다시 만들기였으면 새 감상문이 저장된 뒤 이전 것을 지운다 (감상문이 두 개 남지 않게)
     if (review?.id) deleteReview(review.id);
     setReview({ id: result.reviewId, content: result.content, date: new Date().toISOString() });

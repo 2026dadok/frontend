@@ -131,18 +131,35 @@ const DailyQuest = ({ daily, note }) => (
   </section>
 );
 
-// 감상문을 쓰다가 나갔으면 말풍선이 이어 쓰기를 권한다 (피그마 '감상문 작성 도중 이탈'). 누르면 그 일차의 쓰기 창이 다시 열린다
-const DraftBubble = ({ draft, onResume }) => (
-  <div className="home-quote">
-    <button type="button" className="home-quote-bubble home-draft" onClick={onResume}>
-      <span className="home-draft-ask">감상문을 마저 써볼까요?</span>
-      <small>
-        {draft.book.title} {draft.day}일차
-      </small>
-    </button>
-    <img className="home-mascot" src={mascotImg} alt="" />
-  </div>
-);
+// 감상문을 쓰다가 나갔으면 말풍선이 이어 쓰기를 권한다 (피그마 '감상문 작성 도중 이탈')
+//   쓰기 창에서 나감: 말풍선을 누르면 그 일차의 쓰기 창이 다시 열린다
+//   AI 감상문 채팅에서 나감: [AI감상문 바로 가기] 를 누르면 나눈 이야기에 이어서 채팅한다
+const DraftBubble = ({ draft, onResume }) => {
+  const where = `${draft.book.title}${draft.day ? ` ${draft.day}일차` : ""}`;
+  if (draft.kind === "ai") {
+    return (
+      <div className="home-quote">
+        <div className="home-quote-bubble home-draft ai">
+          <span className="home-draft-ask">감상문을 마저 써볼까요?</span>
+          <button type="button" className="home-quote-link" onClick={onResume}>
+            AI감상문 바로 가기
+          </button>
+          <small>{where}</small>
+        </div>
+        <img className="home-mascot" src={mascotImg} alt="" />
+      </div>
+    );
+  }
+  return (
+    <div className="home-quote">
+      <button type="button" className="home-quote-bubble home-draft" onClick={onResume}>
+        <span className="home-draft-ask">감상문을 마저 써볼까요?</span>
+        <small>{where}</small>
+      </button>
+      <img className="home-mascot" src={mascotImg} alt="" />
+    </div>
+  );
+};
 
 const QuoteBubble = ({ quote }) => (
   <div className="home-quote">
@@ -182,7 +199,10 @@ const Home = () => {
   // 추천 도서를 누르면 책 검색 페이지의 책 상세(3번 화면)를 바로 연다
   const openRecommended = (book) => navigate(`${PATHS.search}?view=detail`, { state: { book } });
   const [draft] = useState(getDraft); // 쓰다 만 감상문 (없으면 null)
-  const resumeDraft = () => navigate(`${PATHS.review}?write=1`, { state: { book: draft.book, resumeDay: draft.day } });
+  const resumeDraft = () =>
+    draft.kind === "ai"
+      ? navigate(PATHS.reviewAi, { state: { book: draft.book, resume: true } })
+      : navigate(`${PATHS.review}?write=1`, { state: { book: draft.book, resumeDay: draft.day } });
 
   return (
     <div className="home">
