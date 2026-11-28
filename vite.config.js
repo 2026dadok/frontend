@@ -39,8 +39,15 @@ export default defineConfig(({ mode }) => {
     }
   }
 
+  // 외부(다른 컴퓨터·도메인)에서 개발 서버에 접속할 때 허용할 주소. .env.local 에 쉼표로 적는다.
+  //   ALLOWED_HOSTS=dadok.example.com,123.45.67.89
+  // 없으면 Vite 기본값(localhost 만 허용). Vercel 배포에는 쓰이지 않는다.
+  const allowedHosts = (env.ALLOWED_HOSTS ?? '').split(',').map((h) => h.trim()).filter(Boolean)
+
   return {
     plugins: [react()],
-    server: { proxy },
+    // host: true → 같은 네트워크·외부에서도 접속 가능 (npm run dev 할 때 Network 주소가 나온다)
+    server: { proxy, host: true, allowedHosts },
+    preview: { host: true, allowedHosts }, // npm run preview 로 켤 때도 같게
   }
 })
